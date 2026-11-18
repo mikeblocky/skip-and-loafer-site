@@ -5,6 +5,7 @@ import { sfx } from '../../sfx'
 import { secrets } from '../../secrets'
 import { music } from '../../music'
 import { FIRST_PAGE, makePage, type Page } from './pages'
+import { TUNE, at, difficulty, gapAt, lerp, minGapAt, speedAt, stage, stageD } from './difficulty'
 
 /** every this many points, the road turns to a freshly generated page with a new leader */
 const PAGE_EVERY = 10000
@@ -37,8 +38,9 @@ const JUMP = 580
 const SKIP = 550
 /** a tap this soon before landing still hops, the moment she touches down */
 const BUFFER = 0.14
-const START_SPEED = 300
-const MAX_SPEED = 1100
+const START_SPEED = TUNE.speed.start
+/** a single hop's time in the air (no skip), under a gravity multiplier */
+const airTime = (grav = 1) => (2 * JUMP) / (GRAVITY * grav)
 const LIVES = 3
 const POOL = 24
 
@@ -64,7 +66,7 @@ const FRIENDS = CHARACTERS.filter((c) => c.id !== 'mitsumi')
 /** score at which each friend catches up; when the last one joins, you've won */
 // a new friend roughly every 8–10 seconds of clean running; all six in about a minute
 const JOIN_AT = [70, 170, 300, 460, 650, 870]
-/** after the win, one more level every this many points */
+/** after the win, the band remixes (and calls out a new level) every this many points */
 const LEVEL_AFTER_WIN = 900
 /** every so often, a breather: no hazards for a few seconds */
 const BREAK_EVERY = 50
@@ -72,40 +74,34 @@ const BREAK_LEN = 7
 /**
  * Twists, for the very long runs. From TWIST_AT points, every so often the camera does
  * something nasty for a few seconds (announced first). How long they last, how often they
- * come and how many stack all grow smoothly with the score (see twistTiming / stackOdds).
+ * come and how many stack all blend in along the difficulty curve (see ./difficulty).
  * They only change how the road looks, never the controls, and never during a break.
  */
 const TWIST_AT = 5000
-/** the new events unlock here, and the "mayhem" curve starts climbing (full by 25,000) */
+/** the new events unlock here, and the "mayhem" stretch starts climbing (full by 25,000) */
 const MAYHEM_AT = 10000
-/** [seconds a twist lasts, seconds between twists], by stage */
-/**
- * How far into the 10k+ "mayhem" stretch we are: 0 at 10,000, rising to 1 at 20,000. Everything
- * that gets nastier past 10k scales with this, so 10k starts the climb instead of flipping a switch.
- */
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t
-/**
- * Smooth late-game curves. Every "harder" number is a gentle S-curve of the score (slow start,
- * steady climb, easing into its maximum), so nothing ever jumps at a particular score.
- * curve(score, from, to) is 0 up to `from`, 1 from `to`, and smooth in between.
- */
-const curve = (score: number, from: number, to: number) => {
-  const t = Math.max(0, Math.min(1, (score - from) / (to - from)))
-  return t * t * (3 - 2 * t)
-}
+// Every late-game knob is a window on the one difficulty curve: stage(score, from, to) is 0 up
+// to `from`, 1 from `to`, and eases smoothly in between, so nothing jumps at a particular score.
 /** the 10k+ stretch: 0 at 10,000, all the way up by 25,000 */
-const mayhem = (score: number) => curve(score, MAYHEM_AT, 25000)
-/** twists stretch out and come closer together from 5,000 to 25,000 */
+const mayhem = (score: number) => stage(score, MAYHEM_AT, 25000)
+/** twists stretch out and come closer together from 5,000 to 25,000 (the first ones are rare) */
 const twistTiming = (score: number) => {
-  const t = curve(score, TWIST_AT, 25000)
-  return { len: lerp(8, 13, t), gap: lerp(11, 4, t) }
+  const t = stage(score, TWIST_AT, 25000)
+  return { len: lerp(7, 13, t), gap: lerp(16, 4, t) }
 }
 /** chance a twist brings a second one along (from ~7k), and a third (from ~15k) */
-const stackOdds = (score: number) => ({ two: 0.85 * curve(score, 7000, 20000), three: 0.4 * curve(score, 15000, 25000) })
+const stackOdds = (score: number) => ({ two: 0.85 * stage(score, 7000, 20000), three: 0.4 * stage(score, 15000, 25000) })
 /** late-game breathing room: hearts / power-ups wait this long after one appears (from ~7k) */
-const cooldowns = (score: number) => ({ heart: lerp(0, HEART_COOLDOWN, curve(score, 7000, 25000)), power: lerp(0, POWER_COOLDOWN, curve(score, 7000, 25000)) })
+const cooldowns = (score: number) => {
+  const t = stage(score, 7000, 25000)
+  return { heart: lerp(0, HEART_COOLDOWN, t), power: lerp(0, POWER_COOLDOWN, t) }
+}
 /** extra clutter slipped in between patterns, building up all the way from the win */
-const extraClutter = (score: number) => 0.8 * curve(score, 900, 25000)
+const extraClutter = (score: number) => 0.8 * stage(score, 900, 25000)
+/** how strong boosts are: stars, power-up time, star showers (0 at the start, full by ~2,700) */
+const boostOf = (score: number) => stage(score, 0, 2700)
+/** the golden heart gets offered more and more often from the win to 5,000 */
+const goldOdds = (score: number) => 0.35 * stage(score, 870, 5000)
 const TWISTS = {
   tilt: { label: 'the road tilts!', from: TWIST_AT },
   mirror: { label: 'mirror world!', from: TWIST_AT },
@@ -132,27 +128,37 @@ const TINTS = ['#ffffff', '#fffcf2', '#fff8e8', '#fff3ee', '#fdf0f6', '#f5f1ff',
 const WON_TINT = '#fff6d8'
 
 /**
- * Difficulty tier: one per friend who has joined, then one more every 900 points after the win.
- * Each tier unlocks a meaner pattern on the road, and makes every boost a little stronger.
+ * Level: one per friend who has joined, then one more every 900 points after the win. Only the
+ * music and the call-outs follow it; how hard the road is comes from the difficulty curve.
  */
 const tierOf = (friends: number, score: number) =>
   friends + Math.floor(Math.max(0, score - JOIN_AT[JOIN_AT.length - 1]) / LEVEL_AFTER_WIN)
-/** road patterns and the tier that unlocks them */
+/**
+ * Road patterns and the score where each starts to show up. A pattern blends in over a short
+ * stretch of the curve (TUNE.fade) rather than switching on, roughly as each friend arrives.
+ */
 const COMBOS = [
   { name: 'single', from: 0 },
-  { name: 'pair', from: 1 }, // two close together: a long hop or hop + skip
-  { name: 'under', from: 2 }, // clutter with a paper plane right above: hop, don't skip
-  { name: 'triple', from: 3 }, // three in a row
-  { name: 'low', from: 4 }, // a plane at head height: stay on the ground
-  { name: 'drop', from: 5 }, // a sticker falls out of the sky ahead
-  // ── chaos, after the win ──
-  { name: 'bounce', from: 6 }, // clutter that hops along the road
-  { name: 'zigzag', from: 6 }, // a plane that swoops up and down through the hop zone
-  { name: 'swarm', from: 7 }, // a few planes at mixed heights
-  { name: 'rain', from: 7 }, // several stickers falling at once
-  { name: 'roll', from: 8 }, // clutter rolling at you faster than the road
-  { name: 'chaos', from: 9 }, // two patterns at the same time
+  { name: 'pair', from: 70 }, // two close together: a long hop or hop + skip
+  { name: 'under', from: 170 }, // clutter with a paper plane right above: hop, don't skip
+  { name: 'triple', from: 300 }, // three in a row
+  { name: 'low', from: 460 }, // a plane at head height: stay on the ground
+  { name: 'drop', from: 650 }, // a sticker falls out of the sky ahead
+  // ── chaos, from the win on ──
+  { name: 'bounce', from: 870 }, // clutter that hops along the road
+  { name: 'zigzag', from: 870 }, // a plane that swoops up and down through the hop zone
+  { name: 'swarm', from: 1800 }, // a few planes at mixed heights
+  { name: 'rain', from: 1800 }, // several stickers falling at once
+  { name: 'roll', from: 2700 }, // clutter rolling at you faster than the road
+  { name: 'chaos', from: 3600 }, // two patterns at the same time
 ] as const
+const COMBO_D = COMBOS.map((c) => difficulty(c.from))
+/** how likely each pattern is at difficulty d: blended in after its score; plain singles fade out */
+const comboWeights = (d: number) =>
+  COMBOS.map((c, i) => {
+    const on = Math.max(0, Math.min(1, (d - COMBO_D[i]) / TUNE.fade))
+    return c.name === 'single' ? 0.6 + 3.4 * Math.pow(1 - d, 3) : on * on * (3 - 2 * on)
+  })
 type ComboName = (typeof COMBOS)[number]['name']
 /** how things move besides scrolling with the road */
 type Mode = 'normal' | 'bounce' | 'zigzag' | 'roll'
@@ -282,6 +288,10 @@ export function SkipGame() {
     powerCd: 0, // 10k+: seconds until another power-up may appear
     twistWait: 11, // seconds until the next one may start
     breakT: 0, // seconds of break left
+    clock: 0, // seconds since the run started
+    lastHit: 0, // clock time the last hazard spawned so far reaches Mitsumi (for fair gaps)
+    calm: 0, // seconds of breather left after a big moment
+    batch: null as number[] | null, // things spawned by the hazard group being placed
     buffer: 0,
     fy: [0, 0, 0, 0, 0, 0],
     fvy: [0, 0, 0, 0, 0, 0],
@@ -339,6 +349,10 @@ export function SkipGame() {
     setPage(FIRST_PAGE)
     s.powerCd = 0
     s.twistWait = 11
+    s.clock = 0
+    s.lastHit = 0
+    s.calm = 0
+    s.batch = null
     setTwists([])
     music.setRest(false)
     setRest(0)
@@ -448,20 +462,55 @@ export function SkipGame() {
                 : 30 + Math.random() * 55
       const y0 = yAt ?? y
       s.things[i] = { on: true, kind, x, y: y0, vy: 0, base: y0, mode, size, look, phase: Math.random() * 6 }
+      s.batch?.push(i)
       setLooks((L) => (L[i].kind === kind && L[i].look === look ? L : L.map((v, j) => (j === i ? { kind, look } : v))))
     }
+
+    // ── fair spacing ──
+    /** how much faster than the road a thing moves */
+    const pace = (t: Thing) => (t.kind === 'plane' ? 1.3 : t.mode === 'roll' ? 1.45 : 1)
+    /** clock time a thing reaches Mitsumi, at the current speed */
+    const arrival = (t: Thing) => s.clock + Math.max(0, t.x + t.size * 0.25 - PX) / (s.speed * pace(t))
+    /** things you have to dodge (a plane cruising high overhead only matters if you skip into it) */
+    const counts = (t: Thing) =>
+      t.kind === 'ground' || t.kind === 'drop' || (t.kind === 'plane' && (t.mode !== 'normal' || t.base < 180))
+    /** the least time between hazard groups right now: always room to land and hop again */
+    const minGap = () => minGapAt(difficulty(s.score), airTime(s.active.includes('moon') ? MOON : 1))
+    /**
+     * Spawn one group of hazards (a pattern, a stray bit of clutter, a storm plane). If it would
+     * reach Mitsumi sooner than minGap after the last group, the whole group is pushed back
+     * (keeping its own shape), so every gap between groups can be cleared with a plain hop.
+     */
+    const group = (place: () => void) => {
+      s.batch = []
+      place()
+      const ids = s.batch
+      s.batch = null
+      const hz = ids.map((i) => s.things[i]).filter(counts)
+      if (!hz.length) return
+      const late = s.lastHit + minGap() - Math.min(...hz.map(arrival))
+      if (late > 0) ids.forEach((i) => (s.things[i].x += late * s.speed * pace(s.things[i])))
+      s.lastHit = Math.max(s.lastHit, ...hz.map(arrival))
+    }
+    /** start a breather: the road eases off for a few seconds (never shortens one already running) */
+    const breathe = (secs: number) => (s.calm = Math.max(s.calm, secs))
 
     const frame = (now: number) => {
       const dt = Math.min(0.033, (now - s.last) / 1000)
       s.last = now
       const w = worldW.current
-      // break time: every BREAK_EVERY seconds, a few seconds with no hazards and no speed-up
+      s.clock += dt
+      s.calm = Math.max(0, s.calm - dt)
+      /** where the run is on the difficulty curve */
+      const D = difficulty(s.score)
+      // break time: every BREAK_EVERY seconds, a few seconds with no hazards and a slower road
       if (s.breakT > 0) {
         s.breakT = Math.max(0, s.breakT - dt)
         if (s.breakT === 0) {
           s.playT = 0
           music.setRest(false)
           say('here we go!', 1300)
+          breathe(TUNE.breather.rest)
         }
       } else {
         s.playT += dt
@@ -474,7 +523,6 @@ export function SkipGame() {
           if (s.lives < LIVES) spawn('heart', w + 30, 40)
         }
       }
-      // the road keeps speeding up: briskly at first, still noticeably even when it is already fast
       // twists: a new one every so often past TWIST_AT points (not during breaks)
       if (s.twistT > 0) {
         s.twistT = Math.max(0, s.twistT - dt)
@@ -510,19 +558,19 @@ export function SkipGame() {
           s.twistT = len
           s.twistWait = gap * (0.8 + Math.random() * 0.5)
           s.active = picked
-          if (picked.includes('rush')) s.speed = Math.min(MAX_SPEED * rushOf(s.score), s.speed * rushOf(s.score))
+          // a moment to get used to the new view before the road gets busy again
+          breathe(TUNE.breather.twist)
           setTiltDir(Math.random() < 0.5 ? -1 : 1)
           setTwists(picked)
           say(picked.map((t) => TWISTS[t].label).join(' + '), 2000)
           sfx.whoosh(0.5, true, 0.14)
         }
       }
-      if (s.breakT <= 0) s.speed += 24 * dt * Math.max(0.3, 1 - (s.speed - START_SPEED) / 1100)
-      // ...up to a ceiling a person can still react at (clutter crosses the screen in ~½s); past that,
-      // the harder road patterns keep raising the difficulty instead
-      // past the cap (rush hour just ended), ease back down instead of snapping
-      const cap = MAX_SPEED * (s.active.includes('rush') ? rushOf(s.score) : 1)
-      if (s.speed > cap) s.speed = Math.max(cap, s.speed - (s.speed - cap) * Math.min(1, dt * 1.5) - 40 * dt)
+      // the road's speed comes straight off the difficulty curve (approaching a ceiling a person can
+      // still react at); rush hour and breaks only nudge that target, and the road eases toward it
+      // so nothing ever lurches
+      const target = speedAt(D) * (s.active.includes('rush') ? rushOf(s.score) : 1) * (s.breakT > 0 ? TUNE.speed.rest : 1)
+      s.speed += (target - s.speed) * Math.min(1, dt * TUNE.speed.follow)
       s.dist += s.speed * dt
       // the band speeds up with the road: ~112 bpm at the start, up to ~172 when it's frantic
       music.setPace(116 + (s.speed - START_SPEED) * 0.09 - (s.breakT > 0 ? 10 : 0))
@@ -590,6 +638,8 @@ export function SkipGame() {
           if (el) el.style.opacity = '0'
         })
         s.next = Math.max(s.next, 1.4)
+        s.lastHit = s.clock
+        breathe(TUNE.breather.page)
         setPage(next)
         setFlipping(true)
         window.setTimeout(() => setFlipping(false), 800)
@@ -615,6 +665,7 @@ export function SkipGame() {
         if (joined === JOIN_AT.length && !s.won) {
           s.won = true
           setWon(true)
+          breathe(TUNE.breather.win)
           say('everyone made it to school! keep skipping…', 3200)
           // the band plays a fanfare on the next downbeat (falls back to the jingle if it's silent)
           if (!music.cue('win')) sfx.jingle(0.8)
@@ -636,51 +687,57 @@ export function SkipGame() {
       })
       if (ground.current) ground.current.style.backgroundPositionX = `${-s.dist % 120}px`
 
-      // spawning gets denser and meaner with speed
+      // what turns up on the road, and how often, all follows the difficulty curve
       s.next -= dt
       s.heartCd = Math.max(0, s.heartCd - dt)
       s.powerCd = Math.max(0, s.powerCd - dt)
+      /** 1 just after a big moment, fading to 0 as the breather runs out */
+      const ease = Math.min(1, s.calm / 1.5)
+      /** the difficulty patterns are picked at: the curve, eased off during a breather */
+      const Dp = D * (1 - TUNE.breather.ease * ease)
       if (s.active.includes('storm')) {
         s.stormT -= dt
         if (s.stormT <= 0) {
           s.stormT = lerp(0.9, 0.45, mayhem(s.score)) + Math.random() * 0.35
-          spawn('plane', w + 40 + Math.random() * 60, 92 + Math.random() * 110, Math.random() < 0.3 ? 'zigzag' : 'normal')
+          group(() => spawn('plane', w + 40 + Math.random() * 60, 92 + Math.random() * 110, Math.random() < 0.3 ? 'zigzag' : 'normal'))
         }
       }
       if (s.next <= 0) {
-        const lvl = Math.min(1, (s.speed - START_SPEED) / 520)
-        const T = s.tier
         const r = Math.random()
-        if (s.breakT > 0) {
-          // break: a gentle trickle of stars, the odd heart or power-up
-          if (s.lives < LIVES && r < 0.2) spawn('heart', w + 20)
-          else if (r < 0.3) {
-            const choices = (Object.keys(POWERS) as Power[]).filter((k) => k === 'sparkle' || s.pw[k as Timed] <= 0)
-            spawn(choices[Math.floor(Math.random() * choices.length)], w + 20)
-          } else spawn('star', w + 20)
-        } else if (s.score > 60 && r < 0.14 + lvl * 0.12) spawn('plane', w + 40)
-        else if (s.score > 15 && r < Math.min(0.34, 0.26 + lvl * 0.06 + T * 0.012) && s.powerCd <= 0) {
-          s.powerCd = cooldowns(s.score).power
+        const odds = TUNE.odds
+        // chances for each kind of spawn, read off the curve; whatever is left is road clutter
+        const pPlane = stage(s.score, 40, 250) * at(odds.plane, D)
+        const pPower = s.score > 15 && s.powerCd <= 0 ? at(odds.power, D) : 0
+        const pStar = at(odds.star, D)
+        const pHeart = s.lives < LIVES && s.heartCd <= 0 ? at(odds.heart, D) : 0
+        const x0 = w + 20
+        const powerUp = () => {
           // a power-up, never one that is already running
           const choices = (Object.keys(POWERS) as Power[]).filter((k) => k === 'sparkle' || s.pw[k as Timed] <= 0)
           // the wilder the road, the more often the golden heart is the one on offer
-          if (T >= 6 && s.pw.goldheart <= 0 && Math.random() < Math.min(0.35, (T - 5) * 0.06)) spawn('goldheart', w + 20)
-          else spawn(choices[Math.floor(Math.random() * choices.length)], w + 20)
-        } else if (r < 0.42 + lvl * 0.08) spawn('star', w + 20)
-        // hearts turn up more often with every level
-        else if (s.lives < LIVES && r < 0.45 + lvl * 0.05 + T * 0.02 + Math.max(0, T - 5) * 0.015 && s.heartCd <= 0) {
-          s.heartCd = cooldowns(s.score).heart
-          spawn('heart', w + 20)
+          if (s.pw.goldheart <= 0 && Math.random() < goldOdds(s.score)) spawn('goldheart', x0)
+          else spawn(choices[Math.floor(Math.random() * choices.length)], x0)
         }
-        else {
-          // pick a road pattern; the plain single gets rarer as the tiers climb
-          const open = COMBOS.filter((c) => c.from <= T || (c.name === 'pair' && lvl > 0.3))
-          const weights = open.map((c) => (c.name === 'single' ? Math.max(1, 4 - T * 0.6) : 1))
+        if (s.breakT > 0) {
+          // break: a gentle trickle of stars, the odd heart or power-up
+          if (s.lives < LIVES && r < 0.2) spawn('heart', x0)
+          else if (r < 0.3) powerUp()
+          else spawn('star', x0)
+        } else if (r < pPlane) group(() => spawn('plane', w + 40))
+        else if (r < pPlane + pPower) {
+          s.powerCd = cooldowns(s.score).power
+          powerUp()
+        } else if (r < pPlane + pPower + pStar) spawn('star', x0)
+        else if (r < pPlane + pPower + pStar + pHeart) {
+          s.heartCd = cooldowns(s.score).heart
+          spawn('heart', x0)
+        } else {
+          // pick a road pattern: each one blends in after its score, plain singles fade out
+          const weights = comboWeights(Dp)
           let pick = Math.random() * weights.reduce((a, b) => a + b, 0)
           let k = 0
-          while (pick > weights[k]) pick -= weights[k++]
-          const combo = open[k].name
-          const x0 = w + 20
+          while (k < weights.length - 1 && pick > weights[k]) pick -= weights[k++]
+          const combo = COMBOS[k].name
           const pattern = (c: ComboName, x: number) => {
             if (c === 'single') spawn('ground', x)
             else if (c === 'pair') {
@@ -711,22 +768,27 @@ export function SkipGame() {
               spawn('ground', x + 60, 0, 'roll')
             }
           }
-          if (combo === 'chaos') {
-            // two different patterns stacked: something on the road and something in the air
-            const road: ComboName[] = ['pair', 'triple', 'bounce', 'roll', 'drop']
-            const air: ComboName[] = ['zigzag', 'swarm', 'rain', 'under']
-            pattern(road[Math.floor(Math.random() * road.length)], x0)
-            pattern(air[Math.floor(Math.random() * air.length)], x0 + 140 + Math.random() * 80)
-            // past 10k, often a third pattern on top
-            if (Math.random() < 0.55 * mayhem(s.score)) pattern(road[Math.floor(Math.random() * road.length)], x0 + 300 + Math.random() * 80)
-          } else pattern(combo, x0)
-          // from the win on, the odd extra bit of clutter slips in between patterns (much more past 10k)
-          if (T >= 6 && Math.random() < extraClutter(s.score)) pattern(Math.random() < 0.5 ? 'single' : 'bounce', x0 + 260 + Math.random() * 120)
-          if (Math.random() < 0.5 * mayhem(s.score)) pattern(Math.random() < 0.5 ? 'roll' : 'drop', x0 + 420 + Math.random() * 120)
-          // let the pattern clear before the next one
-          if (combo === 'triple' || combo === 'under' || combo === 'chaos' || combo === 'swarm' || combo === 'rain') s.next += 0.3
+          const road: ComboName[] = ['pair', 'triple', 'bounce', 'roll', 'drop']
+          const air: ComboName[] = ['zigzag', 'swarm', 'rain', 'under']
+          const any = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)]
+          group(() => {
+            if (combo === 'chaos') {
+              // two different patterns stacked: something on the road and something in the air
+              pattern(any(road), x0)
+              pattern(any(air), x0 + 140 + Math.random() * 80)
+            } else pattern(combo, x0)
+          })
+          // extra groups slipped in behind (each one spaced fairly after the last): a third
+          // pattern on chaos past 10k, stray clutter from the win on, more and more past 10k
+          const extra = 1 - ease
+          if (combo === 'chaos' && Math.random() < 0.55 * mayhem(s.score) * extra) group(() => pattern(any(road), x0 + 300 + Math.random() * 80))
+          if (Math.random() < extraClutter(s.score) * extra) group(() => pattern(Math.random() < 0.5 ? 'single' : 'bounce', x0 + 260 + Math.random() * 120))
+          if (Math.random() < 0.5 * mayhem(s.score) * extra) group(() => pattern(Math.random() < 0.5 ? 'roll' : 'drop', x0 + 420 + Math.random() * 120))
         }
-        s.next += (0.65 + Math.random() * 0.8) * (340 / s.speed) + 0.36 - Math.min(0.12 + 0.1 * mayhem(s.score), T * 0.015)
+        // the next spawn: the curve's gap (longer during a breather), and never so soon that the
+        // next pattern would crowd the last hazard already on its way
+        s.next += gapAt(Dp, s.speed, Math.random()) * (1 + TUNE.breather.gap * ease)
+        s.next = Math.max(s.next, s.lastHit + minGap() - (x0 - PX) / s.speed - s.clock)
       }
 
       // move, draw and check every thing
@@ -745,8 +807,8 @@ export function SkipGame() {
           t.vy -= GRAVITY * 0.8 * dt
           t.y = Math.max(0, t.y + t.vy * dt)
         }
-        // star magnet: stars within reach drift into Mitsumi's arms (reach grows with the tier)
-        if (t.kind === 'star' && s.pw.sun > 0 && t.x < PX + 300 + s.tier * 40 && t.x > PX - 40) {
+        // star magnet: stars within reach drift into Mitsumi's arms (reach grows along the curve)
+        if (t.kind === 'star' && s.pw.sun > 0 && t.x < PX + 300 + 400 * D && t.x > PX - 40) {
           t.x += (PX + 14 - t.x) * Math.min(1, dt * 6)
           t.y += (s.y + 30 - t.y) * Math.min(1, dt * 6)
         }
@@ -782,21 +844,20 @@ export function SkipGame() {
         if (t.kind === 'star') {
           t.on = false
           if (el) el.style.opacity = '0'
-          // stars grow with the level, up to 22 each (so one shower can never skip a whole level)
-          s.score += (10 + 2 * Math.min(6, s.tier)) * mult
+          // stars grow along the curve, up to 22 each
+          s.score += (10 + 12 * boostOf(s.score)) * mult
           sfx.blip(1.5)
         } else if (isPower(t.kind)) {
           t.on = false
           if (el) el.style.opacity = '0'
           const k = t.kind
           if (k === 'sparkle') {
-            // an arc of stars right ahead, all within a hop; longer with each tier
-            const n = Math.min(8, 6 + s.tier)
+            // an arc of stars right ahead, all within a hop; longer as boosts grow
+            const n = 6 + Math.round(2 * boostOf(s.score))
             for (let j = 0; j < n; j++) spawn('star', w + 20 + j * 38, 20 + Math.sin((j / (n - 1)) * Math.PI) * 70)
           } else {
-            // boosts last longer as the tiers climb
-            // the clover stays short and single-use at every level; the rest grow a little with the level
-            s.pw[k] = k === 'clover' ? POWERS[k].secs : POWERS[k].secs * (1 + 0.06 * Math.min(8, s.tier))
+            // the clover stays short and single-use; the rest last a little longer as the curve climbs
+            s.pw[k] = k === 'clover' ? POWERS[k].secs : POWERS[k].secs * (1 + 0.48 * boostOf(s.score))
             // from tier 3 the clover holds off two hits
             if (k === 'clover') s.shieldHits = 1
           }
