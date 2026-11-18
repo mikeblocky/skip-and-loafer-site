@@ -38,15 +38,15 @@ export function Message() {
 
   return (
     <section className="view view-message">
-      <FlexText as="h2" className="msg-title" offset={4} words={[{ t: 'Message', w: 900 }]} data-intro="ui" data-safe="" />
+      <FlexText as="h2" className="msg-title" words={[{ t: 'Message', w: 760, c: C.red }]} data-intro="ui" data-safe="" />
 
       <div className="msg-tabs" role="tablist" data-intro="ui">
         <button role="tab" aria-selected={tab === 'write'} className={tab === 'write' ? 'is-on' : ''} onClick={() => go('write')}>
-          <Icon name="pencil" color={tab === 'write' ? '#fff' : C.ink} size={20} />
+          <Icon name="pencil" color={tab === 'write' ? '#fff' : C.orange} size={20} />
           Write
         </button>
         <button role="tab" aria-selected={tab === 'open'} className={tab === 'open' ? 'is-on' : ''} onClick={() => go('open')}>
-          <Icon name="envelope" color={tab === 'open' ? '#fff' : C.ink} size={20} />
+          <Icon name="envelope" color={tab === 'open' ? '#fff' : C.red} size={20} />
           Open
           {!!stats.total && <span className="msg-badge">{stats.total > 99 ? '99+' : stats.total}</span>}
         </button>

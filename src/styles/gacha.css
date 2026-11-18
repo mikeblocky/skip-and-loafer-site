@@ -147,11 +147,11 @@
   mix-blend-mode: soft-light;
 }
 .gc-card.r3 {
-  border-image: linear-gradient(135deg, #ff2e93, #ffc400, #00c46a, #1f6bff, #7b2fff) 1;
+  border-image: linear-gradient(135deg, #F53D84, #FBBA14, #12B266, #246BE8, #7A45E0) 1;
   border-radius: 0;
   box-shadow:
     0 0 0 2px #fff,
-    0 0 22px rgb(255 196 0 / 0.6);
+    0 0 22px rgb(251 186 20 / 0.6);
 }
 .gc-card.r3 .gc-art {
   background: linear-gradient(135deg, #ffe0f0, #fff4c2, #d9fbe8, #dbe7ff, #eadcff);

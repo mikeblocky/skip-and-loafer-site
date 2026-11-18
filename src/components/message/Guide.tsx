@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom'
 import { gsap } from '../../gsap'
 import { C } from '../../data'
 import { Icon } from '../../icons'
-import { BadBox, bust, FACES, GoodBox, MiniBox, MiniMail } from './GuideScenes'
+import { BadBox, bust, GoodBox, MiniBox, MiniMail } from './GuideScenes'
 
 // the guide's slides, with how long each one stays up before the next (one full loop of its scene)
 const STEPS: ReactNode[] = [
@@ -25,7 +25,8 @@ const STEPS: ReactNode[] = [
       </div>
     </div>
     <p>
-      <b>1</b> Write a short letter to another fan.
+      <span className="gd-num">Step 1</span>
+      Write a short letter to another fan.
     </p>
 </div>,
   <div className="gd-step" style={{ '--fc': C.blue } as CSSProperties}>
@@ -49,7 +50,8 @@ const STEPS: ReactNode[] = [
       </div>
     </div>
     <p>
-      <b>2</b> It’s sealed and dropped in one shared mailbox, with no name on it unless you sign it.
+      <span className="gd-num">Step 2</span>
+      It’s sealed and dropped in one shared mailbox, with no name on it unless you sign it.
     </p>
 </div>,
   <div className="gd-step" style={{ '--fc': C.green } as CSSProperties}>
@@ -66,10 +68,20 @@ const STEPS: ReactNode[] = [
       </div>
     </div>
     <p>
-      <b>3</b> Anyone who checks the mail might get yours, and you can open one too.
+      <span className="gd-num">Step 3</span>
+      Anyone who checks the mail might get yours, and you can open one too.
     </p>
 </div>,
 ]
+// the header's group shot: Mitsumi up front, friends behind her (right edge in px, width, drop from the top)
+const CAST = [
+  { id: 'makoto', right: 104, w: 74, top: 30 },
+  { id: 'mika', right: -24, w: 74, top: 32 },
+  { id: 'shima', right: 64, w: 88, top: 12 },
+  { id: 'yuzuki', right: -6, w: 86, top: 22 },
+  { id: 'mitsumi', right: 24, w: 100, top: 20 },
+]
+
 const SLIDES: { node: ReactNode; secs: number }[] = [
   ...STEPS.map((node) => ({ node, secs: 5 })),
   { node: <GoodBox />, secs: 6.8 },
@@ -93,16 +105,14 @@ export function Guide() {
   return (
     <aside className="msg-guide" data-safe="">
       <div className="gd-hero">
-        <span className="gd-hero-char" style={{ backgroundImage: `url(${FACES.mitsumi.src})` }} />
-        <span className="gd-float gd-f1">
-          <Icon name="envelope" color={C.pink} size={30} />
-        </span>
-        <span className="gd-float gd-f2">
-          <Icon name="heart" color="#fff" size={20} />
-        </span>
-        <span className="gd-float gd-f3">
-          <Icon name="sakura" color="#fff" size={22} />
-        </span>
+        {CAST.map((c) => (
+          <span
+            key={c.id}
+            className={`gd-hero-char${c.id === 'mitsumi' ? ' is-lead' : ''}`}
+            style={{ backgroundImage: `url(/characters/${c.id}.png)`, right: c.right, width: c.w, top: c.top }}
+          />
+        ))}
+        <i className="gd-tape" />
         <h3>How it works</h3>
       </div>
 
@@ -114,13 +124,13 @@ export function Guide() {
 
       <div className="gd-nav">
         <button className="gd-arrow is-prev" onClick={() => go(at - 1, -1)} aria-label="Previous">
-          <Icon name="chev" color={C.ink} size={18} />
+          <Icon name="chev" color={C.pink} size={18} />
         </button>
         <div className="gd-dots">
           {SLIDES.map((sl, i) => (
             <button
               key={i}
-              className={`gd-dot${i === at ? ' is-on' : ''}`}
+              className={`gd-dot${i === at ? ' is-on' : i < at ? ' is-done' : ''}`}
               onClick={() => i !== at && go(i, i > at ? 1 : -1)}
               aria-label={`Show part ${i + 1} of ${SLIDES.length}`}
               aria-current={i === at ? 'step' : undefined}
@@ -131,7 +141,7 @@ export function Guide() {
           ))}
         </div>
         <button className="gd-arrow" onClick={() => go(at + 1, 1)} aria-label="Next">
-          <Icon name="chev" color={C.ink} size={18} />
+          <Icon name="chev" color={C.pink} size={18} />
         </button>
       </div>
 

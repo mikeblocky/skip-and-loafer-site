@@ -1,4 +1,4 @@
-import { VOLUMES } from '../data'
+import { C, VOLUMES } from '../data'
 import { VolumeCards } from './VolumeCards'
 import { FlexText } from './FlexText'
 
@@ -8,8 +8,7 @@ export function Volumes({ hidden, onOpen }: { hidden: number | null; onOpen: (i:
       <FlexText
         as="h2"
         className="vol-title"
-        offset={1}
-        words={[{ t: 'Volumes', w: 900 }]}
+        words={[{ t: 'Volumes', w: 760, c: C.blue }]}
         data-intro="ui"
         data-safe=""
       >

@@ -10,6 +10,8 @@ import { Poll } from './Poll'
 import { Quiz } from './Quiz'
 
 const COLORS: Record<SecretId, string> = { gacha: C.pink, skip: C.orange, poll: C.red, quiz: C.blue }
+// title words take turns through these, starting at the secret's own colour
+const TITLE_INKS: string[] = [C.pink, C.orange, C.blue, C.green, C.violet, C.red]
 
 /**
  * Same family as the volume viewer: the page blurs behind paper, a round × sits in the corner,
@@ -34,7 +36,11 @@ function Overlay({ info, onClose, children }: { info: SecretInfo; onClose: () =>
         <Icon name="close" color={C.ink} size={22} />
       </button>
       <div className={`sx-panel${info.id === 'skip' ? ' is-wide' : ''}`}>
-        <FlexText as="h2" className="sx-title" offset={info.id.length} words={info.title.split(' ').map((t) => ({ t, w: 900 }))} />
+        <FlexText as="h2" className="sx-title" words={info.title.split(' ').map((t, i) => ({
+            t,
+            w: 760,
+            c: TITLE_INKS[(TITLE_INKS.indexOf(COLORS[info.id]) + i) % TITLE_INKS.length],
+          }))} />
         <div className="sx-body">{children}</div>
       </div>
     </div>

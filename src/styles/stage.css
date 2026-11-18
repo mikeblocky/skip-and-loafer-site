@@ -56,6 +56,11 @@
 .floaty svg {
   display: block;
 }
+/* stickers come in many sizes; draw them all with the same line so the sheet reads as one set */
+.floaty svg * {
+  vector-effect: non-scaling-stroke;
+  stroke-width: 3.5px;
+}
 .char-inner {
   width: 100%;
   height: 100%;

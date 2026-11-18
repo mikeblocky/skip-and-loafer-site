@@ -63,7 +63,8 @@ export function Sheet({
       </span>
       <div className="lt-head">
         Dear stranger,
-        {date && <span className="lt-date">{date}</span>}
+        {/* the space is for copying; it takes no room on the page */}
+        {date && <span className="lt-date"><span className="lt-gap"> </span>{date}</span>}
       </div>
       {children ?? (
         <>
@@ -77,11 +78,16 @@ export function Sheet({
   )
 }
 
-/** The sheet cut into thirds so the top and bottom can fold over the middle. */
-export function Folding({ sheet }: { sheet: ReactNode }) {
+/**
+ * The sheet cut into thirds so the top and bottom can fold over the middle. Each third holds a
+ * whole copy of the sheet, so once it lies flat (`selectable`) one invisible copy is laid over
+ * all three: selecting reads like a highlighter on the paper and copies the letter just once.
+ */
+export function Folding({ sheet, selectable = false }: { sheet: ReactNode; selectable?: boolean }) {
   // middle first: the bottom folds over it, then the top over both
   return (
     <div className="lt">
+      {selectable && <div className="lt-copy">{sheet}</div>}
       {[1, 2, 0].map((i) => (
         <div key={i} className={`lt-p lt-p${i}`}>
           <div className="lt-face lt-front">

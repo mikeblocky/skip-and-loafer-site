@@ -310,3 +310,47 @@
 .seal-r {
   clip-path: polygon(54% 0, 100% 0, 100% 100%, 52% 100%, 46% 74%, 56% 50%, 47% 28%);
 }
+
+/* the thirds are pictures of the page; the copy laid over them is what you select */
+.lt-p {
+  -webkit-user-select: none;
+  user-select: none;
+}
+.lt-gap {
+  font-size: 0;
+  white-space: pre;
+}
+.lt-copy {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+}
+.lt-copy .lt-sheet {
+  background: none;
+  box-shadow: none;
+}
+.lt-copy .lt-stamp {
+  visibility: hidden;
+}
+.lt-copy,
+.lt-copy * {
+  color: transparent !important;
+}
+/* a highlighter pass over the handwriting underneath */
+.lt-copy ::selection {
+  background: color-mix(in srgb, var(--yellow) 42%, transparent);
+  color: transparent;
+}
+
+/* confetti and sparkles from the send and unbox animations */
+.fx-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+  pointer-events: none;
+  overflow: hidden;
+}
+.fx-layer i {
+  position: absolute;
+  will-change: transform, opacity;
+}

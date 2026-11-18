@@ -12,10 +12,14 @@ export const FACES = {
   mika: { src: '/characters/mika.png', x: 0.49, y: 0.13 },
 } as const
 
-/** Head-and-shoulders crop of a character, for the step scenes. */
+// the art is 900×1950; .gd-bust shows it 211px tall, so it is this wide and the box is 96px
+const BUST_ART_W = (211 * 900) / 1950
+const BUST_BOX_W = 96
+
+/** Head-and-shoulders crop of a character, for the step scenes: face centred, shoulders kept whole. */
 export const bust = (who: keyof typeof FACES): CSSProperties => ({
   backgroundImage: `url(${FACES[who].src})`,
-  backgroundPosition: `${((FACES[who].x * 1.5 - 0.5) / 0.5) * 100}% 0`,
+  backgroundPosition: `${(BUST_BOX_W / 2 - FACES[who].x * BUST_ART_W).toFixed(1)}px 0`,
 })
 
 /** The sealed envelope from step 2, small: the same pink, flap outline and seal. */
@@ -23,7 +27,7 @@ export function MiniMail() {
   return (
     <svg className="mini-mail" viewBox="0 0 84 52" aria-hidden="true">
       <rect width="84" height="52" rx="6" fill={C.pink} />
-      <path d="M0 0 H84 L45 27 Q42 29 39 27 Z" fill="#ff5aa8" stroke="#fff" strokeWidth="3" strokeLinejoin="round" paintOrder="stroke" />
+      <path d="M0 0 H84 L45 27 Q42 29 39 27 Z" fill="#F8629E" stroke="#fff" strokeWidth="3" strokeLinejoin="round" paintOrder="stroke" />
       <circle cx="42" cy="26" r="8" fill={C.yellow} />
       <circle cx="42" cy="26" r="5" fill="none" stroke="#fff" strokeWidth="1.6" />
     </svg>

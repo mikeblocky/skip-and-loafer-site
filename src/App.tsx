@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { gsap } from './gsap'
-import { CHARACTERS, RAINBOW } from './data'
+import { C, CHARACTERS, RAINBOW } from './data'
 import { Stage, type StageHandle, type Mode } from './components/Stage'
 import { Countdown } from './components/Countdown'
 import { Volumes } from './components/Volumes'
@@ -244,11 +244,10 @@ export default function App() {
       <FlexText
         as="div"
         className="wordmark"
-        offset={3}
         words={[
-          { t: 'Skip', w: 900 },
-          { t: 'and', w: 300, oblique: true },
-          { t: 'Loafer', w: 900 },
+          { t: 'Skip', w: 900, c: C.pink },
+          { t: 'and', w: 300, oblique: true, c: C.orange },
+          { t: 'Loafer', w: 900, c: C.blue },
         ]}
       />
       <Bookmarks view={view} onSelect={onNav} />
@@ -269,7 +268,7 @@ export default function App() {
       {ready && <Secrets />}
 
       <div className="wipe" aria-hidden="true">
-        {['#FF2E93', '#FFC400', '#1F6BFF', '#00C46A', '#7B2FFF', '#FF6B00'].map((c) => (
+        {['#F53D84', '#FBBA14', '#246BE8', '#12B266', '#7A45E0', '#F86E1A'].map((c) => (
           <i key={c} style={{ background: c }} />
         ))}
       </div>

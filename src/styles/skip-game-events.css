@@ -7,8 +7,8 @@
 .sg-field.is-won {
   box-shadow:
     var(--shadow-2),
-    0 0 0 3px rgb(255 196 0 / 0.5),
-    0 0 40px rgb(255 196 0 / 0.25);
+    0 0 0 3px rgb(251 186 20 / 0.5),
+    0 0 40px rgb(251 186 20 / 0.25);
 }
 /* break time: a soft calm wash over the paper, and a badge in the HUD */
 .sg-field::after {
@@ -125,7 +125,7 @@
 }
 .sg-field.tw-moon .sg-player img,
 .sg-field.tw-moon .sg-friend img {
-  filter: drop-shadow(0 0 7px rgb(160 190 255 / 0.95));
+  filter: var(--outline) drop-shadow(0 0 7px rgb(160 190 255 / 0.95));
 }
 .sg-field.tw-rush .sg-doodles,
 .sg-field.tw-rush .sg-floor {

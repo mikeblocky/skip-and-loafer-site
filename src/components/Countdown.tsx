@@ -17,19 +17,16 @@ function useNow() {
   return now
 }
 
-// only deep, saturated tones so every digit stays white
-const BLOCKS = [C.pink, C.blue, C.orange, C.green, C.violet, C.red, C.magenta, C.indigo, C.amber, C.teal]
-const pick = (not?: string) => {
-  let c = not
-  while (c === not) c = BLOCKS[Math.floor(Math.random() * BLOCKS.length)]
-  return c!
-}
+// fridge-magnet numbers: every digit always wears the same colour. Consecutive digits sit
+// three steps apart on the wheel so a ticking block never flips to a near-identical hue.
+const WHEEL = [C.pink, C.orange, C.amber, C.green, C.teal, C.sky, C.blue, C.indigo, C.violet, C.magenta]
+const digitColor = (d: string) => WHEEL[(Number(d) * 3) % WHEEL.length] ?? C.ink
 
 /** One digit on a coloured block. Every change flips a fresh block down over the old one. */
 export function Block({ d, quiet = false }: { d: string; quiet?: boolean }) {
-  const [s, set] = useState(() => ({ d, k: 0, c: pick(), prev: null as null | { d: string; c: string } }))
+  const [s, set] = useState(() => ({ d, k: 0, c: digitColor(d), prev: null as null | { d: string; c: string } }))
   useLayoutEffect(() => {
-    set((p) => (p.d === d ? p : { d, k: p.k + 1, c: pick(p.c), prev: { d: p.d, c: p.c } }))
+    set((p) => (p.d === d ? p : { d, k: p.k + 1, c: digitColor(d), prev: { d: p.d, c: p.c } }))
   }, [d])
   // the clack lands with the flip, slightly different every time
   const first = useRef(true)
@@ -99,12 +96,12 @@ const fmt = (t: number, tz?: string) =>
 
 const HEAD: Word[] = [
   { t: 'Next', w: 900, c: C.pink },
-  { t: 'chapter', w: 320, oblique: true, c: C.blue },
+  { t: 'chapter', w: 320, oblique: true, c: C.teal },
   ...(NEXT_CHAPTER_NUMBER !== null ? [{ t: String(NEXT_CHAPTER_NUMBER), w: 900, c: C.orange }] : []),
-  { t: 'will', w: 640, c: C.orange },
-  { t: 'be', w: 420, oblique: true, c: C.violet },
+  { t: 'will', w: 640, c: C.blue },
+  { t: 'be', w: 420, oblique: true, c: C.red },
   { t: 'released', w: 760, c: C.green },
-  { t: 'in', w: 900, c: C.red },
+  { t: 'in', w: 900, c: C.violet },
 ]
 
 export function Countdown() {

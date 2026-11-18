@@ -2,14 +2,14 @@
 .gd-box {
   margin: 0;
   overflow: hidden;
-  border-radius: 18px;
-  background: color-mix(in oklab, var(--fc), #fff 90%);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--fc), #fff 92%);
 }
 .gd-box h4 {
   margin: 0;
   padding: 10px 14px 8px;
   font-size: 16px;
-  font-weight: 900;
+  font-weight: 750;
 }
 .gd-box.is-ok h4 {
   color: color-mix(in oklab, var(--green), var(--ink) 30%);
@@ -84,7 +84,7 @@
 
 /* good scene: Yuzuki and a letter filling up */
 .gb-bust {
-  left: 20px;
+  left: 5px;
 }
 .gb-paper {
   position: absolute;
@@ -160,7 +160,7 @@
   top: 4px;
 }
 .bb-bust {
-  left: 192px;
+  left: 177px;
 }
 .bb-tile {
   position: absolute;
@@ -200,44 +200,53 @@
 .gd-arrow {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #f4f0e8;
-  transition:
-    background var(--t-hover) var(--soft),
-    scale var(--t-hover) var(--spring);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  transition: background var(--t-hover) var(--soft);
 }
 .gd-arrow:hover {
-  background: #ebe5d9;
-  scale: 1.08;
+  background: #f4f0e8;
 }
 .gd-arrow:active {
-  scale: 0.94;
+  background: #ebe5d9;
 }
 .gd-arrow.is-prev svg {
   rotate: 180deg;
 }
+/* one segment per part, filling like a progress line while it plays */
 .gd-dots {
+  flex: 1;
   display: flex;
-  gap: 6px;
+  gap: 4px;
 }
 .gd-dot {
   position: relative;
-  width: 9px;
-  height: 9px;
+  flex: 1;
+  height: 16px;
   overflow: hidden;
-  border-radius: 5px;
-  background: #e2dcd0;
-  transition: width 0.35s var(--soft);
 }
-.gd-dot.is-on {
-  width: 30px;
+.gd-dot::before,
+.gd-dot b {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 6px;
+  height: 4px;
+  border-radius: 2px;
+}
+.gd-dot::before {
+  background: #ebe5da;
+  transition: background var(--t-hover) var(--soft);
+}
+.gd-dot.is-done::before {
+  background: color-mix(in oklab, var(--pink), #fff 45%);
+}
+.gd-dot:hover::before {
+  background: #e0d8c9;
 }
 .gd-dot b {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
   background: var(--pink);
   transform-origin: 0 50%;
   animation: gd-fill linear both;
@@ -265,11 +274,6 @@
   padding: 14px 20px 18px;
   font-size: 13px;
   color: var(--muted);
-}
-@media (prefers-reduced-motion: reduce) {
-  .gd-float {
-    animation: none;
-  }
 }
 
 /* buttons */
@@ -299,12 +303,12 @@
 }
 .msg-btn:disabled {
   background: #e6e1ec;
-  color: #a39cba;
+  color: #A49C8E;
   box-shadow: none;
   cursor: not-allowed;
 }
-.msg-btn:disabled svg * {
-  fill: #a39cba;
+.msg-btn:disabled svg {
+  stroke: #A49C8E;
 }
 .msg-btn.is-ghost {
   background: #fff;

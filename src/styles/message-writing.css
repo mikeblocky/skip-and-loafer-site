@@ -100,8 +100,8 @@
   background: color-mix(in oklab, var(--et), #fff 62%);
   color: #fff;
 }
-.wr-send:disabled svg * {
-  fill: #fff;
+.wr-send:disabled svg {
+  stroke: #fff;
 }
 .wr-stats {
   margin: -2px 0 0;

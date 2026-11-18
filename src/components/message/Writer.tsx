@@ -8,6 +8,7 @@ import { cleanSigner, cleanText, LETTER_MAX, LETTER_MIN, NAME_MAX, problem, safe
 import { ANON, clientId, post, remember, store } from './mail'
 import { dateOf, PAPER, paper, reduced, vars, type Geo } from './geometry'
 import { Envelope, Folding, parts, Sheet, turn } from './Paper'
+import { centre, confetti } from './confetti'
 
 type WritePhase = 'compose' | 'sending' | 'sent'
 
@@ -90,6 +91,12 @@ export function Writer({ g, onSent, onOpen, stats }: { g: Geo; onSent: () => voi
     t.to(seal, { scaleX: 1.14, scaleY: 0.88, duration: 0.08, ease: 'power2.out' }, 4.27)
     t.to(seal, { scaleX: 1, scaleY: 1, duration: 0.6, ease: 'elastic.out(1, 0.45)' }, 4.35)
     t.to(el, { scale: 0.985, duration: 0.08, yoyo: true, repeat: 1 }, 4.27)
+    // a little puff of paper as the wax goes on (not when a refusal rewinds past it)
+    t.call(() => {
+      if (t.reversed()) return
+      const p = centre(seal)
+      confetti(p.x, p.y, { n: 14, spread: 170, reach: 80, colors: [color, C.yellow, C.pink, C.blue] })
+    }, [], 4.27)
     t.addLabel('sealed', 4.75)
     // waits here, sealed, until the post office has the letter
     let ok: boolean | null = null
@@ -127,6 +134,13 @@ export function Writer({ g, onSent, onOpen, stats }: { g: Geo; onSent: () => voi
     t.to(el, { y: () => -window.innerHeight * 0.85, duration: 1.15, ease: 'power2.in' }, 'sealed+=0.28')
     t.to(el, { rotation: 24, scale: 0.22, duration: 1.15, ease: 'power1.in' }, 'sealed+=0.28')
     t.to(el, { autoAlpha: 0, duration: 0.3 }, 'sealed+=1.1')
+    // it leaves a trail of sparkles behind it
+    for (let i = 0; i < 12; i++) {
+      t.call(() => {
+        const p = centre(seal)
+        confetti(p.x, p.y, { n: 3, spread: 360, reach: 16, size: 5, fall: 26, duration: 0.8, shape: 'dot', colors: [color, C.yellow] })
+      }, [], `sealed+=${(0.34 + i * 0.07).toFixed(2)}`)
+    }
     t.call(() => {
       setSentAt(Date.now())
       setPhase('sent')
@@ -244,7 +258,11 @@ function Sent({ at, onAgain, onOpen }: { at: number; onAgain: () => void; onOpen
     const q = gsap.utils.selector(ref)
     const t = gsap.timeline()
     t.from(q('.pm'), { scale: 2.4, autoAlpha: 0, rotation: -40, duration: 0.32, ease: 'power3.in' })
-    t.call(() => sfx.stamp())
+    t.call(() => {
+      sfx.stamp()
+      const p = centre(q('.pm')[0])
+      confetti(p.x, p.y, { n: 22, spread: 200, reach: 130, size: 8 })
+    })
     t.to(q('.pm'), { scale: 1.06, duration: 0.07, yoyo: true, repeat: 1 })
     t.from(q('.pm-waves path'), { scaleX: 0, transformOrigin: '0% 50%', duration: 0.4, stagger: 0.06, ease: 'power2.out' }, '-=0.05')
     t.from(q('.sent > :not(.pm-wrap)'), { autoAlpha: 0, y: 20, duration: 0.5, stagger: 0.07, ease: 'back.out(1.4)' }, '-=0.2')
@@ -272,7 +290,7 @@ function Sent({ at, onAgain, onOpen }: { at: number; onAgain: () => void; onOpen
           Write another
         </button>
         <button className="msg-btn is-ghost" onClick={onOpen}>
-          <Icon name="envelope" color={C.ink} size={22} />
+          <Icon name="envelope" color={C.red} size={22} />
           Open a letter
         </button>
       </div>

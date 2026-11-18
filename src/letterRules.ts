@@ -11,11 +11,23 @@ export const LETTER_MAX = 500
 export const LETTER_MIN = 8
 export const NAME_MAX = 16
 
-export const STATIONERY = ['#FF2E93', '#1F6BFF', '#FFC400', '#00C46A', '#FF6B00', '#7B2FFF'] as const
+export const STATIONERY = ['#F53D84', '#246BE8', '#FBBA14', '#12B266', '#F86E1A', '#7A45E0'] as const
+
+/** The papers' colours before the palette was retuned; letters stored back then still carry them. */
+const LEGACY: Record<string, string> = {
+  '#FF2E93': STATIONERY[0],
+  '#1F6BFF': STATIONERY[1],
+  '#FFC400': STATIONERY[2],
+  '#00C46A': STATIONERY[3],
+  '#FF6B00': STATIONERY[4],
+  '#7B2FFF': STATIONERY[5],
+}
 
 /** Only ever one of the six papers: a colour from storage or the network never reaches CSS as-is. */
 export const safeColor = (c: unknown): string =>
-  STATIONERY.includes(c as (typeof STATIONERY)[number]) ? (c as string) : STATIONERY[0]
+  STATIONERY.includes(c as (typeof STATIONERY)[number])
+    ? (c as string)
+    : (typeof c === 'string' && LEGACY[c.toUpperCase()]) || STATIONERY[0]
 
 const INVISIBLE = /[\p{Cf}\p{Zl}\p{Zp}]|[\u0000-\u0009\u000B-\u001F\u007F-\u009F]/gu
 

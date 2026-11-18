@@ -1,37 +1,31 @@
 /* the three steps, each a small looping scene */
 .gd-step {
   overflow: hidden;
-  border-radius: 18px;
-  background: color-mix(in oklab, var(--fc), #fff 90%);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--fc), #fff 92%);
 }
 .gd-step p {
   margin: 0;
-  padding: 8px 14px 12px;
+  padding: 10px 14px 13px;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.45;
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 500;
 }
-.gd-step p b {
-  display: inline-grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  margin-right: 4px;
-  border-radius: 50%;
-  background: var(--fc);
-  color: #fff;
+.gd-num {
+  display: block;
+  margin-bottom: 2px;
   font-size: 12px;
-  font-weight: 900;
-  vertical-align: 1px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--fc), var(--ink) 25%);
 }
 .gd-scene {
   position: relative;
   height: 104px;
   overflow: hidden;
-  background:
-    radial-gradient(circle, color-mix(in oklab, var(--fc), #fff 70%) 1.6px, transparent 2.2px) 0 0 / 14px 14px,
-    color-mix(in oklab, var(--fc), #fff 80%);
+  background: color-mix(in oklab, var(--fc), #fff 80%);
 }
 .gd-scene * {
   animation-duration: 4.8s;
@@ -48,16 +42,16 @@
 .gd-bust {
   position: absolute;
   bottom: 0;
-  width: 66px;
+  width: 96px;
   height: 96px;
   background-repeat: no-repeat;
-  background-size: 150% auto;
+  background-size: auto 211px;
   filter: drop-shadow(0 3px 4px rgb(29 27 44 / 0.2));
 }
 
 /* scene 1: writing */
 .s1-bust {
-  left: 22px;
+  left: 7px;
 }
 .s1-paper {
   position: absolute;
@@ -200,7 +194,7 @@
   animation-name: s2-flap;
 }
 .s2-flap path {
-  fill: #ff5aa8;
+  fill: #F8629E;
   stroke: #fff;
   stroke-width: 3px;
   stroke-linejoin: round;
@@ -323,7 +317,7 @@
   92%, 100% { translate: 128px 22px; scale: 0.9; rotate: -8deg; opacity: 0; }
 }
 .s3-bust {
-  left: 176px;
+  left: 161px;
   animation-name: s3-bust;
 }
 @keyframes s3-bust {

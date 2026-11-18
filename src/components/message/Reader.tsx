@@ -8,6 +8,7 @@ import { safeColor } from '../../letterRules'
 import { ANON, api, clientId, post, remember, store, type Letter } from './mail'
 import { dateOf, paper, reduced, vars, type Geo } from './geometry'
 import { Envelope, Folding, parts, Sheet, turn } from './Paper'
+import { centre, confetti } from './confetti'
 
 type ReadPhase = 'idle' | 'checking' | 'arrived' | 'opening' | 'read' | 'empty' | 'error'
 
@@ -128,7 +129,14 @@ export function Reader({ g, total, onChange, onWrite }: { g: Geo; total: number 
     t.to(el, { scale: 1, rotation: tilt + 8, duration: 0.85, ease: 'power2.inOut' }, 0.72)
     t.to(q('.mbox'), { y: 70, autoAlpha: 0, duration: 0.5, ease: 'power2.in' }, 0.9)
     // lands, skids a little, settles
-    t.call(() => sfx.thud(), [], 1.57)
+    t.call(() => {
+      sfx.thud()
+      // a puff of dust off the desk at both ends
+      const { r } = centre(q('.env-front')[0] ?? el)
+      const dust = { n: 5, spread: 40, reach: 34, size: 5, fall: -6, duration: 0.6, shape: 'dot' as const, colors: ['#e2dcd0', '#ebe5da'] }
+      confetti(r.left + 6, r.bottom - 4, { ...dust, angle: 190 })
+      confetti(r.right - 6, r.bottom - 4, { ...dust, angle: -10 })
+    }, [], 1.57)
     t.to(el, { scaleY: 0.95, scaleX: 1.03, rotation: tilt, duration: 0.09, ease: 'power2.out' }, 1.57)
     t.to(el, { scaleY: 1, scaleX: 1, duration: 0.7, ease: 'elastic.out(1, 0.5)' }, 1.66)
     t.to(el, { x: tilt * 3, duration: 0.5, ease: 'power3.out' }, 1.57)
@@ -144,16 +152,27 @@ export function Reader({ g, total, onChange, onWrite }: { g: Geo; total: number 
     const el = root.current!
     const q = gsap.utils.selector(el)
     const { holder, env, flap } = parts(el)
+    const color = letter?.color ?? C.pink
     const t = keep(gsap.timeline())
     t.to(mq()('.rx-hint'), { autoAlpha: 0, duration: 0.2 }, 0)
     t.to(el, { rotation: 0, x: 0, duration: 0.5, ease: 'power2.out' }, 0)
     // wax gives way
     t.to(q('.env-seal'), { x: -2, duration: 0.05, yoyo: true, repeat: 3 }, 0.15)
-    t.call(() => sfx.crack(), [], 0.35)
+    t.call(() => {
+      sfx.crack()
+      // wax crumbs
+      const p = centre(q('.env-seal')[0])
+      confetti(p.x, p.y, { n: 7, angle: 90, spread: 100, reach: 26, size: 4, fall: 46, duration: 0.8, shape: 'dot', colors: [color] })
+    }, [], 0.35)
     t.to(q('.seal-l'), { x: -22, y: 90, rotation: -50, autoAlpha: 0, duration: 0.75, ease: 'power2.in' }, 0.36)
     t.to(q('.seal-r'), { x: 18, y: 110, rotation: 40, autoAlpha: 0, duration: 0.8, ease: 'power2.in' }, 0.38)
     // flap lifts; once past upright it's behind the letter
-    t.call(() => sfx.fold(0), [], 0.6)
+    t.call(() => {
+      sfx.fold(0)
+      // something good is in here
+      const { r } = centre(q('.env-front')[0])
+      confetti(r.left + r.width / 2, r.top + 4, { n: 18, spread: 90, reach: 100, size: 8 })
+    }, [], 0.6)
     t.to(flap, { rotationX: 180, duration: 0.6, ease: 'power2.out' }, 0.55)
     t.set(flap, { zIndex: 0 }, 0.72)
     // letter drawn out of the pocket
@@ -170,7 +189,14 @@ export function Reader({ g, total, onChange, onWrite }: { g: Geo; total: number 
     t.call(() => sfx.fold(0.1), [], 3.7)
     turn(t, q('.lt-p2')[0], 0, 3.55, 0.75)
     t.fromTo(q('.lt'), { scale: 1 }, { scale: 1.02, duration: 0.15, yoyo: true, repeat: 1, ease: 'power1.inOut' }, 4.3)
-    t.call(() => sfx.chime(1.2, 0.5), [], 4.3)
+    t.call(() => {
+      sfx.chime(1.2, 0.5)
+      // and it's open: a burst from each side, clear of the writing
+      const { r } = centre(q('.lt')[0])
+      const side = { n: 16, spread: 70, reach: 120, size: 8, fall: 60 }
+      confetti(r.left, r.top + r.height * 0.3, { ...side, angle: -150 })
+      confetti(r.right, r.top + r.height * 0.3, { ...side, angle: -30 })
+    }, [], 4.3)
     t.call(() => setPhase('read'), [], 4.35)
     if (reduced()) t.timeScale(3)
   }
@@ -225,7 +251,10 @@ export function Reader({ g, total, onChange, onWrite }: { g: Geo; total: number 
           >
             <Envelope label={letter.mine ? 'your own letter' : `from ${letter.from || ANON}`} icon={paper(letter.color).icon} />
             <div className="lt-holder">
-              <Folding sheet={<Sheet icon={paper(letter.color).icon} text={letter.text} from={letter.from} date={dateOf(letter.at)} />} />
+              <Folding
+                selectable={phase === 'read'}
+                sheet={<Sheet icon={paper(letter.color).icon} text={letter.text} from={letter.from} date={dateOf(letter.at)} />}
+              />
             </div>
           </div>
         )}
@@ -275,7 +304,7 @@ export function Reader({ g, total, onChange, onWrite }: { g: Geo; total: number 
                 Open another
               </button>
               <button className="msg-btn is-ghost" onClick={onWrite}>
-                <Icon name="pencil" color={C.ink} size={22} />
+                <Icon name="pencil" color={C.orange} size={22} />
                 Write one back
               </button>
             </div>

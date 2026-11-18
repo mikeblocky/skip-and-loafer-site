@@ -53,7 +53,7 @@
 }
 .gate-quiet {
   font-size: 15px;
-  font-weight: 750;
+  font-weight: 600;
   color: var(--muted);
   padding: 6px 12px;
   border-radius: 999px;

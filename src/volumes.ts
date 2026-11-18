@@ -49,22 +49,22 @@ export const VOLUMES: Volume[] = [
   { n: 15, src: null, chapters: [85], inProgress: true, icon: 'gradcap' },
 ]
 
-/** Vivid per-volume colours, hue-matched to each cover. Volume 14 uses its sampled cover colour. */
+/** Per-volume colours, hue-matched to each cover. Volume 14 uses its sampled cover colour. */
 export const VOL_COLORS: Record<number, string> = {
-  1: '#FF2E93', // pink
-  2: '#FF9500', // peach-yellow → amber
-  3: '#00C46A', // green
-  4: '#7B2FFF', // lavender → violet
-  5: '#FF2850', // red
-  6: '#1F6BFF', // blue
-  7: '#FF4F6E', // peach-pink → coral
-  8: '#0091FF', // yellow-blue → azure
-  9: '#2DB800', // green-red → leaf
-  10: '#3D3BFF', // blue-lavender → indigo
-  11: '#E0179A', // pink → raspberry
-  12: '#00A6A6', // peach-green → teal
-  13: '#B620E0', // lavender → orchid
-  15: '#FF6B00', // in progress → orange
+  1: '#F53D84', // pink
+  2: '#F5900F', // peach-yellow → amber
+  3: '#12B266', // green
+  4: '#7A45E0', // lavender → violet
+  5: '#F0344F', // red
+  6: '#246BE8', // blue
+  7: '#F85A66', // peach-pink → coral
+  8: '#1B88E8', // yellow-blue → azure
+  9: '#4CB41A', // green-red → leaf
+  10: '#3F44D6', // blue-lavender → indigo
+  11: '#DE2A8E', // pink → raspberry
+  12: '#0EA09E', // peach-green → teal
+  13: '#AC3DD4', // lavender → orchid
+  15: '#F86E1A', // in progress → orange
 }
 
 export const CHAPTERS: Chapter[] = [
