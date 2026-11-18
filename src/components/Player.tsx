@@ -242,16 +242,43 @@ export function Player({ src, poster, kind, title, titleJp, artist, artistJp, co
                   }
                 >
                   <span className="pl-jp" lang="ja" aria-label={c.jp}>
-                    {chars.map((ch, j) => (
-                      <span
-                        key={j}
-                        aria-hidden="true"
-                        style={{ '--i': j } as CSSProperties}
-                        className={`pl-k${ch === ' ' ? ' is-gap' : ''}${j < k ? ' is-sung' : ''}${i === cue && j === k - 1 && k < chars.length + 1 ? ' is-now' : ''}`}
-                      >
-                        {ch}
-                      </span>
-                    ))}
+                    {(() => {
+                      const char = (j: number) => (
+                        <span
+                          key={j}
+                          aria-hidden="true"
+                          style={{ '--i': j } as CSSProperties}
+                          className={`pl-k${chars[j] === ' ' ? ' is-gap' : ''}${j < k ? ' is-sung' : ''}${i === cue && j === k - 1 && k < chars.length + 1 ? ' is-now' : ''}`}
+                        >
+                          {chars[j]}
+                        </span>
+                      )
+                      // kanji words sit in a <ruby> with their reading on top; each character
+                      // inside still lights up on its own, so the sweep doesn't change
+                      const out = []
+                      for (let j = 0; j < chars.length; ) {
+                        const r = c.ruby?.find(([at]) => at === j)
+                        if (!r) {
+                          out.push(char(j++))
+                          continue
+                        }
+                        const [at, len, reading] = r
+                        const base = []
+                        for (let x = at; x < at + len; x++) base.push(char(x))
+                        out.push(
+                          <ruby key={`r${at}`} className="pl-rb" aria-hidden="true">
+                            {base}
+                            <rt
+                              className={`${at < k ? 'is-sung' : ''}${i === cue && k - 1 >= at && k - 1 < at + len ? ' is-now' : ''}` || undefined}
+                            >
+                              {reading}
+                            </rt>
+                          </ruby>,
+                        )
+                        j = at + len
+                      }
+                      return out
+                    })()}
                   </span>
                   <span className="pl-en">{c.en}</span>
                 </p>
