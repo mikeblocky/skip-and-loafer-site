@@ -198,7 +198,11 @@
   top: 16px;
   z-index: 6;
   translate: -50% 0;
+  /* left: 50% would leave only half the field to grow into, so even short call-outs wrapped;
+     size to the words instead, wrapping (balanced) only past the field's width */
+  width: max-content;
   max-width: calc(100% - 32px);
+  text-wrap: balance;
   padding: 7px 16px 8px;
   border-radius: 999px;
   background: var(--c);
@@ -379,6 +383,14 @@
     flex-wrap: wrap;
     justify-content: center;
     pointer-events: none;
+  }
+  /* the power-up timers sit at the top of the field here (up to two rows), so call-outs go
+     just below them instead of on top of them; a touch smaller so most fit on one line */
+  .sg-shout {
+    top: 80px;
+    padding: 5px 13px 6px;
+    font-size: 13.5px;
+    line-height: 1.25;
   }
   .sx-panel.is-wide .sg-field {
     border-radius: 18px;
