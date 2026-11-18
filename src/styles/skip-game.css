@@ -1,0 +1,392 @@
+/* skip minigame: a big notebook-paper field; the world inside is scaled as one piece */
+.sx-panel.is-wide {
+  width: min(1180px, 100%);
+}
+.sg-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 10px;
+  padding: 0 4px;
+  font-size: 15px;
+  color: var(--muted);
+  font-variation-settings: 'wght' 700, 'ROND' 100;
+  font-feature-settings: 'tnum';
+}
+.sg-hud b {
+  color: var(--ink);
+  font-size: 20px;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.sg-lives {
+  display: flex;
+  gap: 3px;
+}
+/* six dots fill in as friends join */
+.sg-gang {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.sg-gang i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px dashed #d6d0c4;
+  transition:
+    background 0.3s,
+    border-color 0.3s,
+    transform 0.4s var(--spring);
+}
+.sg-gang i.is-in {
+  border: 0;
+  background: var(--c);
+  transform: scale(1.15);
+}
+.sg-made {
+  margin-left: 4px;
+  padding: 2px 9px 3px;
+  border-radius: 999px;
+  background: var(--yellow);
+  color: var(--ink) !important;
+  font-size: 12px !important;
+  animation: info-in 0.5s var(--spring);
+}
+.sg-field {
+  --tint: #fff;
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--tint);
+  box-shadow: var(--shadow-2);
+  touch-action: none;
+  user-select: none;
+  cursor: pointer;
+  transition: background-color 2.5s ease;
+}
+.sg-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  /* the page's own paper lines (set per page from the game); the notebook look by default */
+  background-image: var(--page-lines, linear-gradient(var(--line) 1.5px, transparent 1.5px));
+  background-size: var(--page-size, 100% 30px);
+  background-position: 0 12px;
+}
+/* the pink margin line of a notebook page */
+.sg-world::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 34px;
+  width: 1.5px;
+  background: var(--page-margin, #ffc7e0);
+}
+.sg-field.is-hit {
+  animation: sg-shake 0.35s ease;
+}
+@keyframes sg-shake {
+  20% {
+    transform: translateX(-6px) rotate(-0.4deg);
+  }
+  50% {
+    transform: translateX(5px) rotate(0.3deg);
+  }
+  80% {
+    transform: translateX(-2px);
+  }
+}
+.sg-doodles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.sg-doodle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0.08;
+}
+/* a hand-drawn ink line for the road, scrolled from the game loop */
+.sg-floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--floor);
+  /* the page's road line (set per page from the game); the wavy ink line by default */
+  background-image: var(--page-floor, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='14' viewBox='0 0 120 14'%3E%3Cpath d='M0 7c10-2.5 20-2.5 30 0s20 2.5 30 0 20-2.5 30 0 20 2.5 30 0' fill='none' stroke='%231d1b2c' stroke-width='2.6' stroke-linecap='round'/%3E%3Cpath d='M14 13l3-3M52 13l3-3M88 13l4-3' stroke='%231d1b2c' stroke-opacity='.25' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"));
+  background-size: 120px 14px;
+  background-repeat: repeat-x;
+}
+.sg-player,
+.sg-friend {
+  position: absolute;
+  bottom: calc(var(--floor) - 8px);
+  z-index: 4;
+  will-change: transform;
+}
+.sg-player img,
+.sg-friend img {
+  display: block;
+  height: 100%;
+  transform-origin: 50% 100%;
+  pointer-events: none;
+}
+.sg-friend {
+  animation: sg-join 0.6s var(--spring) both;
+}
+@keyframes sg-join {
+  from {
+    opacity: 0;
+    translate: -40px 0;
+  }
+}
+.is-run .sg-player img,
+.is-run .sg-friend img {
+  animation: sg-bob 0.34s ease-in-out infinite alternate;
+}
+.is-run .sg-friend:nth-of-type(odd) img {
+  animation-delay: -0.17s;
+}
+.sg-player.is-hop img {
+  animation: sg-hop 0.42s var(--spring);
+}
+.sg-player.is-blink {
+  animation: sg-blink 0.16s steps(2) infinite;
+}
+@keyframes sg-bob {
+  to {
+    transform: translateY(-3px) rotate(2deg);
+  }
+}
+@keyframes sg-hop {
+  30% {
+    transform: scale(0.94, 1.08) rotate(-8deg);
+  }
+}
+@keyframes sg-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+.sg-thing {
+  position: absolute;
+  left: 0;
+  bottom: var(--floor);
+  z-index: 5;
+  opacity: 0;
+  will-change: transform;
+}
+.sg-thing svg {
+  display: block;
+}
+.sg-thing.is-star svg,
+.sg-thing.is-heart svg {
+  filter: drop-shadow(0 0 6px rgb(255 196 0 / 0.55));
+}
+.sg-thing.is-plane svg {
+  filter: drop-shadow(0 6px 0 rgb(29 27 44 / 0.12));
+}
+.sg-shout {
+  position: absolute;
+  left: 50%;
+  top: 16px;
+  z-index: 6;
+  translate: -50% 0;
+  max-width: calc(100% - 32px);
+  padding: 7px 16px 8px;
+  border-radius: 999px;
+  background: var(--c);
+  color: #fff;
+  font-size: 15px;
+  text-align: center;
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+  box-shadow: var(--shadow-1);
+  animation: info-in 0.4s var(--spring);
+}
+.is-won .sg-shout {
+  background: var(--yellow);
+  color: var(--ink);
+}
+.sg-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px;
+  background: rgb(255 253 247 / 0.72);
+  text-align: center;
+  animation: fade-in 0.3s ease both;
+}
+.sg-overlay b {
+  font-size: clamp(26px, 3.4vw, 40px);
+  color: var(--c);
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.sg-overlay span {
+  font-size: 16px;
+  font-variation-settings: 'wght' 700, 'ROND' 100;
+  text-wrap: balance;
+}
+.sg-overlay .sg-how {
+  color: var(--muted);
+  font-size: 14px;
+}
+.sg-save {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 2px;
+  cursor: default;
+}
+.sg-save input {
+  width: 190px;
+  height: 44px;
+  padding: 0 14px;
+  border: 2px solid color-mix(in oklab, var(--c), #fff 60%);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  font-variation-settings: 'wght' 750, 'ROND' 100;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.sg-save input:focus {
+  border-color: var(--c);
+}
+.sg-save .sx-btn {
+  height: 44px;
+}
+.sg-saved {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+}
+.sg-err {
+  flex-basis: 100%;
+  color: var(--red);
+  font-size: 13px !important;
+}
+
+/* power-ups: HUD timers, a soft glow on the pickups, and the clover's bubble */
+.sg-powers {
+  display: flex;
+  gap: 6px;
+  min-height: 26px;
+}
+.sg-power {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px 3px 6px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--c), #fff 82%);
+  color: color-mix(in oklab, var(--c), #000 20%);
+  font-size: 13px;
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+  font-feature-settings: 'tnum';
+  animation: info-in 0.4s var(--spring);
+}
+.sg-thing.is-power svg {
+  filter: drop-shadow(0 0 7px rgb(255 255 255 / 0.95)) drop-shadow(0 0 4px currentColor);
+  animation: sg-power 0.9s ease-in-out infinite alternate;
+}
+@keyframes sg-power {
+  to {
+    transform: scale(1.12) rotate(8deg);
+  }
+}
+.sg-player.is-shield::after {
+  content: '';
+  position: absolute;
+  inset: -14% -42% -6%;
+  border-radius: 50%;
+  border: 2.5px solid rgb(0 196 106 / 0.55);
+  background: radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.55), rgb(0 196 106 / 0.08) 60%);
+  animation: sg-bubble 1.2s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes sg-bubble {
+  to {
+    transform: scale(1.04);
+    border-color: rgb(0 196 106 / 0.8);
+  }
+}
+
+/* the golden 4th heart glows while it lasts */
+.sg-goldheart {
+  filter: drop-shadow(0 0 5px rgb(255 179 0 / 0.8));
+  animation: sg-power 0.8s ease-in-out infinite alternate;
+}
+
+/* phones: the game sits right at the top, title compact, field tall and easy to tap */
+@media (max-width: 760px) {
+  .sx-panel.is-wide {
+    justify-content: flex-start;
+    padding: 22px 10px 32px;
+  }
+  /* the title shares the top row with the × button; the HUD starts below both */
+  .sx-panel.is-wide .sx-title {
+    min-height: 44px;
+    margin: 0 60px 10px 4px;
+    align-items: center;
+    align-self: flex-start;
+    justify-content: flex-start;
+    font-size: 30px;
+  }
+  .sx-panel.is-wide .sg-hud {
+    position: relative;
+    flex-wrap: nowrap;
+    gap: 5px;
+    font-size: clamp(11px, 3.3vw, 13px);
+    white-space: nowrap;
+  }
+  .sx-panel.is-wide .sg-hud b {
+    font-size: clamp(13px, 4vw, 17px);
+  }
+  .sg-lives svg {
+    width: 16px;
+    height: 16px;
+  }
+  .sg-gang {
+    gap: 3px;
+  }
+  .sg-gang i {
+    width: 8px;
+    height: 8px;
+  }
+  .sg-made {
+    display: none;
+  }
+  .sg-powers {
+    position: absolute;
+    z-index: 4;
+    inset: calc(100% + 16px) 12px auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .sx-panel.is-wide .sg-field {
+    border-radius: 18px;
+  }
+  .sg-overlay span {
+    font-size: 14px;
+  }
+  .sg-overlay .sg-how {
+    font-size: 12.5px;
+  }
+}

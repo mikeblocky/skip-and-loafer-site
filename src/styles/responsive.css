@@ -1,0 +1,50 @@
+@media (max-width: 760px) {
+  .paper::after {
+    left: 28px;
+  }
+  .wordmark {
+    display: none;
+  }
+  .mark {
+    width: 84px;
+    height: 116px;
+  }
+  .mark-label {
+    font-size: 13px;
+  }
+  .view {
+    justify-content: flex-start;
+    padding-top: 172px;
+  }
+  .clock {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 22px 28px;
+    max-width: 380px;
+  }
+  .unit-blocks {
+    font-size: min(17vw, 76px);
+  }
+  .cd-when {
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .cd-dot {
+    display: none;
+  }
+}
+
+/* reduced motion: nothing loops, nothing floats; state changes still fade so you can follow them */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+  :where(.round-btn, .buy, .ch-card, .ch-link, .vcard-face, .tv, .gate-go, .pl-big, .bd-dot) {
+    transition-property: opacity, background, border-color, box-shadow, color !important;
+  }
+}

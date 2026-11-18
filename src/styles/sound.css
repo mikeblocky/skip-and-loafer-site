@@ -1,0 +1,94 @@
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 7000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+}
+.gate-go {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: var(--pink);
+  box-shadow: var(--shadow-2);
+  transition:
+    transform var(--t-hover) var(--spring),
+    box-shadow var(--t-hover) var(--soft);
+}
+/* one slow ripple, like a breath, instead of constant bouncing */
+.gate-go::before {
+  content: '';
+  position: absolute;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  border: 2px solid var(--pink);
+  animation: gate-ring 2.8s var(--soft) infinite;
+  pointer-events: none;
+}
+.gate-go:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-3);
+}
+.gate-go:active {
+  transform: scale(0.97);
+  box-shadow: var(--shadow-1);
+  transition-duration: var(--t-fast);
+}
+@keyframes gate-ring {
+  from {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  70%,
+  to {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+.gate-quiet {
+  font-size: 15px;
+  font-weight: 750;
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 999px;
+  transition: color 0.2s;
+}
+.gate-quiet:hover {
+  color: var(--ink);
+}
+
+.sound-toggle {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 5000;
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--hair);
+  box-shadow: var(--shadow-1);
+  transform: scale(0);
+  transition:
+    border-color var(--t-hover),
+    box-shadow var(--t-hover) var(--soft),
+    background var(--t-hover);
+}
+.sound-toggle:hover {
+  border-color: color-mix(in oklab, var(--ink), #fff 70%);
+  box-shadow: var(--shadow-2);
+}
+.sound-toggle:active {
+  box-shadow: none;
+}
+.sound-toggle[aria-pressed='false'] {
+  background: #f1eee7;
+}

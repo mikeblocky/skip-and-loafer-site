@@ -1,0 +1,157 @@
+/* message tab: airmail stripes */
+.mark--message .mark-ribbon::before {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgb(255 255 255 / 0.38) 0 7px,
+    transparent 7px 14px,
+    rgb(31 107 255 / 0.38) 14px 21px,
+    transparent 21px 28px
+  );
+  background-size: 39.6px 39.6px;
+}
+.mark--message:hover .mark-ribbon::before,
+.mark--message.is-active .mark-ribbon::before {
+  background-position: 39.6px 0;
+}
+
+/* six tabs: a little narrower where the screen is tight */
+@media (min-width: 761px) and (max-width: 1100px) {
+  .bookmarks {
+    gap: 6px;
+  }
+  .mark {
+    width: 86px;
+  }
+}
+@media (max-width: 1280px) {
+  .timer {
+    display: none;
+  }
+}
+.view-message {
+  justify-content: flex-start;
+}
+.msg-title {
+  position: relative;
+  margin: 0;
+  font-size: clamp(56px, 7.5vw, 116px);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+.msg-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 26px;
+  padding: 5px;
+  background: #fff;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  box-shadow: var(--shadow-1);
+}
+.msg-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 850;
+  transition:
+    background var(--t-hover) var(--soft),
+    color var(--t-hover) var(--soft);
+}
+.msg-tabs button:not(.is-on):hover {
+  background: #f6f2ea;
+}
+.msg-tabs button.is-on {
+  background: var(--red);
+  color: #fff;
+}
+.msg-badge {
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0.6;
+  font-feature-settings: 'tnum';
+}
+.msg-layout {
+  display: grid;
+  grid-template-columns: 300px auto;
+  gap: clamp(32px, 5vw, 64px);
+  align-items: start;
+  margin-top: 36px;
+}
+.msg-desk {
+  min-width: 400px;
+}
+
+/* the guide: a little illustrated how-to */
+.msg-guide {
+  overflow: hidden;
+  border-radius: 24px;
+  background: #fff;
+  border: 1px solid var(--hair);
+  box-shadow: var(--shadow-2);
+  font-size: 15px;
+  line-height: 1.45;
+  color: #4a4566;
+}
+.gd-hero {
+  position: relative;
+  height: 112px;
+  padding: 22px 22px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle, rgb(255 255 255 / 0.3) 2px, transparent 2.6px) 0 0 / 16px 16px,
+    linear-gradient(120deg, var(--pink), var(--orange));
+}
+.gd-hero h3 {
+  position: relative;
+  max-width: 140px;
+  margin: 0;
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 900;
+  color: #fff;
+}
+/* Mitsumi peeks up from the bottom of the band */
+.gd-hero-char {
+  position: absolute;
+  right: 16px;
+  top: 12px;
+  width: 104px;
+  height: 230px;
+  background: no-repeat 50% 0 / 100% auto;
+  filter: drop-shadow(0 4px 6px rgb(29 27 44 / 0.25));
+}
+.gd-float {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  animation: gd-bob 3.2s ease-in-out infinite;
+}
+.gd-f1 {
+  right: 120px;
+  top: 50px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--shadow-2);
+  rotate: -10deg;
+}
+.gd-f2 {
+  right: 112px;
+  top: 14px;
+  animation-delay: -1.1s;
+}
+.gd-f3 {
+  left: 24px;
+  bottom: 14px;
+  opacity: 0.85;
+  animation-delay: -2s;
+}
+@keyframes gd-bob {
+  50% {
+    translate: 0 -5px;
+  }
+}

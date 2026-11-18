@@ -1,0 +1,182 @@
+.view-volumes {
+  padding-left: 0;
+  padding-right: 0;
+}
+.vol-title {
+  position: relative;
+  margin: 0;
+  font-size: clamp(56px, 7.5vw, 116px);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  user-select: none;
+}
+.vt-count {
+  position: absolute;
+  top: 0.02em;
+  left: 100%;
+  margin-left: 0.08em;
+  font-size: 0.32em;
+  color: var(--pink);
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+
+.cards {
+  width: 100%;
+  margin-top: clamp(18px, 3vh, 36px);
+}
+.cards-wrap {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 40px 0 26px;
+}
+.cards-track {
+  --lean: 0deg;
+  --ch: clamp(230px, 38vh, 340px);
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(14px, 1.6vw, 24px);
+  width: max-content;
+  padding: 0 max(12vw, 40px);
+  touch-action: pan-y;
+  user-select: none;
+}
+.vcard {
+  width: calc(var(--ch) * 0.7);
+  height: var(--ch);
+  flex: none;
+  outline: none;
+  cursor: inherit;
+  color: #fff;
+}
+.vcard-lean {
+  width: 100%;
+  height: 100%;
+  transform: rotate(var(--lean));
+  transform-origin: 50% 100%;
+}
+.vcard-face {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: calc(var(--ch) * 0.09);
+  background: var(--c);
+  overflow: hidden;
+  transform: rotate(var(--t));
+  box-shadow: var(--shadow-1);
+  transition:
+    transform 0.45s var(--spring),
+    box-shadow 0.45s var(--soft);
+}
+.vcard:hover .vcard-face,
+.vcard:focus-visible .vcard-face {
+  transform: translateY(-14px) rotate(calc(var(--t) * 0.3));
+  box-shadow: var(--shadow-3);
+}
+.vcard:active .vcard-face {
+  transform: translateY(-8px) rotate(calc(var(--t) * 0.3)) scale(0.985);
+  box-shadow: var(--shadow-2);
+  transition-duration: var(--t-fast);
+}
+.vcard:focus-visible .vcard-face {
+  outline: 3px solid var(--ink);
+  outline-offset: 4px;
+}
+.vcard.is-out .vcard-face {
+  transform: translateY(-40px) scale(0.9);
+  opacity: 0;
+  transition:
+    transform 0.4s ease,
+    opacity 0.2s;
+}
+.vcard-mark {
+  position: absolute;
+  right: -10%;
+  top: -8%;
+  opacity: 0.34;
+  transform: rotate(18deg);
+  transition: transform 0.6s var(--soft);
+}
+.vcard:hover .vcard-mark {
+  transform: rotate(8deg) translate(-4%, 4%);
+}
+.vcard-vol {
+  position: absolute;
+  top: 9%;
+  left: 11%;
+  font-size: calc(var(--ch) * 0.06);
+  font-weight: 800;
+  opacity: 0.85;
+}
+.vcard-num {
+  position: absolute;
+  left: 8%;
+  bottom: 13%;
+  font-size: calc(var(--ch) * 0.48);
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+  font-feature-settings: 'tnum';
+}
+.vcard-jp {
+  position: absolute;
+  left: 11%;
+  bottom: 6%;
+  font-family: var(--jp);
+  font-weight: 900;
+  font-size: calc(var(--ch) * 0.042);
+  letter-spacing: 0.06em;
+  opacity: 0.9;
+}
+
+/* printed spine on the 3D book */
+.spine-art {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 11% 0 9%;
+  background: var(--c);
+  color: #fff;
+  overflow: hidden;
+  font-family: var(--jp);
+}
+.spine-num {
+  font-family: 'Allo', sans-serif;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+  font-size: calc(var(--bh, 300px) * 0.075);
+  line-height: 1;
+}
+.spine-rule {
+  width: 40%;
+  height: 2px;
+  margin: 9% 0 10%;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.7);
+}
+.spine-title {
+  writing-mode: vertical-rl;
+  font-weight: 900;
+  font-size: calc(var(--bh, 300px) * 0.05);
+  letter-spacing: 0.06em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.spine-author {
+  margin-top: auto;
+  writing-mode: vertical-rl;
+  font-weight: 800;
+  font-size: calc(var(--bh, 300px) * 0.032);
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+}
+
+.shelf-hint {
+  margin: 26px 0 0;
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}

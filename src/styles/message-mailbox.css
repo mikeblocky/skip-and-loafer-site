@@ -1,0 +1,96 @@
+/* a little tin mailbox */
+.mm {
+  position: absolute;
+  width: 52px;
+  height: 90px;
+}
+.mm i {
+  position: absolute;
+  display: block;
+}
+.mm-pole {
+  left: 22px;
+  top: 40px;
+  width: 8px;
+  height: 52px;
+  border-radius: 4px 4px 0 0;
+  background: var(--orange);
+}
+.mm-body {
+  left: 0;
+  top: 0;
+  width: 52px;
+  height: 44px;
+  border-radius: 26px 26px 8px 8px;
+  background: var(--blue);
+  transform-origin: 50% 100%;
+}
+.mm-hole {
+  inset: 5px 5px 6px;
+  border-radius: 21px 21px 4px 4px;
+  background: var(--ink);
+}
+.mm-door {
+  inset: 5px 5px 6px;
+  border-radius: 21px 21px 4px 4px;
+  background: var(--sky);
+  transform-origin: 50% 100%;
+}
+.mm-door::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: 16px;
+  height: 5px;
+  margin-left: -8px;
+  border-radius: 3px;
+  background: var(--yellow);
+}
+.mm-flag {
+  right: -7px;
+  top: 10px;
+  width: 5px;
+  height: 26px;
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: 0 0 0 1.5px var(--ink);
+  transform-origin: 50% 90%;
+  rotate: 90deg;
+}
+.mm-flag::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 0;
+  width: 13px;
+  height: 9px;
+  border-radius: 2px 4px 4px 2px;
+  background: var(--red);
+}
+
+/* still pictures for reduced motion: each scene frozen at its most telling moment */
+@media (prefers-reduced-motion: reduce) {
+  .gd-scene * {
+    animation-play-state: paused !important;
+    animation-delay: -3.4s !important;
+  }
+}
+
+.gd-tile {
+  position: relative;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--fc), #fff 70%);
+  box-shadow: 0 0 0 3px var(--fc);
+}
+.gd-tile {
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--fc);
+  box-shadow: var(--shadow-1);
+  rotate: -6deg;
+}

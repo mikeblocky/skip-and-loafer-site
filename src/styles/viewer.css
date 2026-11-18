@@ -1,0 +1,283 @@
+.viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+}
+.viewer-bg {
+  position: absolute;
+  inset: 0;
+  background: rgb(255 253 247 / 0.86);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+.viewer-stage {
+  position: absolute;
+  inset: 70px 0 110px;
+  display: grid;
+  place-items: center;
+  perspective: 1800px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.viewer-stage:active {
+  cursor: grabbing;
+}
+.book3d {
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.book3d .face {
+  position: absolute;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+}
+.f-back {
+  inset: 0;
+  border-radius: 8px 3px 3px 8px;
+  transform: rotateY(180deg) translateZ(calc(var(--d) / 2));
+  background: var(--c);
+  color: #fff;
+}
+.pattern {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  place-items: center;
+  align-content: space-around;
+}
+.back-jp {
+  position: absolute;
+  top: 9%;
+  right: 9%;
+  writing-mode: vertical-rl;
+  font-family: var(--jp);
+  font-weight: 900;
+  font-size: calc(var(--w) * 0.075);
+  letter-spacing: 0.08em;
+}
+.back-num {
+  position: absolute;
+  left: 8%;
+  bottom: 4%;
+  font-size: calc(var(--w) * 0.42);
+  line-height: 1;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.f-spine {
+  --bh: var(--h);
+  top: 0;
+  left: calc(50% - var(--d) / 2);
+  width: var(--d);
+  height: var(--h);
+  /* right-to-left manga: the spine is on the right */
+  transform: rotateY(90deg) translateZ(calc(var(--w) / 2));
+}
+.f-spine .spine-art {
+  border-radius: 0;
+}
+.f-pages {
+  top: 4px;
+  left: calc(50% - var(--d) / 2);
+  width: calc(var(--d) - 2px);
+  height: calc(var(--h) - 8px);
+  transform: rotateY(-90deg) translateZ(calc(var(--w) / 2 - 5px));
+  background: repeating-linear-gradient(90deg, #fbf8f1 0 2px, #ebe5da 2px 3px);
+}
+.f-top,
+.f-bottom {
+  left: 2px;
+  width: calc(var(--w) - 7px);
+  top: calc(50% - var(--d) / 2);
+  height: calc(var(--d) - 2px);
+  background: repeating-linear-gradient(0deg, #fbf8f1 0 2px, #ebe5da 2px 3px);
+}
+.f-top {
+  transform: rotateX(90deg) translateZ(calc(var(--h) / 2 - 4px));
+}
+.f-bottom {
+  transform: rotateX(-90deg) translateZ(calc(var(--h) / 2 - 4px));
+}
+.f-first {
+  position: absolute;
+  inset: 4px 0 4px 5px;
+  transform: translateZ(calc(var(--d) / 2 - 2px));
+  background: #fffdf8;
+  border-radius: 5px 0 0 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.first-vol {
+  font-size: calc(var(--w) * 0.07);
+  font-weight: 750;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+.first-num {
+  font-size: calc(var(--w) * 0.5);
+  line-height: 0.95;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.first-jp {
+  margin-top: 8%;
+  font-family: var(--jp);
+  font-weight: 900;
+  font-size: calc(var(--w) * 0.06);
+  letter-spacing: 0.06em;
+  color: var(--ink);
+}
+.f-cover {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+.cover-front,
+.cover-inside {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 8px 2px 2px 8px;
+  overflow: hidden;
+}
+.cover-inside {
+  border-radius: 2px 8px 8px 2px;
+}
+.cover-front img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+/* the hinge crease of a paperback */
+.cover-front::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(270deg, rgb(0 0 0 / 0.1), transparent 3%, rgb(255 255 255 / 0.22) 4.5%, transparent 7%);
+}
+.cover-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgb(255 255 255 / 0.22) 48%, transparent 60%);
+}
+.cover-inside {
+  transform: rotateY(180deg);
+  background: var(--c);
+}
+
+.viewer-ui {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.viewer-ui > * {
+  pointer-events: auto;
+}
+.round-btn {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--hair);
+  box-shadow: var(--shadow-1);
+  transition:
+    transform var(--t-hover) var(--spring),
+    box-shadow var(--t-hover) var(--soft),
+    border-color var(--t-hover);
+}
+.round-btn svg {
+  width: 20px;
+  height: 20px;
+  transition:
+    transform var(--t-hover) var(--soft),
+    translate var(--t-hover) var(--soft);
+}
+.round-btn:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--ink), #fff 70%);
+  box-shadow: var(--shadow-2);
+}
+.round-btn:active {
+  transform: translateY(0) scale(0.95);
+  box-shadow: var(--shadow-1);
+  transition-duration: var(--t-fast);
+  transition-timing-function: var(--press);
+}
+/* the arrow leans the way it will take you */
+.v-bar .round-btn:first-child:hover svg {
+  translate: -2px 0;
+}
+.v-bar .round-btn:last-child:hover svg {
+  translate: 2px 0;
+}
+.v-close:hover svg {
+  transform: rotate(90deg);
+}
+.v-close {
+  top: 22px;
+  right: 22px;
+}
+.v-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+}
+.v-bar .round-btn {
+  position: relative;
+}
+.v-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 150px;
+  white-space: nowrap;
+}
+.v-count {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--muted);
+  font-feature-settings: 'tnum';
+}
+.v-count b {
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+  font-size: 26px;
+}
+.v-hint {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+}
+
+/* ───────── wipe ───────── */
+.wipe {
+  position: fixed;
+  inset: 0;
+  z-index: 4500;
+  display: flex;
+  visibility: hidden;
+  pointer-events: none;
+}
+.wipe i {
+  flex: 1;
+  transform: scaleY(0);
+  margin: 0 -1px;
+}

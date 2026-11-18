@@ -1,0 +1,201 @@
+.rx {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.rx-scene {
+  position: relative;
+  width: calc(var(--EW) + 20px);
+  height: var(--H);
+}
+.rx-scene > .post {
+  position: absolute;
+  top: 0;
+  left: calc(50% - var(--W) / 2);
+  z-index: 2;
+}
+.post.is-tappable {
+  cursor: pointer;
+}
+.rx-box {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -46%;
+  transition: scale var(--t-hover) var(--spring);
+}
+.rx-box:hover:not(:disabled) {
+  scale: 1.04;
+}
+.rx-box:disabled {
+  cursor: progress;
+}
+.mbox {
+  position: relative;
+  width: 170px;
+  height: 260px;
+}
+.mbox-pole {
+  position: absolute;
+  left: calc(50% - 13px);
+  top: 120px;
+  width: 26px;
+  height: 136px;
+  border-radius: 8px 8px 0 0;
+  background: var(--orange);
+}
+.mbox-pole::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  translate: -50% 0;
+  z-index: -1;
+  width: 110px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgb(29 27 44 / 0.08);
+}
+.mbox-body {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 170px;
+  height: 140px;
+  border-radius: 85px 85px 20px 20px;
+  background: var(--blue);
+  transform-origin: 50% 100%;
+}
+.mbox-hole {
+  position: absolute;
+  inset: 14px 14px 16px;
+  border-radius: 71px 71px 10px 10px;
+  background: var(--ink);
+}
+.mbox-door {
+  position: absolute;
+  inset: 14px 14px 16px;
+  border-radius: 71px 71px 10px 10px;
+  background: var(--sky);
+  transform-origin: 50% 100%;
+}
+.mbox-slot {
+  display: none;
+}
+.mbox-handle {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  translate: -50% 0;
+  width: 44px;
+  height: 14px;
+  border-radius: 7px;
+  background: var(--yellow);
+}
+.mbox-flag {
+  position: absolute;
+  right: -20px;
+  top: 34px;
+  width: 14px;
+  height: 80px;
+  border-radius: 7px;
+  background: #fff;
+  box-shadow: 0 0 0 3px var(--ink);
+  transform-origin: 50% 90%;
+  rotate: 90deg;
+  transition: rotate 0.9s var(--spring);
+}
+.mbox-flag.is-up {
+  rotate: 0deg;
+}
+.mbox-flag i {
+  position: absolute;
+  left: 11px;
+  top: 0;
+  width: 40px;
+  height: 28px;
+  border-radius: 4px 9px 9px 4px;
+  background: var(--red);
+}
+.rx-under {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-height: 120px;
+}
+.rx-count {
+  max-width: 340px;
+  margin: 0;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--muted);
+}
+.rx-hint {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 850;
+  color: var(--et);
+  animation: rx-pulse 1.6s var(--soft) infinite;
+}
+@keyframes rx-pulse {
+  50% {
+    transform: translateY(-3px);
+    opacity: 0.65;
+  }
+}
+.rx-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.rx-report {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.rx-report:disabled {
+  text-decoration: none;
+  cursor: default;
+}
+
+/* narrow windows and phones: the guide sits above the desk */
+@media (max-width: 899px) {
+  .msg-layout {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    width: 100%;
+    max-width: 420px;
+    gap: 28px;
+  }
+  .msg-guide {
+    width: 100%;
+  }
+  .msg-desk {
+    min-width: 0;
+    width: 100%;
+  }
+}
+@media (max-width: 760px) {
+  .msg-title {
+    font-size: 56px;
+  }
+  .msg-tabs button {
+    padding: 9px 18px;
+    font-size: 15px;
+  }
+  .msg-btn {
+    padding: 13px 22px;
+    font-size: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rx-hint {
+    animation: none;
+  }
+}

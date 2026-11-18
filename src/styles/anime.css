@@ -1,0 +1,227 @@
+.view-anime {
+  justify-content: flex-start;
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 120px;
+}
+.anime-title {
+  position: relative;
+  margin: 0 0 clamp(40px, 7vh, 80px);
+  font-size: clamp(56px, 7.5vw, 116px);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+.season {
+  position: relative;
+  width: 100%;
+  margin-bottom: clamp(90px, 14vh, 160px);
+}
+.season-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: clamp(30px, 5vh, 52px);
+}
+.season-no {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  color: var(--c);
+  line-height: 0.85;
+}
+.season-no span {
+  font-size: 30px;
+  font-variation-settings: 'wght' 500, 'ROND' 100;
+}
+.season-no b {
+  font-size: clamp(64px, 8vw, 110px);
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.season-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.s-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px 9px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--c), #fff 84%);
+  color: var(--c);
+  font-size: 15px;
+  font-variation-settings: 'wght' 800, 'ROND' 100;
+}
+.s-chip-soon {
+  background: var(--c);
+  color: #fff;
+}
+.season-body {
+  position: relative;
+  width: 100%;
+}
+
+/* ── story copy: soft rounded type, centred lines, generous leading ── */
+.story {
+  position: relative;
+  z-index: 2;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 22px;
+  text-align: center;
+  pointer-events: none;
+}
+.st-line {
+  margin: 0 0 1.05em;
+  color: #5c5873;
+  font-size: clamp(17px, 1.45vw, 21px);
+  line-height: 1.9;
+  font-variation-settings: 'wght' 450, 'ROND' 100;
+  letter-spacing: 0.01em;
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.8s var(--soft);
+}
+.st-line.is-in {
+  opacity: 1;
+  transform: none;
+}
+.fx-strong {
+  color: var(--ink);
+  font-variation-settings: 'wght' 800, 'ROND' 100;
+}
+.fx-green {
+  color: #18b93a;
+  font-variation-settings: 'wght' 750, 'ROND' 100;
+}
+.fx {
+  position: relative;
+  display: inline;
+  white-space: nowrap;
+}
+/* highlighter swipe behind the lower half, and the short brush tick */
+.fx-hl::before,
+.fx-brush::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  background: var(--fx);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.7s cubic-bezier(0.6, 0, 0.2, 1) 0.45s;
+}
+.fx-hl::before {
+  left: -0.2em;
+  right: -0.25em;
+  bottom: -0.05em;
+  height: 0.62em;
+  opacity: 0.7;
+  border-radius: 40% 55% 45% 60% / 60% 45% 55% 40%;
+  rotate: -1.2deg;
+}
+.fx-brush::before {
+  left: 0.05em;
+  right: -0.1em;
+  bottom: -0.12em;
+  height: 0.24em;
+  opacity: 0.95;
+  border-radius: 999px 70% 999px 40%;
+  rotate: -3deg;
+}
+.st-line.is-in .fx-hl::before,
+.st-line.is-in .fx-brush::before {
+  transform: scaleX(1);
+}
+/* hand loop around a word */
+.fx-circ svg {
+  position: absolute;
+  left: -0.42em;
+  top: -0.3em;
+  width: calc(100% + 0.84em);
+  height: calc(100% + 0.62em);
+  overflow: visible;
+  pointer-events: none;
+}
+.fx-circ path,
+.fx-wavy path {
+  fill: none;
+  stroke: var(--fx);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.55, 0, 0.25, 1) 0.5s;
+}
+.fx-circ path {
+  stroke-width: 4.5px;
+  opacity: 0.8;
+}
+.fx-wavy svg {
+  position: absolute;
+  left: -0.05em;
+  bottom: -0.42em;
+  width: calc(100% + 0.1em);
+  height: 0.45em;
+  overflow: visible;
+  pointer-events: none;
+}
+.fx-wavy path {
+  stroke-width: 4px;
+  opacity: 0.9;
+}
+.st-line.is-in .fx-circ path,
+.st-line.is-in .fx-wavy path {
+  stroke-dashoffset: 0;
+}
+/* emphasis dots above the words */
+.fx-dots::before {
+  content: '';
+  position: absolute;
+  left: 0.15em;
+  right: 0;
+  top: -0.42em;
+  height: 0.32em;
+  background: radial-gradient(circle, var(--fx) 0 0.11em, transparent 0.13em) 0 50% / 0.62em 0.32em repeat-x;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.9s steps(12) 0.5s;
+}
+.st-line.is-in .fx-dots::before {
+  clip-path: inset(0 0 0 0);
+}
+
+/* ── floating stills ── */
+.photos {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.photo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  will-change: transform;
+}
+.photo-float {
+  padding: 7px;
+  border-radius: 16px;
+  background: #fff;
+  transform-origin: 50% 50%;
+}
+.photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 10px;
+  pointer-events: none;
+}

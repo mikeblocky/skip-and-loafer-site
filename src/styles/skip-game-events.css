@@ -1,0 +1,219 @@
+/* one smooth fade for the paper tint and the win glow (no jumps when milestones land) */
+.sg-field {
+  transition:
+    background-color 3s ease,
+    box-shadow 3s ease;
+}
+.sg-field.is-won {
+  box-shadow:
+    var(--shadow-2),
+    0 0 0 3px rgb(255 196 0 / 0.5),
+    0 0 40px rgb(255 196 0 / 0.25);
+}
+/* break time: a soft calm wash over the paper, and a badge in the HUD */
+.sg-field::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(circle at 50% 40%, rgb(224 240 255 / 0.55), transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.2s ease;
+}
+.sg-field.is-break::after {
+  opacity: 1;
+}
+.sg-rest {
+  --c: var(--sky);
+}
+
+/* twists (5,000+ points): a camera layer that tilts, flips, zooms, sways or goes dark */
+.sg-cam {
+  position: absolute;
+  inset: 0;
+  transform-origin: var(--ox, 50%) var(--oy, 50%);
+  transform: rotate(var(--cam-r, 0deg)) scale(var(--cam-z, 1)) scaleX(var(--cam-fx, 1));
+  transition:
+    transform 0.9s var(--soft),
+    rotate 0.9s var(--soft);
+}
+.sg-field.tw-tilt {
+  --cam-r: var(--tilt);
+  --cam-z: 1.14;
+}
+.sg-field.tw-zoom {
+  --cam-z: 1.42;
+}
+.sg-field.tw-mirror {
+  --cam-fx: -1;
+}
+.sg-field.tw-sway .sg-cam {
+  animation: sg-sway 2.4s ease-in-out infinite alternate;
+}
+@keyframes sg-sway {
+  from {
+    rotate: -4deg;
+    translate: -8px 4px;
+  }
+  to {
+    rotate: 4deg;
+    translate: 8px -4px;
+  }
+}
+/* lights out: dark paper with a spotlight on Mitsumi */
+.sg-field::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: radial-gradient(circle at var(--sx, 50%) var(--sy, 50%), transparent 0 90px, rgb(22 20 42 / 0.9) 230px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.9s ease;
+}
+.sg-field.tw-dark::before {
+  opacity: 1;
+}
+.sg-field.tw-dark .sg-shout {
+  box-shadow:
+    var(--shadow-2),
+    0 0 0 2px rgb(255 255 255 / 0.6);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sg-field.tw-sway .sg-cam {
+    animation: none;
+  }
+}
+
+/* 10k+ events: earthquake, flickering lights, and small tells for moon gravity and rush hour */
+.sg-field.tw-quake .sg-world {
+  animation: sg-quake 0.11s steps(2) infinite;
+}
+@keyframes sg-quake {
+  0% {
+    translate: -5px 3px;
+  }
+  25% {
+    translate: 4px -4px;
+  }
+  50% {
+    translate: -3px -2px;
+  }
+  75% {
+    translate: 5px 4px;
+  }
+}
+.sg-field.tw-flicker::before {
+  animation: sg-flicker 1.4s steps(1) infinite;
+}
+@keyframes sg-flicker {
+  0%,
+  18%,
+  44%,
+  52%,
+  80% {
+    opacity: 0;
+  }
+  12%,
+  30%,
+  48%,
+  66%,
+  92% {
+    opacity: 1;
+  }
+}
+.sg-field.tw-moon .sg-player img,
+.sg-field.tw-moon .sg-friend img {
+  filter: drop-shadow(0 0 7px rgb(160 190 255 / 0.95));
+}
+.sg-field.tw-rush .sg-doodles,
+.sg-field.tw-rush .sg-floor {
+  filter: blur(1.4px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sg-field.tw-quake .sg-world,
+  .sg-field.tw-flicker::before {
+    animation: none;
+  }
+}
+
+/* turning to a new page every 10k: a quick page-flip squash */
+.sg-field.is-flip .sg-world {
+  animation: sg-page 0.75s var(--soft);
+}
+@keyframes sg-page {
+  0% {
+    scale: 1 1;
+    opacity: 1;
+  }
+  45% {
+    scale: 0.04 1;
+    opacity: 0.4;
+  }
+  100% {
+    scale: 1 1;
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sg-field.is-flip .sg-world {
+    animation: none;
+  }
+}
+
+.sg-board-toggle {
+  display: block;
+  min-height: 44px;
+  margin: 14px auto 0;
+}
+.sg-board {
+  margin: 10px auto 0;
+  max-width: 520px;
+}
+.sg-board ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+.sg-board li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.7);
+  font-size: 15px;
+  font-variation-settings: 'wght' 700, 'ROND' 100;
+}
+.sg-board li:nth-child(-n + 3) .sg-rank {
+  background: var(--c);
+  color: #fff;
+}
+.sg-board li.is-you {
+  box-shadow: 0 0 0 2px var(--c);
+}
+.sg-rank {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #eeebe4;
+  font-size: 13px;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.sg-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sg-board li b {
+  font-feature-settings: 'tnum';
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
