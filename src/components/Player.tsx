@@ -268,10 +268,12 @@ export function Player({ src, poster, kind, title, titleJp, artist, artistJp, co
                         out.push(
                           <ruby key={`r${at}`} className="pl-rb" aria-hidden="true">
                             {base}
-                            <rt
-                              className={`${at < k ? 'is-sung' : ''}${i === cue && k - 1 >= at && k - 1 < at + len ? ' is-now' : ''}` || undefined}
-                            >
-                              {reading}
+                            <rt>
+                              <span
+                                className={`pl-reading${at < k ? ' is-sung' : ''}${i === cue && k > at && k <= at + len ? ' is-now' : ''}`}
+                              >
+                                {reading}
+                              </span>
                             </rt>
                           </ruby>,
                         )

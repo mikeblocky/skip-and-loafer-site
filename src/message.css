@@ -1,5 +1,4 @@
 /* ═════════════ message: a little post office ═════════════ */
-/* loaded after styles.css (through Message.tsx), so the tab-width overrides below win */
 
 /* message tab: airmail stripes */
 .mark--message .mark-ribbon::before {
@@ -31,19 +30,6 @@
     display: none;
   }
 }
-@media (max-width: 760px) {
-  .bookmarks {
-    gap: 3px;
-  }
-  .mark {
-    width: 57px;
-  }
-  .mark-label {
-    font-size: 9px;
-    letter-spacing: -0.02em;
-  }
-}
-
 .view-message {
   justify-content: flex-start;
 }

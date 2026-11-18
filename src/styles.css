@@ -1831,25 +1831,34 @@ h2,
 
 /* ═════════════ phones ═════════════ */
 @media (max-width: 760px) {
-  /* nav: four compact tabs that fit with room to spare */
+  /* Keep all six bookmarks level and within the viewport. */
   .bookmarks {
-    gap: 6px;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    width: min(calc(100% - 12px), 390px);
+    gap: 3px;
   }
   .mark {
-    width: 74px;
-    height: 104px;
+    width: 100%;
+    height: 54px;
+    transform: none !important;
   }
   .mark-ribbon {
-    gap: 4px;
-    padding-bottom: 14px;
-    border-radius: 0 0 18px 18px;
+    justify-content: center;
+    gap: 3px;
+    padding-bottom: 0;
+    border-radius: 0 0 12px 12px;
+  }
+  .mark.is-active .mark-ribbon {
+    box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.22), var(--shadow-1);
   }
   .mark-ribbon svg {
     width: 18px;
     height: 18px;
   }
   .mark-label {
-    font-size: 11.5px;
+    font-size: clamp(9px, 2.6vw, 11px);
+    letter-spacing: -0.02em;
   }
 
   /* countdown: bigger blocks, calmer float, two by two */
@@ -2593,9 +2602,10 @@ body {
   translate: 0 0;
 }
 .pl-jp {
+  --pl-jp-size: clamp(15px, 2.2vw, 22px);
   font-family: var(--jp);
   font-weight: 800;
-  font-size: clamp(15px, 2.2vw, 22px);
+  font-size: var(--pl-jp-size);
   letter-spacing: 0.04em;
   /* room for furigana above every line, so lines with and without it are the same height;
      a wrapped line gets just enough leading for its readings to clear the line above */
@@ -2617,16 +2627,22 @@ body {
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.02em;
+  user-select: none;
+}
+.pl-reading {
+  --pl-motion-unit: var(--pl-jp-size);
+  --pl-float-delay: 0.5s;
+  position: relative;
+  display: inline-block;
   color: rgb(255 255 255 / 0.72);
   text-shadow:
     0 1px 2px rgb(0 0 0 / 0.7),
     0 0 6px rgb(0 0 0 / 0.4);
   transition: color 0.18s ease;
-  user-select: none;
 }
 /* once sung, the reading gets the same song-coloured outline as the kanji under it; a bit
    thicker in em since the text is so small */
-.pl-rb rt.is-sung {
+.pl-reading.is-sung {
   --ink-o: color-mix(in oklab, var(--c), #000 18%);
   color: #fff;
   text-shadow:
@@ -2671,20 +2687,22 @@ body {
     0 0.06em 0.3em rgb(0 0 0 / 0.4);
 }
 /* every character jumps when it's sung, then keeps floating in a gentle wave down the line */
-.pl-k.is-sung {
+.pl-k.is-sung,
+.pl-reading.is-sung {
   animation:
     pl-pop 0.5s var(--spring) both,
-    pl-float 1.6s ease-in-out calc(0.5s + var(--i) * -0.18s) infinite alternate;
+    pl-float 1.6s ease-in-out var(--pl-float-delay, calc(0.5s + var(--i) * -0.18s)) infinite alternate;
 }
 /* the one being sung right now keeps bouncing, a ball and a sparkle riding on top */
-.pl-k.is-now {
+.pl-k.is-now,
+.pl-reading.is-now {
   scale: 1.16;
   animation:
     pl-pop 0.5s var(--spring) both,
     pl-hop 0.32s ease-in-out 0.3s infinite alternate;
 }
 .pl-k.is-now::after,
-.pl-rb rt.is-now::after {
+.pl-reading.is-now::after {
   content: '';
   position: absolute;
   left: 50%;
@@ -2700,7 +2718,7 @@ body {
   animation: pl-ball 0.3s ease-in-out infinite alternate;
 }
 .pl-k.is-now::before,
-.pl-rb rt.is-now::before {
+.pl-reading.is-now::before {
   content: '✦';
   position: absolute;
   left: 78%;
@@ -2720,17 +2738,14 @@ body {
 .pl-rb .pl-k.is-now::before {
   display: none;
 }
-.pl-rb rt.is-now {
-  position: relative;
-}
 /* the reading is about half size, so double up to keep the ball the same size */
-.pl-rb rt.is-now::after {
+.pl-reading.is-now::after {
   top: -1.1em;
   width: 0.74em;
   height: 0.74em;
   margin-left: -0.37em;
 }
-.pl-rb rt.is-now::before {
+.pl-reading.is-now::before {
   left: 85%;
   top: -0.9em;
   font-size: 0.9em;
@@ -2740,10 +2755,10 @@ body {
     transform: translateY(0) scale(1);
   }
   35% {
-    transform: translateY(-0.42em) scale(1.25, 1.18) rotate(-6deg);
+    transform: translateY(calc(-0.42 * var(--pl-motion-unit, 1em))) scale(1.25, 1.18) rotate(-6deg);
   }
   70% {
-    transform: translateY(0.04em) scale(1.08, 0.92);
+    transform: translateY(calc(0.04 * var(--pl-motion-unit, 1em))) scale(1.08, 0.92);
   }
   100% {
     transform: translateY(0) scale(1);
@@ -2751,10 +2766,10 @@ body {
 }
 @keyframes pl-float {
   from {
-    transform: translateY(0.03em) rotate(-1.5deg);
+    transform: translateY(calc(0.03 * var(--pl-motion-unit, 1em))) rotate(-1.5deg);
   }
   to {
-    transform: translateY(-0.1em) rotate(1.5deg);
+    transform: translateY(calc(-0.1 * var(--pl-motion-unit, 1em))) rotate(1.5deg);
   }
 }
 @keyframes pl-hop {
@@ -2762,7 +2777,7 @@ body {
     transform: translateY(0) scale(1.04, 0.96);
   }
   to {
-    transform: translateY(-0.16em) scale(0.97, 1.04) rotate(3deg);
+    transform: translateY(calc(-0.16 * var(--pl-motion-unit, 1em))) scale(0.97, 1.04) rotate(3deg);
   }
 }
 @keyframes pl-spark {
@@ -2795,7 +2810,7 @@ body {
     0 0 10px rgb(0 0 0 / 0.45);
 }
 .pl-frame:fullscreen .pl-jp {
-  font-size: clamp(22px, 3vw, 40px);
+  --pl-jp-size: clamp(22px, 3vw, 40px);
 }
 .pl-frame:fullscreen .pl-en {
   font-size: clamp(16px, 2vw, 26px);
@@ -2871,15 +2886,6 @@ body {
 
 /* phones */
 @media (max-width: 760px) {
-  .bookmarks {
-    gap: 4px;
-  }
-  .mark {
-    width: 66px;
-  }
-  .mark-label {
-    font-size: 10.5px;
-  }
   .anime-title {
     font-size: 56px;
   }
@@ -3230,7 +3236,7 @@ body {
   cursor: pointer;
 }
 .pl-line.is-golden .pl-k.is-now::after,
-.pl-line.is-golden rt.is-now::after {
+.pl-line.is-golden .pl-reading.is-now::after {
   background: radial-gradient(circle at 35% 30%, #fff6c2, #ffc400 55%, #e09a00);
   box-shadow:
     0 0 0 2.5px #fff,
@@ -3989,11 +3995,36 @@ body {
     font-size: 30px;
   }
   .sx-panel.is-wide .sg-hud {
-    gap: 6px 10px;
-    font-size: 13px;
+    position: relative;
+    flex-wrap: nowrap;
+    gap: 5px;
+    font-size: clamp(11px, 3.3vw, 13px);
+    white-space: nowrap;
   }
   .sx-panel.is-wide .sg-hud b {
-    font-size: 17px;
+    font-size: clamp(13px, 4vw, 17px);
+  }
+  .sg-lives svg {
+    width: 16px;
+    height: 16px;
+  }
+  .sg-gang {
+    gap: 3px;
+  }
+  .sg-gang i {
+    width: 8px;
+    height: 8px;
+  }
+  .sg-made {
+    display: none;
+  }
+  .sg-powers {
+    position: absolute;
+    z-index: 4;
+    inset: calc(100% + 16px) 12px auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    pointer-events: none;
   }
   .sx-panel.is-wide .sg-field {
     border-radius: 18px;
@@ -4170,17 +4201,14 @@ body {
   }
 }
 
-/* leaderboard under the field */
-.sg-board {
-  margin: 18px auto 0;
-  max-width: 520px;
+.sg-board-toggle {
+  display: block;
+  min-height: 44px;
+  margin: 14px auto 0;
 }
-.sg-board h3 {
-  margin: 0 0 8px;
-  text-align: center;
-  font-size: 18px;
-  color: var(--c);
-  font-variation-settings: 'wght' 900, 'ROND' 100;
+.sg-board {
+  margin: 10px auto 0;
+  max-width: 520px;
 }
 .sg-board ol {
   margin: 0;

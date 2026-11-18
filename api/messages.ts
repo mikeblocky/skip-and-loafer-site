@@ -155,6 +155,20 @@ function nextFor(letters: Letter[], read: string[]): Letter | undefined {
   return shuffle(letters).sort((a, b) => when(a) - when(b))[0]
 }
 
+// Reconcile the index and count it in one Redis operation so sends and reports cannot race the cleanup.
+const RECONCILE_LIVE = `
+  for _, id in ipairs(redis.call('SMEMBERS', KEYS[1])) do
+    if redis.call('HEXISTS', KEYS[2], id) == 0 then
+      redis.call('SREM', KEYS[1], id)
+    end
+  end
+  return redis.call('SCARD', KEYS[1])
+`
+
+async function liveTotal(r: Client) {
+  return (await r.eval(RECONCILE_LIVE, { keys: [KEY.live, KEY.data] })) as number
+}
+
 async function openOne(r: Client, me: string, not: string[]) {
   const picks: string[] = await r.sRandMemberCount(KEY.live, 40)
   if (!picks.length) return null
@@ -181,13 +195,14 @@ export default async function handler(req: Req, res: Res) {
 
     if (req.method === 'GET') {
       const q = new URL(req.url ?? '/', 'http://x').searchParams
-      const total = await r.sCard(KEY.live)
       if (q.has('mine')) {
+        const total = await liveTotal(r)
         const mine = ids(q.get('mine'), 60)
         const counts = mine.length ? ((await r.hmGet(KEY.opens, mine)) as (string | null)[]) : []
         return send(res, 200, { total, opens: Object.fromEntries(mine.map((id, i) => [id, Number(counts[i] ?? 0)])) })
       }
       if (await limited(r, 'open', ip, OPENS_PER_MINUTE, 60)) return send(res, 429, { error: 'too many tries, wait a minute' })
+      const total = await liveTotal(r)
       const me = ids(q.get('me'), 1)[0] ?? ''
       const letter = await openOne(r, me, ids(q.get('not'), 80))
       return send(res, 200, { letter, total })
@@ -216,9 +231,8 @@ export default async function handler(req: Req, res: Res) {
     const color = safeColor(body.color)
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 10)
     const letter: Letter = { id, text, from, color, at: Date.now(), by: me }
-    await r.hSet(KEY.data, id, JSON.stringify(letter))
-    await r.sAdd(KEY.live, id)
-    return send(res, 200, { id, total: await r.sCard(KEY.live) })
+    await r.multi().hSet(KEY.data, id, JSON.stringify(letter)).sAdd(KEY.live, id).exec()
+    return send(res, 200, { id, total: await liveTotal(r) })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'error'
     return send(res, msg === 'REDIS_URL is not set' ? 503 : 500, { error: 'couldn’t reach the mailbox, try again later' })

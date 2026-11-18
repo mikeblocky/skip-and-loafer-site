@@ -14,10 +14,9 @@ const ITEMS: { id: NavId; label: string; color: string; icon: IconName; ink?: bo
   { id: 'replay', label: 'Replay', color: C.violet, icon: 'replay', tilt: -2 },
 ]
 
-const small = () => window.innerWidth < 760
-const ACTIVE = 0
-const rest = () => (small() ? -50 : -58)
-const lift = () => (small() ? -30 : -34)
+const isDesktop = () => window.matchMedia('(width > 760px)').matches
+const REST = -58
+const LIFT = -34
 
 function Mark({
   item,
@@ -33,23 +32,23 @@ function Mark({
   const first = useRef(true)
 
   useEffect(() => {
-    const y = active ? ACTIVE : hover ? lift() : rest()
+    const y = active ? 0 : hover ? LIFT : REST
     const rotation = active || hover ? 0 : item.tilt
-    if (first.current) {
+    if (first.current || !isDesktop()) {
       first.current = false
       gsap.set(ref.current, { y, rotation, transformOrigin: '50% 0%' })
       return
     }
-    gsap.to(ref.current, { y, rotation, duration: active ? 0.9 : 0.7, ease: active ? 'elastic.out(1, 0.75)' : 'elastic.out(1, 0.75)', overwrite: 'auto' })
+    gsap.to(ref.current, { y, rotation, duration: active ? 0.9 : 0.7, ease: 'elastic.out(1, 0.75)', overwrite: 'auto' })
   }, [active, hover])
 
   const press = () => {
     const el = ref.current
-    if (item.id === 'replay') {
-      gsap.fromTo(el, { y: 6 }, { y: hover ? lift() : rest(), duration: 0.9, ease: 'elastic.out(1, 0.75)' })
+    if (isDesktop() && item.id === 'replay') {
+      gsap.fromTo(el, { y: 6 }, { y: hover ? LIFT : REST, duration: 0.9, ease: 'elastic.out(1, 0.75)' })
       gsap.fromTo(el!.querySelector('svg'), { rotation: 0 }, { rotation: -360, duration: 0.8, ease: 'back.out(1.25)' })
-    } else if (!active) {
-      gsap.fromTo(el, { y: lift() }, { y: 14, duration: 0.18, ease: 'power2.out' })
+    } else if (isDesktop() && !active) {
+      gsap.fromTo(el, { y: LIFT }, { y: 14, duration: 0.18, ease: 'power2.out' })
     }
     onSelect(item.id)
   }
@@ -59,7 +58,7 @@ function Mark({
       ref={ref}
       className={`mark mark--${item.id}${active ? ' is-active' : ''}${item.ink ? ' is-ink' : ''}`}
       style={{ '--c': item.color, color: item.ink ? C.ink : '#fff' } as CSSProperties}
-      onPointerEnter={() => setHover(true)}
+      onPointerEnter={(e) => e.pointerType === 'mouse' && setHover(true)}
       onPointerLeave={() => setHover(false)}
       onFocus={() => setHover(true)}
       onBlur={() => setHover(false)}

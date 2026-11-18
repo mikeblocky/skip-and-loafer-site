@@ -237,6 +237,7 @@ export function SkipGame() {
   const [tiltDir, setTiltDir] = useState(1)
 
   const board = useLeaderboard()
+  const [boardOpen, setBoardOpen] = useState(false)
   const [name, setName] = useState(() => {
     try {
       return localStorage.getItem(NAME_KEY) ?? ''
@@ -1117,8 +1118,16 @@ export function SkipGame() {
         )}
       </div>
 
-      <section className="sg-board" aria-label="Leaderboard">
-        <h3>leaderboard</h3>
+      <button
+        type="button"
+        className="sx-btn sg-board-toggle"
+        aria-expanded={boardOpen}
+        aria-controls="sg-leaderboard"
+        onClick={() => setBoardOpen((open) => !open)}
+      >
+        Leaderboard
+      </button>
+      <section id="sg-leaderboard" className="sg-board" aria-label="Leaderboard" hidden={!boardOpen}>
         {board.state === 'loading' && <p className="sx-note">loading…</p>}
         {board.state === 'offline' && <p className="sx-note">the leaderboard is offline right now. your best still saves on this device.</p>}
         {board.state === 'ok' && board.entries.length === 0 && <p className="sx-note">no scores yet. be the first!</p>}
