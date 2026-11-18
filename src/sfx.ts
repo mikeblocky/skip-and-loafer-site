@@ -1,8 +1,8 @@
 /**
  * Every sound on the site is synthesized here with the Web Audio API: no audio files.
  * Browsers only let audio start after a user gesture, so `unlock()` must run inside one.
- * Soft plucks, pink noise, a gentle low-pass and a small room reverb, with slight random
- * variation on every hit so repeats never sound machine-identical.
+ * Bright plucks, bubbly bloops and springy boings over pink noise and a small, airy room, with
+ * slight random variation on every hit so repeats never sound machine-identical.
  */
 
 const KEY = 'sl-sound'
@@ -38,7 +38,7 @@ function pinkNoise(c: AudioContext, seconds: number) {
   return buf
 }
 
-/** A short, dark, decaying impulse: a small soft room. */
+/** A short decaying impulse: a small, lively room. */
 function roomImpulse(c: AudioContext, seconds = 1.6) {
   const len = Math.floor(c.sampleRate * seconds)
   const buf = c.createBuffer(2, len, c.sampleRate)
@@ -69,10 +69,10 @@ function ensure() {
   master = ctx.createGain()
   master.gain.value = 0.5
 
-  // Dry path: roll off the harsh top end.
+  // Dry path: keep the sparkle, only take the edge off the very top.
   const warm = ctx.createBiquadFilter()
   warm.type = 'lowpass'
-  warm.frequency.value = 4800
+  warm.frequency.value = 8200
   warm.Q.value = 0.5
   master.connect(warm).connect(comp)
 
@@ -83,7 +83,7 @@ function ensure() {
   verb.buffer = roomImpulse(ctx)
   const verbTone = ctx.createBiquadFilter()
   verbTone.type = 'lowpass'
-  verbTone.frequency.value = 2600
+  verbTone.frequency.value = 4400
   master.connect(send).connect(verb).connect(verbTone).connect(comp)
 
   noiseBuf = pinkNoise(ctx, 2)
@@ -220,6 +220,53 @@ function whistle({ f, dur, g = 0.06, delay = 0, pan = 0 }: { f: number; dur: num
   lfo.stop(t + dur + 0.05)
 }
 
+/** A bubble popping up: a quick upward sweep, the cutest sound a UI can make. */
+function bubble({ f, dur = 0.08, g = 0.06, delay = 0, pan = 0, rise = 2.1 }: { f: number; dur?: number; g?: number; delay?: number; pan?: number; rise?: number }) {
+  tone({ f: f / Math.sqrt(rise), f2: f * Math.sqrt(rise), dur, g, a: 0.003, delay, pan })
+}
+
+/**
+ * A cartoon spring: the note leaps up into place and wobbles there, the wobble dying away
+ * like a ruler twanged on a desk.
+ */
+function spring({ f, dur = 0.42, g = 0.06, delay = 0, pan = 0, wob = 0.08 }: { f: number; dur?: number; g?: number; delay?: number; pan?: number; wob?: number }) {
+  const dest = out(pan)
+  if (!ctx || !dest) return
+  f *= TUNE
+  const t = ctx.currentTime + delay
+  const o = ctx.createOscillator()
+  o.type = 'triangle'
+  o.frequency.setValueAtTime(f * 0.55, t)
+  o.frequency.exponentialRampToValueAtTime(f, t + 0.06)
+  const lfo = ctx.createOscillator()
+  lfo.frequency.value = 13 * vary(0.1)
+  const depth = ctx.createGain()
+  depth.gain.setValueAtTime(f * wob, t)
+  depth.gain.exponentialRampToValueAtTime(f * 0.002, t + dur)
+  lfo.connect(depth).connect(o.frequency)
+  const v = ctx.createGain()
+  v.gain.setValueAtTime(0.0001, t)
+  v.gain.exponentialRampToValueAtTime(g, t + 0.006)
+  v.gain.exponentialRampToValueAtTime(0.0001, t + dur)
+  o.connect(v).connect(dest)
+  o.start(t)
+  lfo.start(t)
+  o.stop(t + dur + 0.03)
+  lfo.stop(t + dur + 0.03)
+}
+
+/** A glockenspiel bar: a bright pluck with an octave shimmer on top. */
+function glock({ f, dur = 0.6, g = 0.05, delay = 0, pan = 0 }: { f: number; dur?: number; g?: number; delay?: number; pan?: number }) {
+  pluck({ f, dur, g, delay, pan, wood: 0.12 })
+  tone({ f: f * 2, dur: dur * 0.45, g: g * 0.3, a: 0.002, delay, pan })
+}
+
+/** A soft handclap: three tiny bursts smeared together, the way two hands never quite meet at once. */
+function clap({ g = 0.03, delay = 0, pan = 0 }: { g?: number; delay?: number; pan?: number }) {
+  for (let i = 0; i < 3; i++) noise({ dur: 0.012, f: 1500, q: 1.2, g: g * 0.7, a: 0.001, delay: delay + i * 0.009, pan })
+  noise({ dur: 0.09, f: 1300, q: 1, g, a: 0.002, delay: delay + 0.027, pan })
+}
+
 /** The raw voices, for the music engine (src/music.ts) to schedule ahead on the audio clock. */
 export const voices = {
   live: () => live(),
@@ -280,38 +327,42 @@ export const sfx = {
   },
   panOf,
 
-  /** Soft arrival: a gentle wooden note. Bigger things sound lower. */
+  /** Something pops into view: a bubbly bloop that lands on a bright note. Bigger things sound lower. */
   pop(pitch = 1, pan = 0) {
     if (!live() || !gate('pop', 30)) return
-    pluck({ f: inKey(440 * pitch) * vary(0.004), dur: 0.35, g: 0.075 * vary(0.15), pan, wood: 0.25 })
+    const f = inKey(440 * pitch) * vary(0.004)
+    bubble({ f, dur: 0.07, g: 0.05 * vary(0.15), pan })
+    pluck({ f, dur: 0.3, g: 0.06 * vary(0.15), delay: 0.035, pan, wood: 0.3 })
   },
-  /** Barely-there hover touch. */
+  /** Hover: a tiny upward chirp, barely there. */
   blip(pitch = 1) {
     if (!live() || !gate('blip', 70)) return
-    pluck({ f: 660 * pitch * vary(0.02), dur: 0.16, g: 0.018 * vary(0.2), wood: 0.15 })
+    bubble({ f: 1050 * pitch * vary(0.03), dur: 0.05, g: 0.016 * vary(0.2), rise: 1.6 })
   },
-  /** A soft wooden tap. */
+  /** Press: a bright little bloop with a tap at the front. */
   click(pitch = 1) {
     if (!live() || !gate('click', 40)) return
-    pluck({ f: 523 * pitch * vary(0.02), dur: 0.18, g: 0.07 * vary(0.12), wood: 0.45 })
-    noise({ dur: 0.02, f: 1800, q: 1.2, g: 0.012 })
+    bubble({ f: 740 * pitch * vary(0.02), dur: 0.06, g: 0.05 * vary(0.12) })
+    pluck({ f: 1046 * pitch * vary(0.02), dur: 0.14, g: 0.035 * vary(0.12), delay: 0.02, wood: 0.4 })
+    noise({ dur: 0.015, f: 2600, q: 1.2, g: 0.012 })
   },
   /** Light wooden tick for dials and scrolling. */
   tick(pitch = 1, g = 1) {
     if (!live() || !gate('tick', 35)) return
-    noise({ dur: 0.018, f: 2200 * pitch * vary(0.08), q: 4, g: 0.022 * g * vary(0.25), a: 0.002 })
-    tone({ f: 880 * pitch * vary(0.04), dur: 0.04, g: 0.012 * g, a: 0.002 })
+    noise({ dur: 0.018, f: 2800 * pitch * vary(0.08), q: 4, g: 0.022 * g * vary(0.25), a: 0.002 })
+    tone({ f: 1320 * pitch * vary(0.04), dur: 0.035, g: 0.012 * g, a: 0.002 })
   },
-  /** A flip block landing: a muted knock on wood. */
+  /** A flip block landing: a woodblock knock, like a toy one. */
   clack(pitch = 1) {
     if (!live() || !gate('clack', 35)) return
-    noise({ dur: 0.045, f: 1100 * pitch * vary(0.08), q: 2, g: 0.035 * vary(0.2), a: 0.002 })
-    pluck({ f: 220 * pitch * vary(0.03), dur: 0.14, g: 0.06 * vary(0.15), wood: 0.5 })
+    noise({ dur: 0.04, f: 1500 * pitch * vary(0.08), q: 2.5, g: 0.032 * vary(0.2), a: 0.002 })
+    pluck({ f: 440 * pitch * vary(0.03), dur: 0.12, g: 0.055 * vary(0.15), wood: 0.7 })
   },
-  /** A breath of air rather than a jet. */
+  /** A breath of air rather than a jet, with a faint slide-whistle riding along. */
   whoosh(dur = 0.5, up = true, g = 0.22, pan = 0) {
     if (!live() || !gate('whoosh', 90)) return
     const d = dur * 1.15 * vary(0.08)
+    tone({ f: up ? 520 : 1150, f2: up ? 1150 : 520, dur: d * 0.9, g: g * 0.07, a: d * 0.35, pan })
     noise({
       dur: d,
       f: up ? 260 : 1500,
@@ -323,30 +374,32 @@ export const sfx = {
       pan,
     })
   },
-  /** Something soft set down on a cushion. */
+  /** Landing on something soft, with a little bounce. */
   thud(pan = 0) {
     if (!live() || !gate('thud', 60)) return
-    tone({ f: 120 * vary(0.05), f2: 62, dur: 0.28, g: 0.17 * vary(0.1), a: 0.012, pan })
-    noise({ dur: 0.08, f: 380, type: 'lowpass', g: 0.05, a: 0.006, pan })
+    tone({ f: 140 * vary(0.05), f2: 75, dur: 0.22, g: 0.15 * vary(0.1), a: 0.01, pan })
+    noise({ dur: 0.07, f: 420, type: 'lowpass', g: 0.045, a: 0.006, pan })
+    bubble({ f: 330 * vary(0.03), dur: 0.08, g: 0.035, delay: 0.11, pan, rise: 1.7 })
   },
+  /** Picked up: a quick bloop upward. */
   grab(pan = 0) {
     if (!live() || !gate('grab', 40)) return
-    pluck({ f: 392 * vary(0.03), dur: 0.14, g: 0.05 * vary(0.15), pan, wood: 0.3 })
+    bubble({ f: 523 * vary(0.03), dur: 0.09, g: 0.055 * vary(0.15), pan })
   },
-  /** Gentle release: two soft notes settling down. */
+  /** Let go: a proper boing, settling on a happy note. */
   boing(pan = 0) {
     if (!live() || !gate('boing', 90)) return
-    pluck({ f: 587.33 * vary(0.01), dur: 0.22, g: 0.05, pan, wood: 0.2 })
-    pluck({ f: 392 * vary(0.01), dur: 0.35, g: 0.045, delay: 0.09 * vary(0.15), pan, wood: 0.2 })
+    spring({ f: 392 * vary(0.02), dur: 0.45, g: 0.055, pan })
+    pluck({ f: 783.99 * vary(0.01), dur: 0.3, g: 0.03, delay: 0.1, pan, wood: 0.2 })
   },
-  /** Kalimba-like phrase, unhurried and slightly humanized. */
+  /** A glockenspiel run up the scale, quick and sparkly. */
   chime(base = 1, g = 1) {
     if (!live() || !gate('chime', 200)) return
     const notes = [PENTA[0], PENTA[2], PENTA[3], PENTA[5], 987.77]
     let at = 0
     notes.forEach((f, i) => {
-      pluck({ f: f * base * vary(0.004), dur: 1.3, g: 0.05 * g * vary(0.15) * (i === notes.length - 1 ? 1.1 : 1), delay: at, wood: 0.18 })
-      at += 0.11 * vary(0.2)
+      glock({ f: f * base * vary(0.004), dur: 1.1, g: 0.045 * g * vary(0.15) * (i === notes.length - 1 ? 1.15 : 1), delay: at })
+      at += 0.075 * vary(0.2)
     })
   },
   /**
@@ -386,6 +439,16 @@ export const sfx = {
     for (let s = 1; s < 16; s += 2) {
       noise({ dur: 0.05, f: 5200, q: 1.5, g: 0.012 * g * vary(0.3), a: 0.008, delay: s * e })
     }
+    // Handclaps on the backbeat, and one on the finish.
+    for (let s = 2; s < 16; s += 4) clap({ g: 0.022 * g * vary(0.2), delay: s * e, pan: s % 8 ? 0.2 : -0.2 })
+    clap({ g: 0.03 * g, delay: end })
+
+    // A glockenspiel doubles the tune an octave up, quietly, for sparkle.
+    step = 0
+    melody.forEach(([f, len], i) => {
+      tone({ f: f * 2 * vary(0.002), dur: i === melody.length - 1 ? 1.2 : 0.18, g: 0.011 * g, a: 0.002, delay: step * e })
+      step += len
+    })
   },
   /** Paper turning: a few irregular soft grains. */
   rustle() {
@@ -417,19 +480,20 @@ export const sfx = {
     noise({ dur, f: 1400 * vary(0.1), f2: 2400, q: 0.5, g: 0.03 * g * vary(0.15), a: dur * 0.35 })
     noise({ dur: dur * 0.8, f: 5200, q: 1, g: 0.008 * g, a: dur * 0.3 })
   },
-  /** A wax seal pressed down: a soft, heavy squish. */
+  /** A stamp pressed down, then a little "ta-da!" */
   stamp() {
     if (!live() || !gate('stamp', 150)) return
-    tone({ f: 150 * vary(0.05), f2: 70, dur: 0.24, g: 0.16, a: 0.008 })
-    noise({ dur: 0.12, f: 520, q: 0.8, g: 0.05, a: 0.004, type: 'lowpass' })
-    pluck({ f: 880 * vary(0.02), dur: 0.12, g: 0.02, delay: 0.03, wood: 0.6 })
+    tone({ f: 150 * vary(0.05), f2: 70, dur: 0.22, g: 0.15, a: 0.008 })
+    noise({ dur: 0.1, f: 560, q: 0.8, g: 0.045, a: 0.004, type: 'lowpass' })
+    glock({ f: 783.99, dur: 0.35, g: 0.04, delay: 0.09 })
+    glock({ f: 1174.66, dur: 0.8, g: 0.045, delay: 0.19 * vary(0.05) })
   },
-  /** Wax breaking: two sharp little snaps. */
+  /** Wax breaking: two sharp little snaps and a twinkle. */
   crack() {
     if (!live() || !gate('crack', 150)) return
     noise({ dur: 0.025, f: 3400, q: 3, g: 0.07, a: 0.001 })
     noise({ dur: 0.03, f: 2400, q: 2.5, g: 0.05, a: 0.001, delay: 0.06 * vary(0.3) })
-    pluck({ f: 1320 * vary(0.03), dur: 0.08, g: 0.02, wood: 0.8 })
+    glock({ f: 1567.98 * vary(0.01), dur: 0.4, g: 0.02, delay: 0.08 })
   },
   /** A tin mailbox door: a hollow knock with a short metallic ring. */
   clank(pitch = 1) {
@@ -455,8 +519,8 @@ export const sfx = {
   transition(lead = 0.65) {
     if (!live() || !gate('transition', 400)) return
     buildUp(lead, 0.7, false)
-    pluck({ f: 587.33, dur: 0.9, g: 0.05, delay: lead, wood: 0.2 })
-    pluck({ f: 783.99, dur: 1.1, g: 0.04, delay: lead + 0.06 * vary(0.3), wood: 0.15 })
+    glock({ f: 587.33, dur: 0.9, g: 0.045, delay: lead })
+    glock({ f: 783.99, dur: 1.1, g: 0.04, delay: lead + 0.06 * vary(0.3) })
   },
 }
 

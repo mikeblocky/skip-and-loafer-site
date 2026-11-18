@@ -8,7 +8,7 @@ import { openSecret } from '../secrets'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const START = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
-const BAND = ['#FF2E93', '#FF6B00', '#FF9500', '#3FC800', '#00C46A', '#00A6A6', '#0091FF', '#1F6BFF', '#3D3BFF', '#7B2FFF', '#D500F9', '#FF2850']
+const BAND = ['#F53D84', '#F86E1A', '#F5900F', '#3FC800', '#12B266', '#0EA09E', '#1B88E8', '#246BE8', '#3F44D6', '#7A45E0', '#CC3DC0', '#F0344F']
 
 /** 0° is the top of the dial, clockwise through the year. */
 const angleOf = (m: number, d: number) => ((START[m - 1] + d - 1) / 365) * 360
@@ -244,7 +244,7 @@ export function Birthdays() {
 
   return (
     <section className={`view view-birthdays${mobile ? ' is-mobile' : ''}`}>
-      <FlexText as="h2" className="bd-title" offset={2} words={[{ t: 'Birthdays', w: 900 }]} data-intro="ui" data-safe="">
+      <FlexText as="h2" className="bd-title" words={[{ t: 'Birthdays', w: 760, c: C.green }]} data-intro="ui" data-safe="">
         <sup className="vt-count">{list.length}</sup>
       </FlexText>
 
@@ -283,7 +283,7 @@ export function Birthdays() {
                 ))}
               </div>
             </div>
-            <FlexText as="div" className="bd-who" offset={sel} words={[{ t: b.name, w: 850 }]} />
+            <FlexText as="div" className="bd-who" words={[{ t: b.name, w: 850, c: b.color }]} />
             <div className="bd-date">{date}</div>
             <div className="bd-count">
               {b.days === 0 ? (

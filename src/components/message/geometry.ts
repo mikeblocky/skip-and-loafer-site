@@ -59,12 +59,12 @@ export const vars = (g: Geo, color: string) =>
 
 /** Each paper has its own icon (stamp, seal, picker) and an ink dark enough to read on white. */
 export const PAPER: Record<string, { name: string; icon: IconName; ink: string }> = {
-  '#FF2E93': { name: 'Sakura', icon: 'sakura', ink: '#FF2E93' },
-  '#1F6BFF': { name: 'Star', icon: 'star', ink: '#1F6BFF' },
-  '#FFC400': { name: 'Sun', icon: 'sun', ink: '#E39400' },
-  '#00C46A': { name: 'Clover', icon: 'clover', ink: '#00A65A' },
-  '#FF6B00': { name: 'Flame', icon: 'flame', ink: '#FF6B00' },
-  '#7B2FFF': { name: 'Moon', icon: 'moon', ink: '#7B2FFF' },
+  '#F53D84': { name: 'Sakura', icon: 'sakura', ink: '#F53D84' },
+  '#246BE8': { name: 'Star', icon: 'star', ink: '#246BE8' },
+  '#FBBA14': { name: 'Sun', icon: 'sun', ink: '#E39400' },
+  '#12B266': { name: 'Clover', icon: 'clover', ink: '#00A65A' },
+  '#F86E1A': { name: 'Flame', icon: 'flame', ink: '#F86E1A' },
+  '#7A45E0': { name: 'Moon', icon: 'moon', ink: '#7A45E0' },
 }
 export const paper = (c: string) => PAPER[safeColor(c)]
 

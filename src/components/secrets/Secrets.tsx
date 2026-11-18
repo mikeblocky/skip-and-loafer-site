@@ -34,7 +34,7 @@ function Overlay({ info, onClose, children }: { info: SecretInfo; onClose: () =>
         <Icon name="close" color={C.ink} size={22} />
       </button>
       <div className={`sx-panel${info.id === 'skip' ? ' is-wide' : ''}`}>
-        <FlexText as="h2" className="sx-title" offset={info.id.length} words={info.title.split(' ').map((t) => ({ t, w: 900 }))} />
+        <FlexText as="h2" className="sx-title" words={info.title.split(' ').map((t) => ({ t, w: 760 }))} />
         <div className="sx-body">{children}</div>
       </div>
     </div>

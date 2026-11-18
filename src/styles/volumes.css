@@ -105,7 +105,7 @@
   top: 9%;
   left: 11%;
   font-size: calc(var(--ch) * 0.06);
-  font-weight: 800;
+  font-weight: 650;
   opacity: 0.85;
 }
 .vcard-num {
@@ -176,7 +176,7 @@
 .shelf-hint {
   margin: 26px 0 0;
   font-size: 14px;
-  font-weight: 750;
+  font-weight: 600;
   color: var(--muted);
   letter-spacing: 0.04em;
 }

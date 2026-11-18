@@ -247,7 +247,7 @@ export function Anime() {
 
   return (
     <section className="view view-anime">
-      <FlexText as="h2" className="anime-title" offset={4} words={[{ t: 'Anime', w: 900 }]} data-intro="ui" data-safe="">
+      <FlexText as="h2" className="anime-title" words={[{ t: 'Anime', w: 760, c: C.orange }]} data-intro="ui" data-safe="">
         <sup className="vt-count">{SEASONS.length}</sup>
       </FlexText>
 

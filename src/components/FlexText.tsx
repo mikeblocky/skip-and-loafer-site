@@ -1,20 +1,15 @@
 import { useEffect, useRef, type CSSProperties, type ElementType } from 'react'
-import { C } from '../data'
-
-// readable on the cream paper (no yellow/sky for text)
-const INKS = [C.pink, C.blue, C.orange, C.green, C.violet, C.red, '#00B39B']
-
 export interface Word {
   t: string
   w: number
   oblique?: boolean
-  /** one colour for the whole word instead of a rainbow per letter */
+  /** colour for this word; defaults to the heading's colour */
   c?: string
 }
 
 /**
  * Letters near the pointer swing toward the opposite end of the weight axis and lose
- * some roundness, then ease back. Each letter carries its own colour.
+ * some roundness, then ease back.
  */
 function useWeightField(root: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
@@ -73,21 +68,18 @@ function useWeightField(root: React.RefObject<HTMLElement | null>) {
 export function FlexText({
   as: Tag = 'h1',
   words,
-  offset = 0,
   className,
   children,
   ...rest
 }: {
   as?: ElementType
   words: Word[]
-  offset?: number
   className?: string
   children?: React.ReactNode
   [k: `data-${string}`]: unknown
 }) {
   const ref = useRef<HTMLElement>(null)
   useWeightField(ref)
-  let n = offset
   return (
     <Tag ref={ref} className={`flex-text ${className ?? ''}`} aria-label={words.map((w) => w.t).join(' ')} {...rest}>
       {words.map((wd, wi) => (
@@ -97,7 +89,7 @@ export function FlexText({
               key={k}
               className="fl"
               data-w={wd.w}
-              style={{ color: wd.c ?? INKS[n++ % INKS.length], fontVariationSettings: `'wght' ${wd.w}, 'ROND' 100` } as CSSProperties}
+              style={{ color: wd.c, fontVariationSettings: `'wght' ${wd.w}, 'ROND' 100` } as CSSProperties}
             >
               {ch}
             </span>

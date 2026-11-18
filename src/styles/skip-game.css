@@ -187,7 +187,7 @@
 }
 .sg-thing.is-star svg,
 .sg-thing.is-heart svg {
-  filter: drop-shadow(0 0 6px rgb(255 196 0 / 0.55));
+  filter: drop-shadow(0 0 6px rgb(251 186 20 / 0.55));
 }
 .sg-thing.is-plane svg {
   filter: drop-shadow(0 6px 0 rgb(29 27 44 / 0.12));
@@ -319,15 +319,15 @@
   position: absolute;
   inset: -14% -42% -6%;
   border-radius: 50%;
-  border: 2.5px solid rgb(0 196 106 / 0.55);
-  background: radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.55), rgb(0 196 106 / 0.08) 60%);
+  border: 2.5px solid rgb(18 178 102 / 0.55);
+  background: radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.55), rgb(18 178 102 / 0.08) 60%);
   animation: sg-bubble 1.2s ease-in-out infinite alternate;
   pointer-events: none;
 }
 @keyframes sg-bubble {
   to {
     transform: scale(1.04);
-    border-color: rgb(0 196 106 / 0.8);
+    border-color: rgb(18 178 102 / 0.8);
   }
 }
 
