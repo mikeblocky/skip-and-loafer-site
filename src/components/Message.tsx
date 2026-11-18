@@ -51,7 +51,7 @@ interface Letter {
   from: string | null
   color: string
   at: number
-  /** only your own letters were in the mailbox */
+  /** you wrote this one */
   mine?: boolean
 }
 
@@ -355,7 +355,9 @@ function Writer({ g, onSent, onOpen, stats }: { g: Geo; onSent: () => void; onOp
 
     const t = gsap.timeline()
     tl.current = t
-    t.to(q('.wr-tools'), { autoAlpha: 0, y: 14, duration: 0.3, ease: 'power2.in' }, 0)
+    // the tray sits beside the post, not inside it
+    const tools = el.parentElement?.querySelector('.wr-tools')
+    if (tools) t.to(tools, { autoAlpha: 0, y: 14, duration: 0.3, ease: 'power2.in' }, 0)
     // bottom third folds up, then the top third folds down over it
     t.call(() => sfx.fold(0.1), [], 0.62)
     turn(t, p2, 180, 0.2)
@@ -393,10 +395,19 @@ function Writer({ g, onSent, onOpen, stats }: { g: Geo; onSent: () => void; onOp
       if (ok === false) {
         // unwrap it again and hand the pen back
         t.pause()
-        t.eventCallback('onReverseComplete', () => {
+        const handBack = () => {
+          t.kill()
           setErr(failure)
           setPhase('compose')
-        })
+        }
+        // a refusal that comes back before the first frame has nothing to rewind (and a reverse
+        // from 0 would never report finishing), so put the page back at once
+        if (t.time() < 0.05) {
+          t.progress(0)
+          handBack()
+          return
+        }
+        t.eventCallback('onReverseComplete', handBack)
         t.timeScale(2.4).reverse()
       }
     }
@@ -800,7 +811,7 @@ function Reader({ g, total, onChange, onWrite }: { g: Geo; total: number | null;
           </>
         )}
         {phase === 'checking' && <p className="rx-count">checking…</p>}
-        {phase === 'arrived' && <p className="rx-hint">{letter?.mine ? 'only yours in there right now. tap to open' : 'tap to open'}</p>}
+        {phase === 'arrived' && <p className="rx-hint">{letter?.mine ? 'this one’s yours! tap to open' : 'tap to open'}</p>}
         {phase === 'empty' && (
           <>
             <p className="rx-count">Nothing in there yet.</p>

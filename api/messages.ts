@@ -9,12 +9,12 @@
  *   POST /api/messages {action:'send', text, from, color, me}   → { id, total }
  *   POST /api/messages {action:'report', id, me}                → { ok }
  *
- * `me` is a random id the browser makes for itself (not personal): it keeps you from opening your
- * own letters and lets one reader report a letter only once. Letters are checked with the same
+ * `me` is a random id the browser makes for itself (not personal): it marks which letters are your
+ * own (they're in the mix too, but don't count as reads) and lets one reader report a letter only once. Letters are checked with the same
  * rules the page shows (src/letterRules.ts); a letter that three readers report is taken down.
  */
 import { createClient } from 'redis'
-import { cleanSigner, cleanText, problem, safeColor } from '../src/letterRules'
+import { cleanSigner, cleanText, problem, safeColor } from '../src/letterRules.js'
 
 declare const process: { env: Record<string, string | undefined> }
 
@@ -135,8 +135,28 @@ const publicView = (l: Letter) => ({
   at: Number(l.at) || 0,
 })
 
+/** Fisher–Yates. Redis hands a small set back in the same order every time, so it's mixed here. */
+function shuffle<T>(list: T[]): T[] {
+  const a = [...list]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
+/**
+ * `read` is this reader's history, oldest first. Letters they haven't read come first, in random
+ * order; once they've read them all, the one they read longest ago comes back round, so a small
+ * mailbox cycles through every letter instead of repeating one.
+ */
+function nextFor(letters: Letter[], read: string[]): Letter | undefined {
+  const when = (l: Letter) => read.indexOf(l.id) // -1 = never read
+  return shuffle(letters).sort((a, b) => when(a) - when(b))[0]
+}
+
 async function openOne(r: Client, me: string, not: string[]) {
-  const picks: string[] = await r.sRandMemberCount(KEY.live, 12)
+  const picks: string[] = await r.sRandMemberCount(KEY.live, 40)
   if (!picks.length) return null
   const rows = (await r.hmGet(KEY.data, picks)) as (string | null)[]
   const letters = rows.flatMap((s) => {
@@ -146,9 +166,8 @@ async function openOne(r: Client, me: string, not: string[]) {
       return []
     }
   })
-  const others = letters.filter((l) => l.by !== me)
-  // a fresh one if there is one, then one you've read before, and your own only when nothing else is in there
-  const pick = others.find((l) => !not.includes(l.id)) ?? others[0] ?? letters[0]
+  // everyone's letters are in the mix, your own included
+  const pick = nextFor(letters, not)
   if (!pick) return null
   const mine = pick.by === me
   if (!mine) await r.hIncrBy(KEY.opens, pick.id, 1)
