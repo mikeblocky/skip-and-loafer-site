@@ -33,6 +33,29 @@ export interface PlayerProps {
 }
 
 const SUBS_KEY = 'sl-subs'
+const FURI_KEY = 'sl-furigana'
+
+/** An on/off preference remembered on this device (on unless turned off). */
+function usePref(key: string) {
+  const [on, setOn] = useState(() => {
+    try {
+      return localStorage.getItem(key) !== 'off'
+    } catch {
+      return true
+    }
+  })
+  const toggle = () => {
+    const next = !on
+    setOn(next)
+    sfx.click(next ? 1.1 : 0.9)
+    try {
+      localStorage.setItem(key, next ? 'on' : 'off')
+    } catch {
+      /* private mode */
+    }
+  }
+  return [on, toggle] as const
+}
 
 /** A plain <video> with our own controls: play, scrub, time, subtitles, mute, fullscreen. */
 export function Player({ src, poster, kind, title, titleJp, artist, artistJp, color, subs, goldenWord, onGolden }: PlayerProps) {
@@ -50,13 +73,9 @@ export function Player({ src, poster, kind, title, titleJp, artist, artistJp, co
   // how many characters of the current line have been sung (drives the karaoke highlight)
   const [sung, setSung] = useState(0)
   const lastCue = useRef(-1)
-  const [subsOn, setSubsOn] = useState(() => {
-    try {
-      return localStorage.getItem(SUBS_KEY) !== 'off'
-    } catch {
-      return true
-    }
-  })
+  const [subsOn, toggleSubs] = usePref(SUBS_KEY)
+  const [furiOn, toggleFuri] = usePref(FURI_KEY)
+  const hasFuri = !!subs?.some((c) => c.ruby?.length)
   // controls show while you're touching the video and slip away after a moment of stillness
   const [awake, setAwake] = useState(false)
   const idleTimer = useRef(0)
@@ -130,17 +149,6 @@ export function Player({ src, poster, kind, title, titleJp, artist, artistJp, co
     // the surprise opens over the page, so leave fullscreen first
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
     onGolden?.()
-  }
-
-  const toggleSubs = () => {
-    const next = !subsOn
-    setSubsOn(next)
-    sfx.click(next ? 1.1 : 0.9)
-    try {
-      localStorage.setItem(SUBS_KEY, next ? 'on' : 'off')
-    } catch {
-      /* private mode */
-    }
   }
 
   useEffect(() => {
@@ -222,7 +230,7 @@ export function Player({ src, poster, kind, title, titleJp, artist, artistJp, co
           }}
         />
         {subs && subsOn && started && (
-          <div className="pl-subs" aria-live="off">
+          <div className={`pl-subs${hasFuri && !furiOn ? ' no-furi' : ''}`} aria-live="off">
             {subs.map((c, i) => {
               const chars = Array.from(c.jp)
               const k = sungIn(i, chars.length)
@@ -257,7 +265,7 @@ export function Player({ src, poster, kind, title, titleJp, artist, artistJp, co
                       // inside still lights up on its own, so the sweep doesn't change
                       const out = []
                       for (let j = 0; j < chars.length; ) {
-                        const r = c.ruby?.find(([at]) => at === j)
+                        const r = furiOn ? c.ruby?.find(([at]) => at === j) : undefined
                         if (!r) {
                           out.push(char(j++))
                           continue
@@ -333,6 +341,18 @@ export function Player({ src, poster, kind, title, titleJp, artist, artistJp, co
               title={subsOn ? 'Hide lyrics' : 'Show lyrics'}
             >
               CC
+            </button>
+          )}
+          {hasFuri && subsOn && (
+            <button
+              className={`pl-btn pl-cc pl-furi${furiOn ? ' is-on' : ''}`}
+              onClick={toggleFuri}
+              aria-pressed={furiOn}
+              aria-label={furiOn ? 'Hide furigana' : 'Show furigana'}
+              title={furiOn ? 'Hide furigana (kanji readings)' : 'Show furigana (kanji readings)'}
+              lang="ja"
+            >
+              ふ
             </button>
           )}
           <button
