@@ -40,10 +40,10 @@ export function SkipHud({ lives, powers, rest, team, won, score, best, scoreEl }
         ))}
       </span>
       <span>
-        score <b ref={scoreEl}>{score}</b>
+        score <b className="sg-score" ref={scoreEl}>{score}</b>
       </span>
       <span>
-        best <b>{best}</b>
+        best <b className="sg-best">{best}</b>
       </span>
     </div>
   )

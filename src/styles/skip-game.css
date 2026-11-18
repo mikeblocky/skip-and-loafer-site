@@ -140,6 +140,66 @@
 .sg-friend {
   animation: sg-join 0.6s var(--spring) both;
 }
+/* every runner wears an outline in their own colour so they stand out from the page;
+   whoever you're playing gets the thicker one */
+.sg-friend {
+  --outline: drop-shadow(0.6px 0 0 var(--oc)) drop-shadow(-0.6px 0 0 var(--oc)) drop-shadow(0 0.6px 0 var(--oc))
+    drop-shadow(0 -0.6px 0 var(--oc));
+}
+.sg-player {
+  --outline: drop-shadow(1px 0 0 var(--oc)) drop-shadow(-1px 0 0 var(--oc)) drop-shadow(0 1px 0 var(--oc))
+    drop-shadow(0 -1px 0 var(--oc)) drop-shadow(0 2px 5px color-mix(in srgb, var(--oc) 25%, transparent));
+}
+/* on the picture itself, so the shield and anything else drawn on the player keep their own edges */
+.sg-player img,
+.sg-friend img {
+  filter: var(--outline);
+}
+
+/* where a falling sticker will land: a shadow that darkens and widens as it comes down */
+.sg-warn {
+  --near: 0;
+  position: absolute;
+  left: 0;
+  bottom: calc(var(--floor) - 6px);
+  z-index: 4;
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+.sg-warn i {
+  position: absolute;
+  left: -22px;
+  bottom: 0;
+  width: 44px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--red);
+  opacity: calc(0.18 + var(--near) * 0.4);
+  scale: calc(0.5 + var(--near) * 0.6) 1;
+}
+.sg-warn b {
+  position: absolute;
+  left: -9px;
+  bottom: 16px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  font-size: 12px;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+  animation: sg-warn 0.32s ease-in-out infinite alternate;
+}
+@keyframes sg-warn {
+  to {
+    translate: 0 -4px;
+    scale: 1.15;
+  }
+}
 @keyframes sg-join {
   from {
     opacity: 0;
@@ -245,6 +305,24 @@
   color: var(--muted);
   font-size: 14px;
 }
+/* the end line: each friend's name in their colour, deepened so the light ones stay readable */
+.sg-overlay em {
+  font-style: normal;
+  color: color-mix(in oklab, var(--c, var(--ink)), #000 18%);
+}
+.sg-overlay .sg-pts {
+  --c: var(--orange);
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.sg-overlay .sg-new {
+  --c: var(--pink);
+}
+.sg-hud .sg-score {
+  color: var(--orange);
+}
+.sg-hud .sg-best {
+  color: var(--pink);
+}
 .sg-save {
   display: flex;
   flex-wrap: wrap;
@@ -314,20 +392,23 @@
     transform: scale(1.12) rotate(8deg);
   }
 }
+/* lucky shield: a flat bubble, one tint and one thin edge */
 .sg-player.is-shield::after {
   content: '';
   position: absolute;
-  inset: -14% -42% -6%;
-  border-radius: 50%;
-  border: 2.5px solid rgb(18 178 102 / 0.55);
-  background: radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.55), rgb(18 178 102 / 0.08) 60%);
-  animation: sg-bubble 1.2s ease-in-out infinite alternate;
   pointer-events: none;
+  inset: -16% -46% -8%;
+  border-radius: 50%;
+  border: 1px solid rgb(18 178 102 / 0.75);
+  background: rgb(18 178 102 / 0.13);
+  animation: sg-bubble 1.4s ease-in-out infinite alternate;
 }
 @keyframes sg-bubble {
+  from {
+    transform: scale(0.98, 1.02);
+  }
   to {
-    transform: scale(1.04);
-    border-color: rgb(18 178 102 / 0.8);
+    transform: scale(1.03, 0.98);
   }
 }
 

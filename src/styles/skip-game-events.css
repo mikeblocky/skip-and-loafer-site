@@ -125,7 +125,7 @@
 }
 .sg-field.tw-moon .sg-player img,
 .sg-field.tw-moon .sg-friend img {
-  filter: drop-shadow(0 0 7px rgb(160 190 255 / 0.95));
+  filter: var(--outline) drop-shadow(0 0 7px rgb(160 190 255 / 0.95));
 }
 .sg-field.tw-rush .sg-doodles,
 .sg-field.tw-rush .sg-floor {

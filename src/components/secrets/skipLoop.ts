@@ -61,6 +61,8 @@ export interface LoopIO {
   ground: RefObject<HTMLDivElement | null>
   scoreEl: RefObject<HTMLElement | null>
   thingEls: RefObject<HTMLDivElement[]>
+  /** one landing marker per thing, shown while a sticker is falling */
+  warnEls: RefObject<HTMLDivElement[]>
   friendEls: RefObject<HTMLDivElement[]>
   doodleEls: RefObject<HTMLDivElement[]>
   worldW: RefObject<number>
@@ -81,7 +83,7 @@ export interface LoopIO {
 
 /** Runs one game from `s` frame by frame until the hearts run out; returns a stop function. */
 export function runSkipLoop(s: GameState, io: LoopIO) {
-  const { field, player, ground, scoreEl, thingEls, friendEls, doodleEls, worldW, hop, end, say } = io
+  const { field, player, ground, scoreEl, thingEls, warnEls, friendEls, doodleEls, worldW, hop, end, say } = io
   const { setLooks, setPowers, setRest, setTwists, setTiltDir, setPage, setFlipping, setTeam, setWon, setLives } = io
   s.last = performance.now()
 
@@ -433,7 +435,11 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
     const pb = s.y + 4
     const pt = s.y + PLAYER_H * 0.78
     s.things.forEach((t, i) => {
-      if (!t.on) return
+      if (!t.on) {
+        const w = warnEls.current[i]
+        if (w && w.style.opacity !== '0') w.style.opacity = '0'
+        return
+      }
       t.x -= s.speed * (t.kind === 'plane' ? 1.3 : t.mode === 'roll' ? 1.45 : 1) * dt
       if (t.mode === 'bounce') t.y = Math.abs(Math.sin(t.phase * 0.55)) * 58
       else if (t.mode === 'zigzag') t.y = t.base + Math.sin(t.phase * 0.4) * 52
@@ -442,6 +448,19 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
       if (t.kind === 'drop' && t.y > 0) {
         t.vy -= GRAVITY * 0.8 * dt
         t.y = Math.max(0, t.y + t.vy * dt)
+      }
+      // while it falls, mark the spot on the road where it will land: the shadow grows as it nears
+      const warn = warnEls.current[i]
+      if (warn) {
+        if (t.kind === 'drop' && t.y > 0) {
+          const g = GRAVITY * 0.8
+          const left = (t.vy + Math.sqrt(t.vy * t.vy + 2 * g * t.y)) / g
+          // a spot still off the right edge is pinned to it, so the warning shows the moment it starts falling
+          const land = Math.min(t.x - s.speed * pace(t) * left + t.size / 2, worldW.current - 22)
+          warn.style.opacity = '1'
+          warn.style.transform = `translateX(${land}px)`
+          warn.style.setProperty('--near', (1 - Math.min(1, t.y / 240)).toFixed(3))
+        } else if (warn.style.opacity !== '0') warn.style.opacity = '0'
       }
       // star magnet: stars within reach drift into Mitsumi's arms (reach grows along the curve)
       if (t.kind === 'star' && s.pw.sun > 0 && t.x < PX + 300 + 400 * D && t.x > PX - 40) {
@@ -453,6 +472,7 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
       if (t.x < -80) {
         t.on = false
         if (el) el.style.opacity = '0'
+        if (warn) warn.style.opacity = '0'
         return
       }
       const by = t.y + wobble
