@@ -2597,6 +2597,48 @@ body {
   font-weight: 800;
   font-size: clamp(15px, 2.2vw, 22px);
   letter-spacing: 0.04em;
+  /* room for furigana above every line, so lines with and without it are the same height;
+     a wrapped line gets just enough leading for its readings to clear the line above */
+  line-height: 1.7;
+  padding-top: 0.3em;
+}
+/* furigana: small and quiet over the kanji, brightening once the word is sung */
+.pl-rb {
+  ruby-position: over;
+  ruby-align: center;
+}
+/* a tight box on the kanji so its reading sits right on top, not above the line's leading */
+.pl-rb,
+.pl-rb .pl-k {
+  line-height: 1.1;
+}
+.pl-rb rt {
+  font-size: max(9px, 0.46em);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: rgb(255 255 255 / 0.72);
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.7),
+    0 0 6px rgb(0 0 0 / 0.4);
+  transition: color 0.18s ease;
+  user-select: none;
+}
+/* once sung, the reading gets the same song-coloured outline as the kanji under it; a bit
+   thicker in em since the text is so small */
+.pl-rb rt.is-sung {
+  --ink-o: color-mix(in oklab, var(--c), #000 18%);
+  color: #fff;
+  text-shadow:
+    0.08em 0 0 var(--ink-o),
+    -0.08em 0 0 var(--ink-o),
+    0 0.08em 0 var(--ink-o),
+    0 -0.08em 0 var(--ink-o),
+    0.06em 0.06em 0 var(--ink-o),
+    -0.06em 0.06em 0 var(--ink-o),
+    0.06em -0.06em 0 var(--ink-o),
+    -0.06em -0.06em 0 var(--ink-o),
+    0 0.06em 0.3em rgb(0 0 0 / 0.4);
 }
 /* karaoke: each character lights up as it's sung, the current one hops with a little ball on top */
 /* Unsung: white with a soft dark edge. Sung: white with a thick outline in the song's colour,
@@ -2641,7 +2683,8 @@ body {
     pl-pop 0.5s var(--spring) both,
     pl-hop 0.32s ease-in-out 0.3s infinite alternate;
 }
-.pl-k.is-now::after {
+.pl-k.is-now::after,
+.pl-rb rt.is-now::after {
   content: '';
   position: absolute;
   left: 50%;
@@ -2656,7 +2699,8 @@ body {
     0 2px 6px rgb(0 0 0 / 0.5);
   animation: pl-ball 0.3s ease-in-out infinite alternate;
 }
-.pl-k.is-now::before {
+.pl-k.is-now::before,
+.pl-rb rt.is-now::before {
   content: '✦';
   position: absolute;
   left: 78%;
@@ -2669,6 +2713,27 @@ body {
 }
 .pl-k.is-gap::before {
   display: none;
+}
+/* over a kanji the ball and sparkle ride on its reading instead. Anything poking up out of the
+   kanji (even a transform) makes the browser lift the reading clear of it, opening a gap. */
+.pl-rb .pl-k.is-now::after,
+.pl-rb .pl-k.is-now::before {
+  display: none;
+}
+.pl-rb rt.is-now {
+  position: relative;
+}
+/* the reading is about half size, so double up to keep the ball the same size */
+.pl-rb rt.is-now::after {
+  top: -1.1em;
+  width: 0.74em;
+  height: 0.74em;
+  margin-left: -0.37em;
+}
+.pl-rb rt.is-now::before {
+  left: 85%;
+  top: -0.9em;
+  font-size: 0.9em;
 }
 @keyframes pl-pop {
   0% {
@@ -3164,7 +3229,8 @@ body {
   pointer-events: auto;
   cursor: pointer;
 }
-.pl-line.is-golden .pl-k.is-now::after {
+.pl-line.is-golden .pl-k.is-now::after,
+.pl-line.is-golden rt.is-now::after {
   background: radial-gradient(circle at 35% 30%, #fff6c2, #ffc400 55%, #e09a00);
   box-shadow:
     0 0 0 2.5px #fff,
