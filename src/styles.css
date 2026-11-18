@@ -2611,6 +2611,10 @@ body {
      a wrapped line gets just enough leading for its readings to clear the line above */
   line-height: 1.7;
   padding-top: 0.3em;
+  /* take the line's full width (the parent is a centring flex column): a shrink-to-fit box
+     is sized from the ruby's intrinsic width, which browsers under-measure, so short lines
+     wrapped for no reason. Full width + centred text only wraps a line that really is too long */
+  align-self: stretch;
 }
 /* furigana: small and quiet over the kanji, brightening once the word is sung */
 .pl-rb {
@@ -2634,11 +2638,22 @@ body {
   --pl-float-delay: 0.5s;
   position: relative;
   display: inline-block;
+  /* a reading wider than its kanji may hang a little over the kana beside it (as printed
+     furigana does) instead of pushing the kanji apart: 新 with あたら no longer leaves a gap
+     before しい */
+  margin-inline: -0.55em;
   color: rgb(255 255 255 / 0.72);
   text-shadow:
     0 1px 2px rgb(0 0 0 / 0.7),
     0 0 6px rgb(0 0 0 / 0.4);
   transition: color 0.18s ease;
+}
+/* ...but never over the next kanji's own reading (正体, 毎日), or the two would overlap */
+.pl-rb + .pl-rb .pl-reading {
+  margin-left: 0;
+}
+.pl-rb:has(+ .pl-rb) .pl-reading {
+  margin-right: 0;
 }
 /* once sung, the reading gets the same song-coloured outline as the kanji under it; a bit
    thicker in em since the text is so small */
@@ -3844,7 +3859,11 @@ body {
   top: 16px;
   z-index: 6;
   translate: -50% 0;
+  /* left: 50% would leave only half the field to grow into, so even short call-outs wrapped;
+     size to the words instead, wrapping (balanced) only past the field's width */
+  width: max-content;
   max-width: calc(100% - 32px);
+  text-wrap: balance;
   padding: 7px 16px 8px;
   border-radius: 999px;
   background: var(--c);
@@ -4025,6 +4044,14 @@ body {
     flex-wrap: wrap;
     justify-content: center;
     pointer-events: none;
+  }
+  /* the power-up timers sit at the top of the field here (up to two rows), so call-outs go
+     just below them instead of on top of them; a touch smaller so most fit on one line */
+  .sg-shout {
+    top: 80px;
+    padding: 5px 13px 6px;
+    font-size: 13.5px;
+    line-height: 1.25;
   }
   .sx-panel.is-wide .sg-field {
     border-radius: 18px;
