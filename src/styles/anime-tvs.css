@@ -1,0 +1,312 @@
+.tv-row {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: clamp(18px, 4vw, 56px);
+  margin: 0 0 clamp(56px, 9vh, 96px);
+  padding: 0 16px;
+}
+.tv {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: clamp(150px, 26vw, 330px);
+  padding-top: clamp(34px, 4.5vw, 58px);
+  transform: rotate(var(--t));
+  transition: transform 0.45s var(--spring);
+  cursor: pointer;
+}
+.tv:hover,
+.tv:focus-visible {
+  transform: rotate(0deg) translateY(-6px);
+  outline: none;
+}
+.tv:focus-visible .tv-body {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+.tv:active {
+  transform: rotate(0deg) translateY(-2px) scale(0.99);
+  transition-duration: var(--t-fast);
+}
+.tv.is-on {
+  transform: rotate(0deg);
+}
+/* rabbit-ear antennas */
+.tv-ant {
+  position: absolute;
+  bottom: calc(100% - clamp(34px, 4.5vw, 58px) - 4px);
+  left: 50%;
+  width: 4px;
+  height: clamp(34px, 4.6vw, 60px);
+  margin-left: -2px;
+  border-radius: 4px;
+  background: var(--c);
+  transform-origin: 50% 100%;
+  transition: transform 0.6s var(--spring);
+}
+.tv-ant::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: -4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--c);
+}
+.tv-ant-l {
+  transform: rotate(-32deg);
+}
+.tv-ant-r {
+  transform: rotate(28deg);
+}
+.tv:hover .tv-ant-l {
+  transform: rotate(-44deg);
+}
+.tv:hover .tv-ant-r {
+  transform: rotate(40deg);
+}
+.tv.is-on .tv-ant {
+  animation: ant 2.4s ease-in-out infinite alternate;
+}
+.tv.is-on .tv-ant-r {
+  animation-delay: -0.7s;
+}
+@keyframes ant {
+  from {
+    rotate: -4deg;
+  }
+  to {
+    rotate: 4deg;
+  }
+}
+.tv-body {
+  position: relative;
+  display: flex;
+  gap: clamp(8px, 1vw, 14px);
+  width: 100%;
+  padding: clamp(10px, 1.2vw, 16px);
+  border-radius: clamp(20px, 2.2vw, 30px);
+  background: var(--c);
+}
+.tv-screen {
+  position: relative;
+  flex: 1;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 22% / 26%;
+  background: var(--ink);
+}
+.tv-screen img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.08);
+  filter: grayscale(1) brightness(0.55);
+  transition:
+    opacity 0.8s ease,
+    transform 2.6s ease,
+    filter 0.5s ease;
+}
+.tv-screen img:first-child {
+  opacity: 1;
+}
+.tv.is-on .tv-screen img {
+  filter: none;
+  opacity: 0;
+}
+.tv.is-on .tv-screen img.is-shown {
+  opacity: 1;
+  transform: scale(1);
+}
+/* static: a looping noise texture */
+.tv-static {
+  position: absolute;
+  inset: -20%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: screen;
+  opacity: 0.35;
+  animation: static 0.35s steps(4) infinite;
+  pointer-events: none;
+}
+.tv.is-on .tv-static {
+  animation:
+    static 0.35s steps(4) infinite,
+    tune 0.7s ease-out forwards;
+}
+@keyframes static {
+  25% {
+    transform: translate(-6%, 4%);
+  }
+  50% {
+    transform: translate(5%, -6%);
+  }
+  75% {
+    transform: translate(-3%, -2%);
+  }
+}
+@keyframes tune {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.tv-glare {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(140deg, rgb(255 255 255 / 0.22), transparent 38%);
+  pointer-events: none;
+}
+.tv-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  padding-left: 4px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: var(--shadow-2);
+  transition: transform var(--t-hover) var(--spring);
+}
+.tv:hover .tv-play {
+  transform: scale(1.08);
+}
+.tv-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 15%;
+  padding-top: 4px;
+}
+.tv-knob {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.6s var(--spring);
+}
+.tv-knob::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 12%;
+  width: 14%;
+  height: 34%;
+  margin-left: -7%;
+  border-radius: 4px;
+  background: var(--c);
+}
+.tv:hover .tv-knob {
+  transform: rotate(120deg);
+}
+.tv:hover .tv-knob-b {
+  transform: rotate(-90deg);
+}
+.tv-grille {
+  flex: 1;
+  width: 70%;
+  min-height: 24px;
+  background: repeating-linear-gradient(180deg, rgb(255 255 255 / 0.55) 0 3px, transparent 3px 7px);
+  border-radius: 3px;
+}
+.tv-legs {
+  position: relative;
+  width: 62%;
+  height: 12px;
+}
+.tv-legs::before,
+.tv-legs::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 14px;
+  height: 12px;
+  background: var(--c);
+  border-radius: 0 0 6px 6px;
+}
+.tv-legs::before {
+  left: 0;
+  transform: skewX(18deg);
+}
+.tv-legs::after {
+  right: 0;
+  transform: skewX(-18deg);
+}
+.tv-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 14px;
+  color: var(--c);
+}
+.tv-label b {
+  font-size: clamp(20px, 2vw, 28px);
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.tv-label small {
+  font-size: 14px;
+  font-variation-settings: 'wght' 750, 'ROND' 100;
+  opacity: 0.8;
+}
+.tv:not(.is-on) .tv-label {
+  opacity: 0.7;
+}
+
+.season-wrap {
+  width: 100%;
+}
+.season-head {
+  animation: info-in 0.5s var(--soft) both;
+}
+
+@media (max-width: 760px) {
+  .tv {
+    width: 44vw;
+  }
+  .tv-play {
+    width: 40px;
+    height: 40px;
+  }
+  .tv-play svg {
+    width: 20px;
+    height: 20px;
+  }
+  .tv-label small {
+    font-size: 12px;
+  }
+}
+
+/* touch screens have no hover: don't leave things lifted after a tap */
+@media (hover: none) {
+  .round-btn:hover,
+  .buy:hover,
+  .ch-card:hover,
+  .gate-go:hover,
+  .pl-big:hover {
+    transform: none;
+    box-shadow: var(--shadow-1);
+  }
+  .vcard:hover .vcard-face {
+    transform: rotate(var(--t));
+    box-shadow: var(--shadow-1);
+  }
+  .bd-pin:hover .bd-dot {
+    scale: 1;
+  }
+}

@@ -1,0 +1,102 @@
+.cd-title {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.12em 0.3em;
+  max-width: 1100px;
+  text-align: center;
+  font-size: clamp(26px, 3vw, 46px);
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+.clock {
+  --px: 0;
+  --py: 0;
+  display: flex;
+  align-items: center;
+  gap: clamp(18px, 3vw, 54px);
+  padding: clamp(56px, 9vh, 88px) 10px clamp(30px, 5vh, 48px);
+  user-select: none;
+}
+.unit-par {
+  transform: translate(calc(var(--px) * var(--depth) * 46px), calc(var(--dy) * var(--float, 1) + var(--py) * var(--depth) * 30px))
+    rotate(var(--r)) scale(var(--s));
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.unit-float {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: float ease-in-out infinite alternate;
+}
+@keyframes float {
+  from {
+    transform: translateY(8px) rotate(-1.2deg);
+  }
+  to {
+    transform: translateY(-10px) rotate(1.4deg);
+  }
+}
+.unit-blocks {
+  display: flex;
+  gap: 0.07em;
+  font-size: clamp(50px, min(6.2vw, 12vh), 124px);
+  perspective: 500px;
+}
+.block-slot {
+  position: relative;
+  width: 0.76em;
+  height: 1.04em;
+}
+.block {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 0.2em;
+  line-height: 1;
+  padding-top: 0.04em;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+  font-feature-settings: 'tnum';
+  backface-visibility: hidden;
+}
+.block-flip {
+  transform-origin: 50% 0;
+  animation: flip 0.62s cubic-bezier(0.3, 1.45, 0.5, 1) both;
+}
+@keyframes flip {
+  from {
+    transform: rotateX(-105deg) scale(0.96);
+  }
+  60% {
+    transform: rotateX(8deg) scale(1.04);
+  }
+}
+.unit-label {
+  margin-top: 0.7em;
+  font-size: clamp(12px, 1.1vw, 15px);
+  font-weight: 750;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+}
+
+.cd-when {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px 14px;
+  margin: clamp(10px, 2vh, 24px) 0 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.cd-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--yellow);
+}

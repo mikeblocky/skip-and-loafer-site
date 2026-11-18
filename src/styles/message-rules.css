@@ -1,0 +1,314 @@
+/* do / don't: a scene on top, the list underneath, kept in step by one timeline */
+.gd-box {
+  margin: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  background: color-mix(in oklab, var(--fc), #fff 90%);
+}
+.gd-box h4 {
+  margin: 0;
+  padding: 10px 14px 8px;
+  font-size: 16px;
+  font-weight: 900;
+}
+.gd-box.is-ok h4 {
+  color: color-mix(in oklab, var(--green), var(--ink) 30%);
+}
+.gd-box.is-no h4 {
+  color: var(--red);
+}
+.gd-chips {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0 12px 12px;
+  list-style: none;
+}
+.gd-chips li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 6px 6px;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+.gd-chip-ico {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--fc);
+}
+.is-no .gd-chip-ico {
+  background: color-mix(in oklab, var(--red), #fff 84%);
+}
+/* the don'ts are crossed out */
+.is-no .gd-chip-ico::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  top: 50%;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 2px;
+  background: var(--red);
+  rotate: -45deg;
+  box-shadow: 0 0 0 1.5px color-mix(in oklab, var(--red), #fff 84%);
+}
+.gd-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+}
+.is-ok .gd-mark {
+  background: var(--green);
+}
+.is-no .gd-mark {
+  background: var(--red);
+}
+
+/* good scene: Yuzuki and a letter filling up */
+.gb-bust {
+  left: 20px;
+}
+.gb-paper {
+  position: absolute;
+  left: 108px;
+  top: 12px;
+  width: 128px;
+  height: 82px;
+  border-radius: 6px;
+  background: #fff;
+  rotate: -3deg;
+}
+.gb-heart {
+  position: absolute;
+  right: -8px;
+  top: -8px;
+}
+.gb-tile {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+}
+.gb-tick,
+.bb-x {
+  position: absolute;
+  right: -6px;
+  top: -6px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #fff;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+}
+.gb-tick {
+  background: var(--green);
+}
+
+/* don't scene: Mika guarding a clean letter */
+.bb-paper {
+  position: absolute;
+  left: 34px;
+  top: 14px;
+  width: 112px;
+  height: 80px;
+  padding: 14px 12px;
+  border-radius: 6px;
+  background: #fff;
+  rotate: 3deg;
+}
+.bb-paper i {
+  display: block;
+  height: 4px;
+  margin-bottom: 10px;
+  border-radius: 2px;
+  background: var(--ink);
+  opacity: 0.7;
+}
+.bb-paper i:nth-child(2) {
+  width: 86%;
+}
+.bb-paper i:nth-child(3) {
+  width: 55%;
+}
+.bb-spark {
+  position: absolute;
+  left: 128px;
+  top: 4px;
+}
+.bb-bust {
+  left: 192px;
+}
+.bb-tile {
+  position: absolute;
+  left: 128px;
+  top: 38px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: color-mix(in oklab, var(--red), #fff 84%);
+}
+.bb-x {
+  right: auto;
+  top: auto;
+  inset: -4px;
+  width: auto;
+  height: auto;
+  border-radius: 11px;
+  background: rgb(255 40 80 / 0.88);
+  font-size: 20px;
+  box-shadow: none;
+}
+
+/* ── one part at a time, with arrows and dots that fill up as each plays ── */
+.gd-slides {
+  overflow: hidden;
+  padding: 14px 14px 0;
+}
+.gd-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px 0;
+}
+.gd-arrow {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f4f0e8;
+  transition:
+    background var(--t-hover) var(--soft),
+    scale var(--t-hover) var(--spring);
+}
+.gd-arrow:hover {
+  background: #ebe5d9;
+  scale: 1.08;
+}
+.gd-arrow:active {
+  scale: 0.94;
+}
+.gd-arrow.is-prev svg {
+  rotate: 180deg;
+}
+.gd-dots {
+  display: flex;
+  gap: 6px;
+}
+.gd-dot {
+  position: relative;
+  width: 9px;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: #e2dcd0;
+  transition: width 0.35s var(--soft);
+}
+.gd-dot.is-on {
+  width: 30px;
+}
+.gd-dot b {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--pink);
+  transform-origin: 0 50%;
+  animation: gd-fill linear both;
+}
+@keyframes gd-fill {
+  from {
+    scale: 0 1;
+  }
+  to {
+    scale: 1 1;
+  }
+}
+/* reading? hold still */
+.msg-guide:hover .gd-dot b {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gd-dot b {
+    animation: none;
+    scale: 1 1;
+  }
+}
+.msg-guide .msg-fine {
+  margin: 0;
+  padding: 14px 20px 18px;
+  font-size: 13px;
+  color: var(--muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gd-float {
+    animation: none;
+  }
+}
+
+/* buttons */
+.msg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 26px;
+  border-radius: 999px;
+  background: var(--red);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 850;
+  box-shadow: var(--shadow-2);
+  transition:
+    transform var(--t-hover) var(--spring),
+    box-shadow var(--t-hover) var(--soft),
+    opacity var(--t-hover);
+}
+.msg-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: var(--shadow-3);
+}
+.msg-btn:active:not(:disabled) {
+  transform: scale(0.97);
+  transition-duration: var(--t-fast);
+}
+.msg-btn:disabled {
+  background: #e6e1ec;
+  color: #a39cba;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.msg-btn:disabled svg * {
+  fill: #a39cba;
+}
+.msg-btn.is-ghost {
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--hair);
+  box-shadow: var(--shadow-1);
+}

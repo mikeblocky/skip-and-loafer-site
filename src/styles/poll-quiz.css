@@ -1,0 +1,167 @@
+/* poll */
+.poll-q {
+  margin: 0 0 14px;
+  text-align: center;
+  font-size: 18px;
+  font-variation-settings: 'wght' 800, 'ROND' 100;
+}
+.poll-grid {
+  display: grid;
+  /* all seven in one row on wider screens; 4 + 3 on phones */
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 8px;
+}
+.poll-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border-radius: 18px;
+  transition:
+    transform var(--t-hover) var(--spring),
+    background var(--t-hover),
+    opacity var(--t-hover);
+}
+.poll-opt:hover {
+  background: color-mix(in oklab, var(--c), #fff 88%);
+  transform: translateY(-3px);
+}
+.poll-opt:active {
+  transform: scale(0.95);
+}
+.poll-opt b {
+  font-size: 14px;
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+}
+.poll-face {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--c), #fff 75%);
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 0 5px transparent;
+  transition: box-shadow 0.3s;
+}
+.poll-face img {
+  position: absolute;
+  left: 50%;
+  top: 5%;
+  height: 300%;
+  translate: -50% 0;
+  pointer-events: none;
+}
+.poll-opt.is-picked {
+  background: color-mix(in oklab, var(--c), #fff 85%);
+}
+.poll-opt.is-picked .poll-face {
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 0 6px var(--c);
+  animation: info-in 0.5s var(--spring);
+}
+.poll-opt.is-dim {
+  opacity: 0.55;
+}
+.poll-react {
+  min-height: 2.8em;
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.45;
+  font-variation-settings: 'wght' 600, 'ROND' 100;
+  text-wrap: balance;
+  animation: info-in 0.4s var(--soft);
+}
+
+/* quiz */
+.quiz {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.quiz-progress {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.quiz-progress i {
+  width: 28px;
+  height: 6px;
+  border-radius: 999px;
+  background: #ece8df;
+  transition: background 0.3s;
+}
+.quiz-progress i.is-done {
+  background: var(--c);
+}
+.quiz-progress i.is-now {
+  background: color-mix(in oklab, var(--c), #fff 55%);
+}
+.quiz-q {
+  margin: 0 0 16px;
+  font-size: 20px;
+  font-variation-settings: 'wght' 700, 'ROND' 100;
+}
+.quiz-q b {
+  color: var(--c);
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.quiz-opts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+.quiz-opt {
+  padding: 14px 10px;
+  border-radius: 16px;
+  background: color-mix(in oklab, var(--c), #fff 86%);
+  color: color-mix(in oklab, var(--c), #000 15%);
+  font-size: 17px;
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+  transition:
+    transform var(--t-hover) var(--spring),
+    background var(--t-hover),
+    opacity var(--t-hover);
+}
+.quiz-opt:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.quiz-opt:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.quiz-opt:disabled {
+  cursor: default;
+}
+.quiz-opt.is-right {
+  background: var(--green);
+  color: #fff;
+  animation: info-in 0.4s var(--spring);
+}
+.quiz-opt.is-wrong {
+  background: var(--red);
+  color: #fff;
+  animation: gc-shake 0.17s linear 2;
+}
+.quiz-opt.is-dim {
+  opacity: 0.45;
+}
+.quiz-score {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 6px 0 18px;
+  font-size: 16px;
+  font-variation-settings: 'wght' 650, 'ROND' 100;
+}
+.quiz-score b {
+  font-size: 54px;
+  line-height: 1;
+  color: var(--c);
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}

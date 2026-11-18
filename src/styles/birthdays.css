@@ -1,0 +1,236 @@
+/* a year dial rising from the bottom */
+.view-birthdays {
+  height: 100vh;
+  height: 100svh;
+  justify-content: flex-start;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+.bd-title {
+  position: relative;
+  margin: 0;
+  font-size: clamp(44px, 5vw, 80px);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+.bd-stage {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  margin-top: clamp(20px, 3vh, 36px);
+}
+.bd-dial {
+  position: absolute;
+  left: 50%;
+  top: 64px;
+  width: var(--D);
+  height: var(--D);
+  margin-left: calc(var(--D) / -2);
+}
+.bd-wheel {
+  --rot: 0deg;
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.bd-wheel:active {
+  cursor: grabbing;
+}
+.bd-ring {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.bd-month {
+  font-family: 'Allo', sans-serif;
+  font-size: 24px;
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+  letter-spacing: 0.04em;
+}
+.bd-today {
+  font-family: 'Allo', sans-serif;
+  font-size: 16px;
+  font-variation-settings: 'wght' 800, 'ROND' 100;
+  fill: var(--ink);
+}
+
+.bd-pin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform: rotate(var(--a)) translateY(calc(var(--D) * -0.462));
+}
+.bd-upright {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform: rotate(calc((var(--a) + var(--rot)) * -1));
+}
+.bd-dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+  width: calc(var(--D) * 0.052);
+  height: calc(var(--D) * 0.052);
+  min-width: 26px;
+  min-height: 26px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: var(--c);
+  color: #fff;
+  font-size: max(12px, calc(var(--D) * 0.02));
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+  font-feature-settings: 'tnum';
+  cursor: pointer;
+  box-shadow: var(--shadow-1);
+  transition:
+    scale 0.35s var(--spring),
+    box-shadow 0.35s var(--soft);
+}
+.bd-pin:hover .bd-dot {
+  scale: 1.12;
+  box-shadow: var(--shadow-2);
+}
+.bd-pin.is-sel .bd-dot {
+  scale: 1.35;
+  box-shadow: var(--shadow-2);
+}
+.bd-name {
+  position: absolute;
+  left: 0;
+  bottom: calc(var(--D) * 0.034);
+  translate: -50% 0;
+  white-space: nowrap;
+  color: var(--c);
+  font-size: clamp(11px, calc(var(--D) * 0.015), 16px);
+  font-variation-settings: 'wght' 800, 'ROND' 100;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.bd-pin.is-sel .bd-name {
+  opacity: 0;
+}
+
+.bd-pointer {
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  translate: -50% -100%;
+  animation: pointer 1.8s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes pointer {
+  to {
+    transform: translateY(-4px);
+  }
+}
+
+.bd-info {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--D) * 0.35);
+  translate: -50% -50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  pointer-events: none;
+  animation: info-in 0.45s var(--soft) both;
+}
+@keyframes info-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
+}
+.bd-face {
+  position: relative;
+  width: clamp(92px, calc(var(--D) * 0.14), 150px);
+  aspect-ratio: 1;
+}
+.bd-portrait,
+.bd-initial {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 5px solid var(--c);
+}
+.bd-portrait {
+  background-color: color-mix(in oklab, var(--c), #fff 75%);
+  background-repeat: no-repeat;
+  background-size: 330% auto;
+  background-position: 50% 2.6%;
+}
+.bd-initial {
+  background: var(--c);
+  color: #fff;
+  font-size: 3.2em;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.bd-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+}
+.bd-burst svg {
+  position: absolute;
+  left: -11px;
+  top: -11px;
+  opacity: 0;
+}
+.bd-who {
+  margin-top: 12px;
+  font-size: clamp(34px, calc(var(--D) * 0.058), 66px);
+  line-height: 1;
+}
+.bd-date {
+  margin-top: 6px;
+  font-size: 16px;
+  font-weight: 750;
+  color: var(--muted);
+}
+.bd-count {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35em;
+  margin-top: 6px;
+}
+.bd-big {
+  font-size: clamp(40px, calc(var(--D) * 0.08), 88px);
+  line-height: 0.95;
+  color: color-mix(in oklab, var(--c), #000 12%);
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+  font-feature-settings: 'tnum';
+}
+.bd-in {
+  font-size: 18px;
+  font-weight: 750;
+  color: var(--muted);
+}
+
+/* phones: the whole dial fits, details sit underneath */
+.view-birthdays.is-mobile {
+  height: auto;
+  overflow: visible;
+}
+.is-mobile .bd-stage {
+  flex: none;
+  height: calc(var(--D) + 340px);
+}
+.is-mobile .bd-info {
+  top: calc(var(--D) + 160px);
+}

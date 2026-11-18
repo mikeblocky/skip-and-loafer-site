@@ -15,8 +15,8 @@ const REACTIONS: Record<string, string> = {
 }
 
 /**
- * A one-question poll. There is no server behind this site, so the vote is kept on this device
- * only; it shows your own pick rather than pretending to have everyone's results.
+ * A one-question poll. The vote is kept on this device only, so it shows your own pick rather
+ * than pretending to have everyone's results.
  */
 export function Poll() {
   const [vote, setVote] = useState(secrets.get().vote)

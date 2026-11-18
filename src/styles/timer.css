@@ -1,0 +1,52 @@
+/* the live timer, top right */
+.timer {
+  position: fixed;
+  top: 18px;
+  right: 24px;
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 16px 9px 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--hair);
+  box-shadow: var(--shadow-1);
+  color: var(--ink);
+  transition:
+    opacity 0.35s,
+    visibility 0.35s,
+    border-color var(--t-hover),
+    box-shadow var(--t-hover) var(--soft);
+}
+.timer:hover {
+  border-color: color-mix(in oklab, var(--pink), #fff 40%);
+  box-shadow: var(--shadow-2);
+}
+.timer.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.tm-text {
+  font-size: 17px;
+  line-height: 1;
+  font-variation-settings: 'wght' 750, 'ROND' 100;
+  font-feature-settings: 'tnum';
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.tm-text b {
+  color: var(--pink);
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.tm-text i {
+  font-style: normal;
+  color: var(--muted);
+  margin: 0 1px;
+}
+@media (max-width: 1080px) {
+  .timer {
+    display: none;
+  }
+}

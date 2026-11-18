@@ -1,0 +1,195 @@
+.wr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* the send tray: same width as the letter, tinted by the paper you picked */
+.wr-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: var(--W);
+  padding: 14px;
+  border-radius: 20px;
+  background: color-mix(in oklab, var(--ec), #fff 90%);
+  border: 2px solid color-mix(in oklab, var(--ec), #fff 72%);
+  transition:
+    background 0.4s var(--soft),
+    border-color 0.4s var(--soft);
+}
+.wr-papers {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+.wr-paper {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  background: var(--sw);
+  scale: 0.88;
+  transition:
+    scale var(--t-hover) var(--spring),
+    rotate var(--t-hover) var(--spring),
+    box-shadow var(--t-hover) var(--soft);
+}
+.wr-paper:hover {
+  scale: 0.96;
+  rotate: -6deg;
+}
+.wr-paper.is-on {
+  scale: 1;
+  rotate: 0deg;
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 0 5px var(--sw);
+}
+.wr-meter {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--ec), #fff 78%);
+}
+.wr-meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--et);
+  transition: width 0.25s var(--soft);
+}
+.wr-meter.is-over i {
+  background: var(--red);
+}
+.wr-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: -4px;
+}
+.wr-hint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+.wr-hint.is-bad {
+  color: var(--red);
+  font-weight: 800;
+}
+.wr-count {
+  flex: none;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--et);
+  font-feature-settings: 'tnum';
+}
+.wr-count.is-over {
+  color: var(--red);
+}
+.wr-send {
+  justify-content: center;
+  width: 100%;
+  background: var(--et);
+}
+.wr-send:disabled {
+  background: color-mix(in oklab, var(--et), #fff 62%);
+  color: #fff;
+}
+.wr-send:disabled svg * {
+  fill: #fff;
+}
+.wr-stats {
+  margin: -2px 0 0;
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* sent: a postmark */
+.sent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(380px, 100%);
+  margin: 0 auto;
+  padding: 40px 0 20px;
+  text-align: center;
+}
+.pm-wrap {
+  position: relative;
+  width: 270px;
+  height: 150px;
+}
+.pm {
+  position: absolute;
+  left: 18px;
+  top: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 138px;
+  height: 138px;
+  border-radius: 50%;
+  border: 4px solid var(--red);
+  box-shadow:
+    inset 0 0 0 5px var(--paper),
+    inset 0 0 0 8px var(--red);
+  color: var(--red);
+  rotate: -12deg;
+  opacity: 0.92;
+}
+.pm-top,
+.pm-bot {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+.pm-mid {
+  margin: 2px 0;
+  font-size: 36px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+.pm-waves {
+  position: absolute;
+  right: 0;
+  top: 46px;
+  width: 140px;
+  height: 56px;
+  overflow: visible;
+}
+.pm-waves path {
+  fill: none;
+  stroke: var(--red);
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+.sent h3 {
+  margin: 4px 0 0;
+  font-size: 34px;
+  font-weight: 900;
+}
+.sent p {
+  max-width: 320px;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.sent-btns {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}

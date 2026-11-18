@@ -1,0 +1,284 @@
+.season-videos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 28px;
+  max-width: 1120px;
+  margin: clamp(40px, 7vh, 70px) auto 0;
+  padding: 0 22px;
+  position: relative;
+  z-index: 4;
+}
+.player {
+  margin: 0;
+}
+.pl-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--ink);
+  aspect-ratio: 16 / 9;
+}
+.pl-frame video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* tapping the picture only shows the controls, so no "clickable" hand */
+  cursor: default;
+}
+.pl-frame:fullscreen {
+  border-radius: 0;
+}
+.pl-frame:fullscreen video {
+  object-fit: contain;
+}
+.pl-big {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  padding-left: 6px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: var(--shadow-2);
+  transition:
+    transform var(--t-hover) var(--spring),
+    box-shadow var(--t-hover) var(--soft);
+}
+.pl-big:hover {
+  transform: scale(1.06);
+  box-shadow: var(--shadow-3);
+}
+.pl-big:active {
+  transform: scale(0.96);
+  transition-duration: var(--t-fast);
+}
+.pl-bar {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgb(29 27 44 / 0.62);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #fff;
+  opacity: 0;
+  translate: 0 10px;
+  transition:
+    opacity 0.3s,
+    translate 0.4s var(--soft);
+}
+/* controls: always there when paused; while playing only when you're touching the video */
+/* (only keyboard focus keeps them up: a clicked button keeps focus, which would pin the bar) */
+.player:not(.is-playing) .pl-bar,
+.pl-frame.is-awake .pl-bar,
+.pl-bar:has(:focus-visible) {
+  opacity: 1;
+  translate: 0 0;
+}
+.player.is-playing .pl-frame:not(.is-awake) .pl-bar:not(:has(:focus-visible)) {
+  pointer-events: none;
+}
+/* the pointer gets out of the way too */
+.player.is-playing .pl-frame:not(.is-awake),
+.player.is-playing .pl-frame:not(.is-awake) video {
+  cursor: none;
+}
+.pl-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex: none;
+  transition:
+    background var(--t-hover),
+    transform var(--t-fast) var(--press);
+}
+.pl-btn:hover {
+  background: rgb(255 255 255 / 0.16);
+}
+.pl-btn:active {
+  transform: scale(0.9);
+}
+.pl-time {
+  flex: none;
+  font-size: 13px;
+  font-variation-settings: 'wght' 750, 'ROND' 100;
+  font-feature-settings: 'tnum';
+}
+.pl-time i {
+  font-style: normal;
+  opacity: 0.55;
+}
+.pl-track {
+  position: relative;
+  flex: 1;
+  height: 22px;
+  cursor: pointer;
+  touch-action: none;
+  outline: none;
+}
+.pl-track::before,
+.pl-buf,
+.pl-fill {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 999px;
+}
+.pl-track::before {
+  right: 0;
+  background: rgb(255 255 255 / 0.22);
+}
+.pl-buf {
+  background: rgb(255 255 255 / 0.32);
+}
+.pl-fill {
+  background: var(--c);
+}
+.pl-knob {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 50%;
+  background: #fff;
+  scale: 0.7;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  transition: scale 0.25s var(--soft);
+}
+/* the knob only grows when you reach for it */
+.pl-track:hover .pl-knob,
+.pl-track:focus-visible .pl-knob,
+.pl-track:active .pl-knob {
+  scale: 1.1;
+}
+.pl-track:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+/* lyrics: Japanese line over its English meaning, crossfading line to line */
+.pl-subs {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: max(30px, 7%);
+  display: grid;
+  pointer-events: none;
+  transition: translate 0.4s var(--soft);
+}
+/* make room when the control bar is showing */
+.player:not(.is-playing) .pl-subs,
+.pl-frame.is-awake .pl-subs,
+.pl-frame:has(.pl-bar :focus-visible) .pl-subs {
+  translate: 0 -44px;
+}
+.pl-line {
+  grid-area: 1 / 1;
+  align-self: end;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+  color: #fff;
+  text-wrap: balance;
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.55),
+    0 0 12px rgb(0 0 0 / 0.35);
+  opacity: 0;
+  translate: 0 6px;
+  transition:
+    opacity 0.35s ease,
+    translate 0.45s var(--soft);
+}
+.pl-line.is-on {
+  opacity: 1;
+  translate: 0 0;
+}
+.pl-jp {
+  --pl-jp-size: clamp(15px, 2.2vw, 22px);
+  font-family: var(--jp);
+  font-weight: 800;
+  font-size: var(--pl-jp-size);
+  letter-spacing: 0.04em;
+  /* room for furigana above every line, so lines with and without it are the same height;
+     a wrapped line gets just enough leading for its readings to clear the line above */
+  line-height: 1.7;
+  padding-top: 0.3em;
+  /* take the line's full width (the parent is a centring flex column): a shrink-to-fit box
+     is sized from the ruby's intrinsic width, which browsers under-measure, so short lines
+     wrapped for no reason. Full width + centred text only wraps a line that really is too long */
+  align-self: stretch;
+}
+/* furigana: small and quiet over the kanji, brightening once the word is sung */
+.pl-rb {
+  ruby-position: over;
+  ruby-align: center;
+}
+/* a tight box on the kanji so its reading sits right on top, not above the line's leading */
+.pl-rb,
+.pl-rb .pl-k {
+  line-height: 1.1;
+}
+.pl-rb rt {
+  font-size: max(9px, 0.46em);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+.pl-reading {
+  --pl-motion-unit: var(--pl-jp-size);
+  --pl-float-delay: 0.5s;
+  position: relative;
+  display: inline-block;
+  /* a reading wider than its kanji may hang a little over the kana beside it (as printed
+     furigana does) instead of pushing the kanji apart: 新 with あたら no longer leaves a gap
+     before しい */
+  margin-inline: -0.55em;
+  color: rgb(255 255 255 / 0.72);
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.7),
+    0 0 6px rgb(0 0 0 / 0.4);
+  transition: color 0.18s ease;
+}
+/* ...but never over the next kanji's own reading (正体, 毎日), or the two would overlap */
+.pl-rb + .pl-rb .pl-reading {
+  margin-left: 0;
+}
+.pl-rb:has(+ .pl-rb) .pl-reading {
+  margin-right: 0;
+}
+/* once sung, the reading gets the same song-coloured outline as the kanji under it; a bit
+   thicker in em since the text is so small */
+.pl-reading.is-sung {
+  --ink-o: color-mix(in oklab, var(--c), #000 18%);
+  color: #fff;
+  text-shadow:
+    0.08em 0 0 var(--ink-o),
+    -0.08em 0 0 var(--ink-o),
+    0 0.08em 0 var(--ink-o),
+    0 -0.08em 0 var(--ink-o),
+    0.06em 0.06em 0 var(--ink-o),
+    -0.06em 0.06em 0 var(--ink-o),
+    0.06em -0.06em 0 var(--ink-o),
+    -0.06em -0.06em 0 var(--ink-o),
+    0 0.06em 0.3em rgb(0 0 0 / 0.4);
+}

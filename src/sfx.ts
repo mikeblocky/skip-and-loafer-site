@@ -1,10 +1,8 @@
 /**
  * Every sound on the site is synthesized here with the Web Audio API: no audio files.
  * Browsers only let audio start after a user gesture, so `unlock()` must run inside one.
- *
- * Sound design: soft wooden / kalimba-like plucks instead of chirpy synth sweeps,
- * pink noise instead of white, a gentle low-pass and a small room reverb on the master,
- * and slight random variation on every hit so repeats never sound machine-identical.
+ * Soft plucks, pink noise, a gentle low-pass and a small room reverb, with slight random
+ * variation on every hit so repeats never sound machine-identical.
  */
 
 const KEY = 'sl-sound'

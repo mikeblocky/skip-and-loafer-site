@@ -1,0 +1,312 @@
+/* the post: letter + envelope, all in one box */
+.post {
+  position: relative;
+  width: var(--W);
+  height: var(--H);
+  margin: 0 auto;
+}
+.lt-holder {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+.lt {
+  position: relative;
+  width: var(--W);
+  height: var(--H);
+  perspective: 1600px;
+  filter: drop-shadow(0 1px 1px rgb(29 27 44 / 0.08)) drop-shadow(0 12px 18px rgb(29 27 44 / 0.14));
+}
+.lt-p {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: var(--ph);
+  transform-style: preserve-3d;
+}
+.lt-p0 {
+  top: 0;
+  transform-origin: 50% 100%;
+}
+.lt-p1 {
+  top: var(--ph);
+}
+.lt-p2 {
+  top: calc(var(--ph) * 2);
+  transform-origin: 50% 0%;
+}
+.lt-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #fffefa;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.lt-p0 .lt-face {
+  border-radius: 6px 6px 0 0;
+}
+.lt-p2 .lt-face {
+  border-radius: 0 0 6px 6px;
+}
+.lt-back {
+  transform: rotateX(180deg);
+  background: linear-gradient(#fffcf6, #fbf7ef);
+}
+.lt-clip {
+  position: absolute;
+  left: 0;
+  width: var(--W);
+  height: var(--H);
+}
+.lt-shade {
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+}
+.lt-back .lt-shade {
+  opacity: 0.03;
+}
+/* once folded, the paper remembers it. It lies over the writing, so it only ever darkens
+   (multiply): a line of handwriting that lands on a fold stays fully legible */
+.lt-crease {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  background:
+    linear-gradient(rgb(29 27 44 / 0.1), transparent 3px) top / 100% 4px no-repeat,
+    linear-gradient(transparent 4px, rgb(29 27 44 / 0.035), rgb(29 27 44 / 0.08)) bottom / 100% 8px no-repeat;
+}
+
+/* lined writing paper */
+.lt-sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: var(--W);
+  height: var(--H);
+  padding: calc(30px * var(--k)) calc(24px * var(--k)) calc(22px * var(--k)) calc(34px * var(--k));
+  border-radius: 6px;
+  color: var(--ink);
+  background-color: #fffefa;
+  background-image:
+    linear-gradient(
+      90deg,
+      transparent calc(22px * var(--k)),
+      #ffc7e0 calc(22px * var(--k)) calc(23.5px * var(--k)),
+      transparent calc(23.5px * var(--k))
+    ),
+    linear-gradient(
+      transparent calc(var(--lh, 29px) - 2.5px),
+      #e3eeff calc(var(--lh, 29px) - 2.5px) calc(var(--lh, 29px) - 1px),
+      transparent calc(var(--lh, 29px) - 1px)
+    );
+  background-size:
+    100% 100%,
+    100% var(--lh, 29px);
+  background-position:
+    0 0,
+    0 calc(30px * var(--k));
+  background-repeat: no-repeat, repeat-y;
+  box-shadow: inset 0 0 44px rgb(150 110 50 / 0.06);
+}
+.lt-stamp {
+  position: absolute;
+  top: calc(12px * var(--k, 1));
+  right: calc(16px * var(--k, 1));
+  display: grid;
+  place-items: center;
+  /* sized with the handwriting so it never reaches the first line of text */
+  width: calc(var(--fs, 18px) * 2.2);
+  height: calc(var(--fs, 18px) * 2.5);
+  border-radius: 3px;
+  background: var(--ec);
+  outline: 2px dashed rgb(255 255 255 / 0.75);
+  outline-offset: -5px;
+  transform: rotate(5deg);
+  box-shadow: 0 1px 2px rgb(29 27 44 / 0.2);
+}
+.lt-stamp svg {
+  width: 55%;
+  height: auto;
+}
+.lt-head {
+  display: flex;
+  align-items: baseline;
+  gap: calc(10px * var(--k, 1));
+  padding-right: calc(52px * var(--k, 1));
+  font-size: calc(var(--fs, 18px) + 1px * var(--k, 1));
+  line-height: var(--lh, 29px);
+  font-weight: 850;
+  color: var(--et);
+}
+.lt-date {
+  font-size: calc(13px * var(--k, 1));
+  font-weight: 700;
+  color: var(--muted);
+}
+.lt-text {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-variation-settings: 'wght' 600, 'ROND' 100;
+  font-size: var(--fs, 18px);
+  line-height: var(--lh, 29px);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.lt-text::placeholder {
+  color: #b3adc9;
+}
+.lt-sign {
+  text-align: right;
+  font-size: var(--fs, 18px);
+  line-height: var(--lh, 29px);
+  font-weight: 850;
+  color: var(--et);
+}
+.lt-sign .is-anon,
+.lt-sign input::placeholder {
+  color: color-mix(in oklab, var(--et), #fff 40%);
+}
+.lt-sign input {
+  width: 9.5em;
+  field-sizing: content;
+  min-width: 6em;
+  max-width: 12em;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+/* envelope */
+.env-back,
+.env-front,
+.env-flap {
+  position: absolute;
+  left: -14px;
+  top: var(--ET);
+  width: var(--EW);
+}
+.env-back {
+  z-index: 1;
+  height: var(--EH);
+  border-radius: 3px 3px 10px 10px;
+  background: var(--ac);
+}
+.env-front {
+  z-index: 3;
+  height: var(--EH);
+  border-radius: 3px 3px 10px 10px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.env-front svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.env-pocket {
+  fill: var(--ec);
+}
+.env-crease {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.35);
+  stroke-width: 2px;
+  stroke-linecap: round;
+}
+.env-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  padding: 0 16px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 850;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.env-flap {
+  z-index: 4;
+  height: var(--FH);
+  transform-origin: 50% 0%;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.env-flap svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.flap-out {
+  overflow: visible;
+}
+.flap-out path {
+  fill: color-mix(in oklab, var(--ec), #fff 22%);
+  stroke: #fff;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  paint-order: stroke;
+}
+.flap-in {
+  /* turned around the vertical axis so it still points away from the hinge once the flap opens */
+  transform: rotateY(180deg);
+}
+.flap-in path {
+  /* the inside of the flap is the same paper as the inside of the envelope */
+  fill: var(--ac);
+}
+/* wax seal: two halves along a crack, so it can break */
+.env-seal {
+  position: absolute;
+  z-index: 5;
+  left: calc(50% - 22px);
+  top: calc(var(--ET) + var(--FH) - 32px);
+  width: 44px;
+  height: 44px;
+  pointer-events: none;
+}
+.seal-h {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--ac);
+  box-shadow:
+    inset 0 0 0 5px var(--ac),
+    inset 0 0 0 8px #fff;
+}
+.seal-h svg {
+  opacity: 1;
+}
+.seal-l {
+  clip-path: polygon(0 0, 54% 0, 47% 28%, 56% 50%, 46% 74%, 52% 100%, 0 100%);
+}
+.seal-r {
+  clip-path: polygon(54% 0, 100% 0, 100% 100%, 52% 100%, 46% 74%, 56% 50%, 47% 28%);
+}
