@@ -1003,15 +1003,17 @@
 .lt-back .lt-shade {
   opacity: 0.03;
 }
-/* once folded, the paper remembers it */
+/* once folded, the paper remembers it. It lies over the writing, so it only ever darkens
+   (multiply): a line of handwriting that lands on a fold stays fully legible */
 .lt-crease {
   position: absolute;
   inset: 0;
   opacity: 0;
   pointer-events: none;
+  mix-blend-mode: multiply;
   background:
-    linear-gradient(rgb(29 27 44 / 0.08), transparent 2px, rgb(255 255 255 / 0.6) 2px, transparent 7px) top / 100% 8px no-repeat,
-    linear-gradient(transparent 5px, rgb(29 27 44 / 0.035), rgb(29 27 44 / 0.08)) bottom / 100% 8px no-repeat;
+    linear-gradient(rgb(29 27 44 / 0.1), transparent 3px) top / 100% 4px no-repeat,
+    linear-gradient(transparent 4px, rgb(29 27 44 / 0.035), rgb(29 27 44 / 0.08)) bottom / 100% 8px no-repeat;
 }
 
 /* lined writing paper */
