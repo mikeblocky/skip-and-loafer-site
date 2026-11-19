@@ -39,6 +39,46 @@ export interface Part {
 
 export const UPDATES: Update[] = [
   {
+    id: 'new-faces',
+    at: '2026-11-19T18:25:00+07:00',
+    icon: 'smile',
+    color: C.violet,
+    title: 'New faces',
+    intro:
+      'The site got a lot more crowded this evening. Six more characters moved in, everyone got their art from the official anime site, and the site has its own cursors now because the plain ones felt a bit boring.',
+    items: [
+      'Fumi, Nao, Takamine, Yamada, Mukai and Kanechika joined the cast, so there are thirteen characters now.',
+      'Everyone uses the art from the official anime site, and the pictures load a bit faster too.',
+      'The new characters are in all four hidden games as well.',
+    ],
+    parts: [
+      {
+        title: 'Six more characters',
+        icon: 'smile',
+        color: C.violet,
+        clip: { src: '/updates/new-faces.webp', alt: 'All thirteen characters flying in as the site opens' },
+        items: [
+          'The new six fly in with everyone else when the site opens, and you can drag them around like the others.',
+          'Mukai, Yamada, Kanechika and Takamine have pictures on the birthday dial now, not just their names.',
+          'In Skip to School, everyone can catch up with you now, not just six friends. The first six come as quickly as before, and the rest take longer, so getting all twelve in the line is a real challenge.',
+          'The new characters talk while you run, give you dares with their own little tunes, and react if you pick them as your walking buddy in Find your friends.',
+          'They show up in the capsule pairs trays and your collection too.',
+        ],
+      },
+      {
+        title: 'Cursors and clicks',
+        icon: 'sparkle',
+        color: C.pink,
+        clip: { src: '/updates/cursors.webp', alt: 'The pink arrow, the yellow pointing hand on a tab, the green hand on a character, and a pop of colour from a click' },
+        items: [
+          'The site has its own cursors now, drawn like the icons around the page.',
+          'A pink arrow most of the time, a yellow pointing hand on anything you can click, and a green hand on anything you can drag. The hand closes when you grab something.',
+          'Clicking or tapping makes a little pop of colour. It stays out of the way in Skip to School and in text boxes, and it’s off if your device is set to reduce motion.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'games-day',
     at: '2026-11-19T14:35:00+07:00',
     icon: 'capsule',
