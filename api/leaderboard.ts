@@ -37,7 +37,8 @@ const KEY = {
   rate: (ip: string) => `skip:rate:${ip}`,
 }
 const TOP = 10
-const MAX_SCORE = 250_000
+/** generous: past 10k the score grows by orders of magnitude (a great run reaches millions) */
+const MAX_SCORE = 1_000_000_000_000
 const POSTS_PER_MINUTE = 8
 
 type Client = ReturnType<typeof createClient>

@@ -6,7 +6,8 @@ import { secrets } from '../../secrets'
 import { music } from '../../music'
 import { FIRST_PAGE, type Page } from './pages'
 import {
-  BUFFER, DOODLES, FLOOR, FRIEND_GAP, FRIEND_H, FRIENDS, isPower, JUMP, LIVES, MIN_WORLD_W, PLAYER_H, POOL, POWERS, PX, SKIP,
+  BUFFER, DOODLES, FLOOR, FRIEND_GAP, FRIEND_H, FRIENDS, isPower, JUMP, LIVES, MIN_WORLD_W, PHONE_BEHIND, PHONE_FRIEND_GAP, PHONE_VIEW,
+  fmt, PLAYER_H, POOL, POWERS, PX, SKIP,
   START_SPEED, TINTS, WON_TINT, WORLD_H, type Kind, type Mode, type Timed, type Twist,
 } from './skipRules'
 import { newGame, runSkipLoop } from './skipLoop'
@@ -40,7 +41,12 @@ export function SkipGame() {
   const [won, setWon] = useState(false)
   const [shout, setShout] = useState<string | null>(null)
   const [looks, setLooks] = useState<{ kind: Kind; look: number }[]>(() => Array.from({ length: POOL }, () => ({ kind: 'ground', look: 0 })))
-  const [view, setView] = useState({ scale: 1, w: 600, h: WORLD_H })
+  /**
+   * How the world fits the field: scale (px per unit), w = world units up to the right edge,
+   * h = field height in px, px = field width in px, and camX = world units hidden off the left
+   * edge (phones mid-run zoom in on Mitsumi and leave most of the space behind her off screen).
+   */
+  const [view, setView] = useState({ scale: 1, w: 600, h: WORLD_H, px: 600, phone: false, camX: 0 })
   /** seconds left on each timed power-up, refreshed when a whole second ticks over */
   const [powers, setPowers] = useState<Record<Timed, number>>({ clover: 0, note: 0, sun: 0, bolt: 0, goldheart: 0 })
   /** seconds of break time left (0 = playing) */
@@ -48,6 +54,11 @@ export function SkipGame() {
   /** camera twists running right now, and which way the road tilts */
   const [twists, setTwists] = useState<Twist[]>([])
   const [tiltDir, setTiltDir] = useState(1)
+  /** the latest line of side chatter, and the dare running right now */
+  const [chatLine, setChatLine] = useState<{ id: string; name: string; color: string; text: string; n: number } | null>(null)
+  const [goal, setGoal] = useState<{ text: string; color: string } | null>(null)
+  /** the points multiplier past 10k ('' until it kicks in) */
+  const [pace, setPace] = useState('')
 
   const board = useLeaderboard()
   const [name, setName] = useState(() => {
@@ -85,25 +96,39 @@ export function SkipGame() {
     const fit = () => {
       const w = el.clientWidth
       const phone = window.innerWidth < 760
+      if (phone && el.closest('.skipgame.is-full')) {
+        // phones mid-run: zoomed in so the characters are big, with the camera moved up to
+        // Mitsumi (the friends huddle closer behind her); the world fits the width, or the
+        // field's height if that's tighter
+        const h = el.clientHeight
+        const scale = Math.min(w / PHONE_VIEW, h / WORLD_H)
+        const camX = PX - PHONE_BEHIND
+        setView({ scale, w: camX + w / scale, h, px: w, phone, camX })
+        return
+      }
       if (phone) {
         // phones: fill the width, and let the field grow tall (extra sky above the road)
         // so the whole lower half of the screen is one big tap target
         const scale = w / 360
         const h = Math.max(WORLD_H * scale, Math.min(window.innerHeight * 0.6, 620))
-        setView({ scale, w: w / scale, h })
+        setView({ scale, w: w / scale, h, px: w, phone, camX: 0 })
         return
       }
       const want = Math.min(window.innerHeight * 0.62, 620) / WORLD_H
       const scale = Math.max(0.6, Math.min(want, w / MIN_WORLD_W))
-      setView({ scale, w: w / scale, h: WORLD_H * scale })
+      setView({ scale, w: w / scale, h: WORLD_H * scale, px: w, phone, camX: 0 })
     }
     fit()
     const ro = new ResizeObserver(fit)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [])
+    // re-fit when a run starts or ends: phones switch to (and from) the full-screen layout
+  }, [phase])
   const worldW = useRef(600)
   worldW.current = view.w
+  /** friends huddle closer behind Mitsumi when the phone camera is zoomed in */
+  const friendGap = useRef(FRIEND_GAP)
+  friendGap.current = view.camX > 0 ? PHONE_FRIEND_GAP : FRIEND_GAP
 
   const reset = () => {
     const s = g.current
@@ -127,12 +152,24 @@ export function SkipGame() {
     s.lastHit = 0
     s.calm = 0
     s.batch = null
+    s.goal = null
+    s.dareBy = ''
+    s.dareAt = 0
+    s.paceShown = ''
+    setPace('')
+    s.lastGoal = null
+    s.goalShown = ''
+    s.lastTalk = -99
+    s.lastSpeaker = ''
+    s.idleTalk = 16
+    setGoal(null)
+    setChatLine(null)
     setTwists([])
     music.setRest(false)
     setRest(0)
     setPowers({ ...s.pw })
     s.order = [...FRIENDS].sort(() => Math.random() - 0.5)
-    s.things = Array.from({ length: POOL }, () => ({ on: false, kind: 'ground' as Kind, x: 0, y: 0, vy: 0, base: 0, mode: 'normal' as Mode, size: 40, look: 0, phase: 0 }))
+    s.things = Array.from({ length: POOL }, () => ({ on: false, kind: 'ground' as Kind, x: 0, y: 0, vy: 0, base: 0, mode: 'normal' as Mode, size: 40, look: 0, phase: 0, passed: false }))
     s.doodles = DOODLES.map((_, i) => ({ x: 60 + i * 120, y: 30 + ((i * 53) % 130), s: 0.2 + (i % 3) * 0.12 }))
     thingEls.current.forEach((el) => el && (el.style.opacity = '0'))
     warnEls.current.forEach((el) => el && (el.style.opacity = '0'))
@@ -187,6 +224,15 @@ export function SkipGame() {
     window.setTimeout(() => setShout((t) => (t === text ? null : t)), ms)
   }
 
+  const chatN = useRef(0)
+  const chat = (id: string, text: string, ms = 2800) => {
+    const who = CHARACTERS.find((c) => c.id === id)
+    if (!who) return
+    const n = ++chatN.current
+    setChatLine({ id, name: who.name, color: who.color, text, n })
+    window.setTimeout(() => setChatLine((c) => (c?.n === n ? null : c)), ms)
+  }
+
   const submit = async () => {
     const n = name.trim()
     if (!n || save.state === 'saving') return
@@ -217,7 +263,7 @@ export function SkipGame() {
   useEffect(() => {
     if (phase !== 'run') return
     return runSkipLoop(g.current, {
-      ...{ field, player, ground, scoreEl, thingEls, warnEls, friendEls, doodleEls, worldW, hop, end, say },
+      ...{ field, player, ground, scoreEl, thingEls, warnEls, friendEls, doodleEls, worldW, friendGap, hop, end, say, chat, setGoal, setPace },
       ...{ setLooks, setPowers, setRest, setTwists, setTiltDir, setPage, setFlipping, setTeam, setWon, setLives },
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -247,10 +293,12 @@ export function SkipGame() {
   })
 
   const tint = won ? WON_TINT : TINTS[Math.min(team.length, TINTS.length - 1)]
+  /** phones mid-run: the game takes the whole screen, with hop pads under both thumbs */
+  const full = view.phone && phase === 'run'
 
   return (
-    <div className="skipgame">
-      <SkipHud lives={lives} powers={powers} rest={rest} team={team} won={won} score={score} best={best} scoreEl={scoreEl} />
+    <div className={`skipgame${full ? ' is-full' : ''}`}>
+      <SkipHud lives={lives} powers={powers} rest={rest} goal={phase === 'run' ? goal : null} pace={phase === 'run' ? pace : ''} team={team} won={won} score={score} best={best} scoreEl={scoreEl} />
 
       <div
         className={`sg-field is-${phase}${won ? ' is-won' : ''}${rest > 0 ? ' is-break' : ''}${flipping ? ' is-flip' : ''}${twists.map((t) => ' tw-' + t).join('')}`}
@@ -261,7 +309,9 @@ export function SkipGame() {
         }}
         style={
           {
-            height: view.h,
+            // phones mid-run: tall enough for the zoomed world plus a little sky; the flex
+            // layout shrinks it if the screen is short, and the fit above follows
+            height: full ? Math.round((view.px / PHONE_VIEW) * WORLD_H * 1.12) : view.h,
             '--tint': page.n > 0 ? page.paper : tint,
             '--page-lines': page.lines || 'none',
             '--page-size': page.lineSize,
@@ -271,9 +321,9 @@ export function SkipGame() {
             // Where Mitsumi is on screen. Tilt and zoom pivot on her; the mirror flips around the
             // middle (so the road ahead stays on screen) and the spotlight follows her across.
             ...(() => {
-              const mx = (PX + 22) * view.scale
+              const mx = (PX + 22 - view.camX) * view.scale
               const my = view.h - (FLOOR + 44) * view.scale
-              const fieldW = view.w * view.scale
+              const fieldW = view.px
               const mirror = twists.includes('mirror')
               return {
                 '--ox': mirror ? '50%' : `${mx}px`,
@@ -289,7 +339,7 @@ export function SkipGame() {
         <div
           className="sg-world"
           ref={world}
-          style={{ width: view.w, height: view.h / view.scale, transform: `scale(${view.scale})`, '--floor': `${FLOOR}px` } as CSSProperties}
+          style={{ width: view.w, height: view.h / view.scale, transform: `scale(${view.scale}) translateX(${-view.camX}px)`, '--floor': `${FLOOR}px` } as CSSProperties}
         >
           <div className="sg-doodles" aria-hidden="true">
             {page.doodles.map((n, i) => (
@@ -313,7 +363,7 @@ export function SkipGame() {
               ref={(el) => {
                 if (el) friendEls.current[k] = el
               }}
-              style={{ left: PX - FRIEND_GAP * (k + 1), height: FRIEND_H, zIndex: 3 - k, '--oc': f.color } as CSSProperties}
+              style={{ left: PX - friendGap.current * (k + 1), height: FRIEND_H, zIndex: 3 - k, '--oc': f.color } as CSSProperties}
             >
               <img src={f.src} alt={f.name} draggable={false} />
             </div>
@@ -372,6 +422,12 @@ export function SkipGame() {
         </div>
 
         {shout && phase === 'run' && <div className="sg-shout">{shout}</div>}
+        {chatLine && phase === 'run' && (
+          <div key={chatLine.n} className="sg-chat" style={{ '--c': chatLine.color } as CSSProperties} aria-live="polite">
+            <b>{chatLine.name.toLowerCase()}</b>
+            {chatLine.text}
+          </div>
+        )}
 
         {phase !== 'run' && (
           <div className="sg-overlay">
@@ -379,7 +435,7 @@ export function SkipGame() {
               <>
                 <b>{won ? 'everyone made it!' : 'late for class!'}</b>
                 <span>
-                  <em className="sg-pts">{score}</em> points
+                  <em className="sg-pts">{fmt(score)}</em> points
                   {team.length > 0 && (
                     <>
                       {' · ran with '}
@@ -441,6 +497,30 @@ export function SkipGame() {
           </div>
         )}
       </div>
+
+      {full && (
+        // a big hop pad under each thumb; both do the same thing, so either hand (or both,
+        // taking turns for hop + skip) works
+        <div className="sg-pads" onPointerDown={(e) => e.preventDefault()}>
+          {(['left', 'right'] as const).map((side) => (
+            <button
+              key={side}
+              type="button"
+              className={`sg-pad is-${side}`}
+              aria-label="Hop (again mid-air to skip)"
+              onPointerDown={(e) => {
+                e.preventDefault()
+                hop()
+              }}
+              onContextMenu={(e) => e.preventDefault()}
+            >
+              <Icon name="chev" color="currentColor" size={34} />
+              <span>hop</span>
+            </button>
+          ))}
+          <span className="sg-pad-hint">tap either side · again mid-air to skip</span>
+        </div>
+      )}
 
       <Leaderboard board={board} name={name} />
     </div>

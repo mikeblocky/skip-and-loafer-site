@@ -2,8 +2,32 @@ import { C, CHARACTERS } from '../../data'
 import type { IconName } from '../../icons'
 import { TUNE, difficulty, lerp, stage } from './difficulty'
 
-/** every this many points, the road turns to a freshly generated page with a new leader */
-export const PAGE_EVERY = 10000
+/**
+ * The long road. Past 10,000 points the run keeps going by orders of magnitude: points come in
+ * faster and faster (the "pace" multiplier), and the big moments are spaced out the same way,
+ * at 10k, 25k, 50k, 100k, 250k, 500k, 1M, 2.5M, 5M, 10M and on, so a good run can reach a
+ * hundred thousand in about 15 minutes and a million in about 21, and never runs out of road.
+ */
+/** the i-th page milestone: 10k, 25k, 50k, 100k, 250k, 500k, 1M, … */
+export const pageAt = (i: number) => [1, 2.5, 5][i % 3] * 10 ** (4 + Math.floor(i / 3))
+/** how many page milestones a score has passed: the road turns to a fresh page at each one */
+export const pageOf = (score: number) => {
+  let n = 0
+  while (score >= pageAt(n)) n++
+  return n
+}
+/** past 10k, points (from the road, stars and dares) come in this many times faster */
+export const PACE_FROM = 10000
+const PACE_SCALE = 4500
+export const paceOf = (score: number) => 1 + Math.max(0, score - PACE_FROM) / PACE_SCALE
+/** short, readable numbers for the big ones: 12,345 · 250k · 1.2M */
+export const fmt = (n: number) => {
+  const v = Math.floor(n)
+  if (v < 100000) return v.toLocaleString('en-US')
+  if (v < 1e6) return `${Math.floor(v / 1000)}k`
+  if (v < 1e9) return `${(v / 1e6).toFixed(v < 1e7 ? 2 : 1).replace(/\.?0+$/, '')}M`
+  return `${(v / 1e9).toFixed(2).replace(/\.?0+$/, '')}B`
+}
 
 /** Things on the road: the site's own stickers. */
 export const GROUND: { name: IconName; color: string }[] = [
@@ -24,6 +48,14 @@ export const FLOOR = 46 // the ink line, units from the bottom
 export const PLAYER_H = 96
 export const FRIEND_H = 86
 export const FRIEND_GAP = 30
+/**
+ * Phones mid-run zoom in: about PHONE_VIEW units fit across the screen, the camera starts
+ * PHONE_BEHIND units behind Mitsumi, and the friends run PHONE_FRIEND_GAP apart so most of
+ * them still show.
+ */
+export const PHONE_VIEW = 280
+export const PHONE_BEHIND = 100
+export const PHONE_FRIEND_GAP = 16
 export const PX = 210 // Mitsumi's left edge: room behind her for the whole gang
 export const GRAVITY = 1900
 // A single hop peaks ~88 units with plenty of hang time: clears the clutter (36–52 tall) while
@@ -59,9 +91,9 @@ export const isPower = (k: string): k is Power => k in POWERS
 
 export const FRIENDS = CHARACTERS.filter((c) => c.id !== 'mitsumi')
 /** score at which each friend catches up; when the last one joins, you've won */
-export const JOIN_AT = [70, 170, 300, 460, 650, 870]
-/** after the win, the band remixes (and calls out a new level) every this many points */
-const LEVEL_AFTER_WIN = 900
+export const JOIN_AT = [85, 205, 360, 550, 780, 1050]
+/** after the win, a new level each time the score grows by this factor (so they keep coming at 1M) */
+const LEVEL_STEP = 1.3
 /** every so often, a breather: no hazards for a few seconds */
 export const BREAK_EVERY = 50
 export const BREAK_LEN = 7
@@ -69,29 +101,29 @@ export const BREAK_LEN = 7
  * Twists: from TWIST_AT points the camera does something nasty for a few seconds (announced
  * first). They only change how the road looks, never the controls, and never during a break.
  */
-export const TWIST_AT = 5000
-/** the new events unlock here, and the "mayhem" stretch starts climbing (full by 25,000) */
+export const TWIST_AT = 6000
+/** the new events unlock here, and the "mayhem" stretch starts climbing (full by 1M) */
 export const MAYHEM_AT = 10000
-/** the 10k+ stretch: 0 at 10,000, all the way up by 25,000 */
-export const mayhem = (score: number) => stage(score, MAYHEM_AT, 25000)
-/** twists stretch out and come closer together from 5,000 to 25,000 (the first ones are rare) */
+/** the 10k+ stretch: 0 at 10,000, all the way up by a million */
+export const mayhem = (score: number) => stage(score, MAYHEM_AT, 1e6)
+/** twists stretch out and come closer together from 6,000 to 250k (the first ones are rare) */
 export const twistTiming = (score: number) => {
-  const t = stage(score, TWIST_AT, 25000)
+  const t = stage(score, TWIST_AT, 250000)
   return { len: lerp(7, 13, t), gap: lerp(16, 4, t) }
 }
-/** chance a twist brings a second one along (from ~7k), and a third (from ~15k) */
-export const stackOdds = (score: number) => ({ two: 0.85 * stage(score, 7000, 20000), three: 0.4 * stage(score, 15000, 25000) })
-/** late-game breathing room: hearts / power-ups wait this long after one appears (from ~7k) */
+/** chance a twist brings a second one along (from ~8k, full by 100k), and a third (from 50k to 1M) */
+export const stackOdds = (score: number) => ({ two: 0.85 * stage(score, 8000, 100000), three: 0.4 * stage(score, 50000, 1e6) })
+/** late-game breathing room: hearts / power-ups wait this long after one appears (from ~8k to 250k) */
 export const cooldowns = (score: number) => {
-  const t = stage(score, 7000, 25000)
+  const t = stage(score, 8000, 250000)
   return { heart: lerp(0, HEART_COOLDOWN, t), power: lerp(0, POWER_COOLDOWN, t) }
 }
-/** extra clutter slipped in between patterns, building up all the way from the win */
-export const extraClutter = (score: number) => 0.8 * stage(score, 900, 25000)
-/** how strong boosts are: stars, power-up time, star showers (0 at the start, full by ~2,700) */
-export const boostOf = (score: number) => stage(score, 0, 2700)
-/** the golden heart gets offered more and more often from the win to 5,000 */
-export const goldOdds = (score: number) => 0.35 * stage(score, 870, 5000)
+/** extra clutter slipped in between patterns, building up all the way from the win to 1M */
+export const extraClutter = (score: number) => 0.8 * stage(score, 1050, 1e6)
+/** how strong boosts are: stars, power-up time, star showers (0 at the start, full by ~3,300) */
+export const boostOf = (score: number) => stage(score, 0, 3300)
+/** the golden heart gets offered more and more often from the win to 6,000 */
+export const goldOdds = (score: number) => 0.35 * stage(score, 1050, 6000)
 export const TWISTS = {
   tilt: { label: 'the road tilts!', from: TWIST_AT },
   mirror: { label: 'mirror world!', from: TWIST_AT },
@@ -118,29 +150,32 @@ export const TINTS = ['#ffffff', '#fffcf2', '#fff8e8', '#fff3ee', '#fdf0f6', '#f
 export const WON_TINT = '#fff6d8'
 
 /**
- * Level: one per friend who has joined, then one more every 900 points after the win. Only the
- * music and the call-outs follow it; how hard the road is comes from the difficulty curve.
+ * Level: one per friend who has joined, then one more each time the score grows 1.3× after the
+ * win (1,365, 1,775, … about every 40 seconds late on). The music, the call-outs and the dares
+ * follow it; how hard the road is comes from the difficulty curve.
  */
-export const tierOf = (friends: number, score: number) =>
-  friends + Math.floor(Math.max(0, score - JOIN_AT[JOIN_AT.length - 1]) / LEVEL_AFTER_WIN)
+export const tierOf = (friends: number, score: number) => {
+  const win = JOIN_AT[JOIN_AT.length - 1]
+  return friends + (score > win ? Math.floor(Math.log(score / win) / Math.log(LEVEL_STEP)) : 0)
+}
 /**
  * Road patterns and the score where each starts to show up. A pattern blends in over a short
  * stretch of the curve (TUNE.fade) rather than switching on, roughly as each friend arrives.
  */
 export const COMBOS = [
   { name: 'single', from: 0 },
-  { name: 'pair', from: 70 }, // two close together: a long hop or hop + skip
-  { name: 'under', from: 170 }, // clutter with a paper plane right above: hop, don't skip
-  { name: 'triple', from: 300 }, // three in a row
-  { name: 'low', from: 460 }, // a plane at head height: stay on the ground
-  { name: 'drop', from: 650 }, // a sticker falls out of the sky ahead
+  { name: 'pair', from: 85 }, // two close together: a long hop or hop + skip
+  { name: 'under', from: 205 }, // clutter with a paper plane right above: hop, don't skip
+  { name: 'triple', from: 360 }, // three in a row
+  { name: 'low', from: 550 }, // a plane at head height: stay on the ground
+  { name: 'drop', from: 780 }, // a sticker falls out of the sky ahead
   // ── chaos, from the win on ──
-  { name: 'bounce', from: 870 }, // clutter that hops along the road
-  { name: 'zigzag', from: 870 }, // a plane that swoops up and down through the hop zone
-  { name: 'swarm', from: 1800 }, // a few planes at mixed heights
-  { name: 'rain', from: 1800 }, // several stickers falling at once
-  { name: 'roll', from: 2700 }, // clutter rolling at you faster than the road
-  { name: 'chaos', from: 3600 }, // two patterns at the same time
+  { name: 'bounce', from: 1050 }, // clutter that hops along the road
+  { name: 'zigzag', from: 1050 }, // a plane that swoops up and down through the hop zone
+  { name: 'swarm', from: 2200 }, // a few planes at mixed heights
+  { name: 'rain', from: 2200 }, // several stickers falling at once
+  { name: 'roll', from: 3300 }, // clutter rolling at you faster than the road
+  { name: 'chaos', from: 4400 }, // two patterns at the same time
 ] as const
 const COMBO_D = COMBOS.map((c) => difficulty(c.from))
 /** how likely each pattern is at difficulty d: blended in after its score; plain singles fade out */
@@ -165,4 +200,6 @@ export interface Thing {
   size: number
   look: number
   phase: number
+  /** already slipped past behind Mitsumi (for the "clear" dare) */
+  passed: boolean
 }

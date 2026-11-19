@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { C } from '../../data'
 import { Icon } from '../../icons'
+import { fmt } from './skipRules'
 
 export const NAME_KEY = 'sl-skip-name'
 export const API = '/api/leaderboard'
@@ -53,7 +54,7 @@ export function Leaderboard({ board, name }: { board: Board; name: string }) {
                 <span className="sg-rank">{i + 1}</span>
                 <span className="sg-name">{e.name}</span>
                 {e.won && <Icon name="star" color={C.yellow} size={14} />}
-                <b>{e.score}</b>
+                <b>{fmt(e.score)}</b>
               </li>
             ))}
           </ol>

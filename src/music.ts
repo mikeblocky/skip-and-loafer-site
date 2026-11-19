@@ -175,7 +175,32 @@ let pending: { style: StyleName; order: number[]; lift: number } | null = null
  * a friend joining gets a glockenspiel flourish on the next beat; the win gets a one-bar
  * fanfare of the motif on the next downbeat, then the band moves to a new style.
  */
-let cues: ('join' | 'win')[] = []
+type Cue = 'join' | 'win' | { motif: string; mood: Mood }
+let cues: Cue[] = []
+
+/**
+ * Leitmotifs: every character has a little phrase of their own, in the song's key (G) and its
+ * tune's range, on their own voice. It rings out when they dare you; when you meet the dare it
+ * comes back an octave up with the band behind it, and when the dare runs out it trails off,
+ * slower, with its last note fallen a step. Each note is [midi, length in sixteenths].
+ */
+type Mood = 'dare' | 'done' | 'miss'
+const MOTIFS: Record<string, { voice: Lead; notes: [number, number][] }> = {
+  // bright and climbing, full of plans
+  mitsumi: { voice: 'whistle', notes: [[79, 1], [81, 1], [83, 1], [86, 2], [91, 3]] },
+  // quiet, turning a page and coming back to it
+  makoto: { voice: 'kalimba', notes: [[83, 2], [81, 1], [79, 1], [81, 2], [83, 4]] },
+  // quick and a little prickly, then sweet
+  mika: { voice: 'glock', notes: [[76, 1], [79, 1], [76, 1], [74, 1], [79, 1], [83, 3]] },
+  // on the beat, every time
+  ujie: { voice: 'whistle', notes: [[74, 1], [74, 1], [74, 1], [79, 3], [83, 2], [79, 2]] },
+  // easy, sliding downhill
+  shima: { voice: 'kalimba', notes: [[86, 2], [83, 1], [81, 1], [79, 2], [76, 1], [74, 3]] },
+  // big confident leaps
+  yuzuki: { voice: 'whistle', notes: [[79, 2], [86, 2], [83, 1], [79, 1], [91, 3]] },
+  // in no hurry at all
+  yasaka: { voice: 'kalimba', notes: [[81, 3], [79, 1], [76, 2], [79, 4]] },
+}
 /** break time: the band drops to a relaxed half-time groove */
 let resting = false
 /** how this section ends: a tom fill, a snare roll into a whoosh, or everything stopping for a big hit */
@@ -286,7 +311,26 @@ function play(t: number) {
   // game moments, on the beat
   if (cues.length && (cues[0] === 'win' ? s === 0 : s % 4 === 0)) {
     const c = cues.shift()!
-    if (c === 'join') {
+    if (typeof c === 'object') {
+      const m = MOTIFS[c.motif] ?? MOTIFS.mitsumi
+      const slow = c.mood === 'miss' ? 1.5 : 1
+      const up = c.mood === 'done' ? 12 : 0
+      let at = 0
+      m.notes.forEach(([n, len], i) => {
+        const last = i === m.notes.length - 1
+        const note = n + up + tr - (c.mood === 'miss' && last ? 2 : 0)
+        const g = c.mood === 'miss' ? 0.6 : 1
+        lead(m.voice, note, sx * len * slow, when(at), g)
+        // a glockenspiel doubles the motif when the dare is met
+        if (c.mood === 'done') lead('glock', note, sx * len, when(at), 0.5)
+        if (last && c.mood !== 'miss') strum(c.mood === 'done' ? [...ch.tones, ch.tones[0] + 12] : ch.tones, tr, when(at), false, c.mood === 'done' ? 1.2 : 0.7)
+        if (last && c.mood === 'done') {
+          brass(ch.tones, tr, sx * len, when(at), 1)
+          splash(when(at))
+        }
+        at += sx * len * slow
+      })
+    } else if (c === 'join') {
       ch.tones.forEach((n, i) => lead('glock', n + 12 + tr, sx * 2, when(i * sx * 0.5), 0.7))
       // the band cheers a new friend in: a short brass hit
       brass(ch.tones, tr, sx * 2.5, when(), 0.9)
@@ -665,6 +709,11 @@ export const music = {
   /** play a game moment in time with the band ('join' on the next beat, 'win' on the next bar) */
   cue(kind: 'join' | 'win') {
     if (running) cues.push(kind)
+    return running
+  },
+  /** a character's leitmotif on the next beat: when they dare you, when it's met, or missed */
+  motif(who: string, mood: Mood) {
+    if (running) cues.push({ motif: who, mood })
     return running
   },
   /** break time on/off */

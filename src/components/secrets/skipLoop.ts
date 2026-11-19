@@ -5,10 +5,12 @@ import { music } from '../../music'
 import { makePage, type Page } from './pages'
 import { TUNE, at, difficulty, gapAt, lerp, minGapAt, speedAt, stage } from './difficulty'
 import {
-  airTime, boostOf, BREAK_EVERY, BREAK_LEN, COMBOS, comboWeights, cooldowns, extraClutter, FRIEND_GAP, FRIENDS, goldOdds, GRAVITY,
-  GROUND, isPower, JOIN_AT, JUMP, LIVES, MAYHEM_AT, mayhem, MOON, PAGE_EVERY, PLAYER_H, POWERS, PX, rushOf, stackOdds, START_SPEED,
+  airTime, boostOf, BREAK_EVERY, BREAK_LEN, COMBOS, comboWeights, cooldowns, extraClutter, FRIENDS, goldOdds, GRAVITY,
+  GROUND, isPower, JOIN_AT, JUMP, LIVES, MAYHEM_AT, mayhem, MOON, fmt, pageAt, pageOf, paceOf, PLAYER_H, POWERS, PX, rushOf, stackOdds, START_SPEED,
   tierOf, TIMED, TWIST_AT, twistTiming, TWISTS, type ComboName, type Kind, type Mode, type Power, type Thing, type Timed, type Twist,
 } from './skipRules'
+import { goalChip, goalReward, makeGoal, dareText, STAR_BOOST, type Goal, type GoalKind } from './skipGoals'
+import { IDLE_TALK, lineFor, TALK_GAP, type TalkEvent } from './skipTalk'
 
 /** Everything the frame loop carries between frames. It lives in a ref, so frames never re-render. */
 export const newGame = () => ({
@@ -31,7 +33,7 @@ export const newGame = () => ({
   twistT: 0, // seconds left on the current twist(s)
   active: [] as Twist[], // twists running right now
   stormT: 0, // countdown to the next storm plane
-  pageN: 0, // which page of the road we're on (one per PAGE_EVERY points)
+  pageN: 0, // which page of the road we're on (one per milestone: 10k, 25k, 50k, 100k, …)
   leader: 'mitsumi',
   heartCd: 0, // 10k+: seconds until another heart may appear
   powerCd: 0, // 10k+: seconds until another power-up may appear
@@ -42,6 +44,15 @@ export const newGame = () => ({
   calm: 0, // seconds of breather left after a big moment
   batch: null as number[] | null, // things spawned by the hazard group being placed
   buffer: 0,
+  goal: null as Goal | null, // the dare running right now
+  dareBy: '', // a milestone was just reached: this character dares you once the moment settles
+  dareAt: 0, // clock time to hand that dare out
+  paceShown: '',
+  lastGoal: null as GoalKind | null,
+  goalShown: '',
+  lastTalk: -99, // clock time someone last said something
+  lastSpeaker: '',
+  idleTalk: 16, // seconds of quiet before someone fills the silence
   fy: [0, 0, 0, 0, 0, 0],
   fvy: [0, 0, 0, 0, 0, 0],
   pwShown: '',
@@ -66,6 +77,8 @@ export interface LoopIO {
   friendEls: RefObject<HTMLDivElement[]>
   doodleEls: RefObject<HTMLDivElement[]>
   worldW: RefObject<number>
+  /** room between the friends running behind Mitsumi (tighter on zoomed-in phones) */
+  friendGap: RefObject<number>
   hop: () => void
   end: (final: number) => void
   say: (text: string, ms?: number) => void
@@ -79,11 +92,17 @@ export interface LoopIO {
   setTeam: Set<typeof FRIENDS>
   setWon: Set<boolean>
   setLives: Set<number>
+  /** a line of side chatter from one of the gang */
+  chat: (who: string, text: string) => void
+  /** the dare chip in the HUD */
+  setGoal: Set<{ text: string; color: string } | null>
+  /** the points multiplier past 10k, as shown in the HUD ('' = none yet) */
+  setPace: Set<string>
 }
 
 /** Runs one game from `s` frame by frame until the hearts run out; returns a stop function. */
 export function runSkipLoop(s: GameState, io: LoopIO) {
-  const { field, player, ground, scoreEl, thingEls, warnEls, friendEls, doodleEls, worldW, hop, end, say } = io
+  const { field, player, ground, scoreEl, thingEls, warnEls, friendEls, doodleEls, worldW, friendGap, hop, end, say, chat, setGoal, setPace } = io
   const { setLooks, setPowers, setRest, setTwists, setTiltDir, setPage, setFlipping, setTeam, setWon, setLives } = io
   s.last = performance.now()
 
@@ -104,7 +123,7 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
               ? 15 + Math.random() * 80
               : 30 + Math.random() * 55
     const y0 = yAt ?? y
-    s.things[i] = { on: true, kind, x, y: y0, vy: 0, base: y0, mode, size, look, phase: Math.random() * 6 }
+    s.things[i] = { on: true, kind, x, y: y0, vy: 0, base: y0, mode, size, look, phase: Math.random() * 6, passed: false }
     s.batch?.push(i)
     setLooks((L) => (L[i].kind === kind && L[i].look === look ? L : L.map((v, j) => (j === i ? { kind, look } : v))))
   }
@@ -135,6 +154,69 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
   }
   /** start a breather: the road eases off for a few seconds (never shortens one already running) */
   const breathe = (secs: number) => (s.calm = Math.max(s.calm, secs))
+  const rand = ([a, b]: readonly [number, number]) => a + Math.random() * (b - a)
+
+  /** who's running along right now: the friends picked up so far, or everyone but a page's leader */
+  const crew = () =>
+    s.leader === 'mitsumi' ? s.order.slice(0, s.friends).map((c) => c.id) : CHARACTERS.filter((c) => c.id !== s.leader).map((c) => c.id)
+  /** someone from the crew (or the leader, if it's just them), not whoever spoke last */
+  const speaker = () => {
+    const pool = crew()
+    const others = pool.filter((id) => id !== s.lastSpeaker)
+    const from = others.length ? others : pool.length ? pool : [s.leader]
+    return from[Math.floor(Math.random() * from.length)]
+  }
+  const speak = (id: string, text: string) => {
+    s.lastTalk = s.clock
+    s.lastSpeaker = id
+    s.idleTalk = rand(IDLE_TALK)
+    chat(id, text)
+  }
+  /** side chatter: small moments wait their turn, big ones (force) always get a line */
+  const talk = (ev: TalkEvent, who?: string, force = false) => {
+    if (!force && s.clock - s.lastTalk < TALK_GAP) return
+    const id = who ?? speaker()
+    speak(id, lineFor(id, ev))
+  }
+
+  /**
+   * Dares only come with milestones: a friend catching up, a new level after the win, a new
+   * page. Whoever brought the moment hands it out a beat later, with their own leitmotif. One
+   * dare at a time; a milestone that arrives while one is running just passes.
+   */
+  const dareSoon = (by: string, wait = 1.8) => {
+    if (s.goal || s.dareBy) return
+    s.dareBy = by
+    s.dareAt = s.clock + wait
+  }
+  const nameOf = (id: string) => CHARACTERS.find((c) => c.id === id)?.name.toLowerCase() ?? 'someone'
+  const startGoal = (by: string) => {
+    s.goal = makeGoal(difficulty(s.score), s.lastGoal, by)
+    s.lastGoal = s.goal.kind
+    speak(by, dareText(s.goal))
+    say(`${nameOf(by)}'s dare!`, 1500)
+    if (!music.motif(by, 'dare')) sfx.pop(1.6)
+  }
+  const winGoal = () => {
+    const g = s.goal
+    if (!g) return
+    s.goal = null
+    // worth more the harder the road, and it keeps pace with the points late on
+    const pts = Math.round(goalReward(difficulty(s.score)) * paceOf(s.score))
+    s.score += pts
+    say(`dare done! +${fmt(pts)}`, 1800)
+    if (!music.motif(g.by, 'done')) sfx.chime(1.5, 0.8)
+    talk('done', g.by, true)
+    // and a little gift: a heart if you're missing one, otherwise a star shower
+    spawn(s.lives < LIVES ? 'heart' : 'sparkle', worldW.current + 40, 45)
+  }
+  const missGoal = () => {
+    const g = s.goal
+    if (!g) return
+    s.goal = null
+    music.motif(g.by, 'miss')
+    talk('miss', g.by, true)
+  }
 
   const frame = (now: number) => {
     const dt = Math.min(0.033, (now - s.last) / 1000)
@@ -160,6 +242,7 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
         s.breakT = BREAK_LEN
         music.setRest(true)
         say('break time! catch your breath', 2200)
+        talk('break')
         // a heart is always waiting on a break if you're missing one
         if (s.lives < LIVES) spawn('heart', w + 30, 40)
       }
@@ -203,8 +286,30 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
         setTiltDir(Math.random() < 0.5 ? -1 : 1)
         setTwists(picked)
         say(picked.map((t) => TWISTS[t].label).join(' + '), 2000)
+        talk('twist')
         sfx.whoosh(0.5, true, 0.14)
       }
+    }
+    // dares and idle chatter wait out the breaks
+    if (s.breakT <= 0) {
+      const gl = s.goal
+      if (gl) {
+        if (gl.kind === 'clean' || gl.kind === 'grounded' || (gl.kind === 'air' && s.y > 0)) gl.have += dt
+        if (gl.kind === 'grounded' && s.hops >= 2) missGoal()
+        else if (gl.have >= gl.need) winGoal()
+        else if ((gl.left -= dt) <= 0) missGoal()
+      } else if (s.dareBy && s.clock >= s.dareAt) {
+        const by = s.dareBy
+        s.dareBy = ''
+        startGoal(by)
+      }
+      if ((s.idleTalk -= dt) <= 0) talk('idle')
+    }
+    const chip = s.goal ? goalChip(s.goal) : ''
+    if (chip !== s.goalShown) {
+      s.goalShown = chip
+      const by = s.goal && CHARACTERS.find((c) => c.id === s.goal?.by)
+      setGoal(s.goal ? { text: chip, color: by ? by.color : '#1D1B2C' } : null)
     }
     // speed comes off the curve; rush hour and breaks only nudge the target, and the road eases
     // toward it so nothing ever lurches
@@ -215,8 +320,15 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
     music.setPace(116 + (s.speed - START_SPEED) * 0.09 - (s.breakT > 0 ? 10 : 0))
     const mult = s.pw.note > 0 ? 2 : 1
     // points come from distance, so the counter speeds up with the road: ~5.5/s at the start,
-    // ~20/s at top speed (before the friend bonus and double points)
-    s.score += ((dt * s.speed) / 55) * (1 + 0.1 * s.friends) * mult
+    // ~20/s at top speed (before the friend bonus and double points); past 10k the pace
+    // multiplier keeps them climbing, so the score keeps going by orders of magnitude
+    const ptsPace = paceOf(s.score)
+    s.score += ((dt * s.speed) / 55) * (1 + 0.1 * s.friends) * mult * ptsPace
+    const paceText = ptsPace < 1.05 ? '' : ptsPace < 10 ? ptsPace.toFixed(1) : String(Math.floor(ptsPace))
+    if (paceText !== s.paceShown) {
+      s.paceShown = paceText
+      setPace(paceText)
+    }
 
     // power-up timers; the HUD only re-renders when a whole second ticks over
     TIMED.forEach((k) => (s.pw[k] = Math.max(0, s.pw[k] - dt)))
@@ -249,7 +361,7 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
     // friends hop over the clutter coming at them on their own (just for show; they can't get hurt)
     friendEls.current.forEach((el, k) => {
       if (!el) return
-      const fx = PX - FRIEND_GAP * (k + 1)
+      const fx = PX - friendGap.current * (k + 1)
       s.fvy[k] -= grav * dt
       s.fy[k] = Math.max(0, s.fy[k] + s.fvy[k] * dt)
       if (s.fy[k] === 0) {
@@ -263,8 +375,8 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
       }
       el.style.transform = `translateY(${-s.fy[k]}px)`
     })
-    // a new page every PAGE_EVERY points: new look, new objects, a new leader
-    const pageN = Math.floor(s.score / PAGE_EVERY)
+    // a new page at each milestone (10k, 25k, 50k, 100k, …): new look, new objects, a new leader
+    const pageN = pageOf(s.score)
     if (pageN > s.pageN) {
       s.pageN = pageN
       const next = makePage(pageN, s.leader)
@@ -282,7 +394,9 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
       setFlipping(true)
       window.setTimeout(() => setFlipping(false), 800)
       const lead = CHARACTERS.find((c) => c.id === next.leader)?.name.toLowerCase() ?? 'someone'
-      say(`new page! ${lead} leads the way`, 2400)
+      say(`${fmt(pageAt(pageN - 1))}! new page · ${lead} leads the way`, 2400)
+      talk('page', next.leader, true)
+      dareSoon(next.leader, 2.6)
       sfx.rustle()
       music.remix()
     }
@@ -293,7 +407,10 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
       // (the win's fanfare does its own remix right after, so don't stack a second one)
       if (!(s.won && tier === JOIN_AT.length)) music.remix()
       // after the win, each extra level gets its own heads-up (not the one the last friend brought)
-      if (s.won && tier > JOIN_AT.length) say(`the road gets busier · boosts get stronger (level ${tier})`, 2200)
+      if (s.won && tier > JOIN_AT.length) {
+        say(`level ${tier} · the road gets busier`, 2000)
+        dareSoon(speaker())
+      }
     }
     const joined = JOIN_AT.filter((t) => s.score >= t).length
     if (joined > s.friends && s.friends < s.order.length) {
@@ -307,9 +424,12 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
         say('everyone made it to school! keep skipping…', 3200)
         // the band plays a fanfare on the next downbeat (falls back to the jingle if it's silent)
         if (!music.cue('win')) sfx.jingle(0.8)
+        talk('win', undefined, true)
       } else {
         say(`${who[joined - 1].name.toLowerCase()} joined! (${joined}/${JOIN_AT.length})`)
         if (!music.cue('join')) sfx.chime(1 + joined * 0.08, 0.7)
+        talk('join', who[joined - 1].id, true)
+        dareSoon(who[joined - 1].id)
       }
       // each new friend brings a heart along if you're missing one
       if (s.lives < LIVES) spawn('heart', w + 60, 45)
@@ -345,8 +465,11 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
       const odds = TUNE.odds
       // chances for each kind of spawn, read off the curve; whatever is left is road clutter
       const pPlane = stage(s.score, 40, 250) * at(odds.plane, D)
-      const pPower = s.score > 15 && s.powerCd <= 0 ? at(odds.power, D) : 0
-      const pStar = at(odds.star, D)
+      // a power-up dare skips the cooldown and nudges the odds, so there's a fair shot at one;
+      // a star dare turns more of the road into stars
+      const powerDare = s.goal?.kind === 'power'
+      const pPower = s.score > 15 && (s.powerCd <= 0 || powerDare) ? at(odds.power, D) + (powerDare ? 0.1 : 0) : 0
+      const pStar = at(odds.star, D) + (s.goal?.kind === 'stars' ? STAR_BOOST : 0)
       const pHeart = s.lives < LIVES && s.heartCd <= 0 ? at(odds.heart, D) : 0
       const x0 = w + 20
       const powerUp = () => {
@@ -444,6 +567,11 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
       if (t.mode === 'bounce') t.y = Math.abs(Math.sin(t.phase * 0.55)) * 58
       else if (t.mode === 'zigzag') t.y = t.base + Math.sin(t.phase * 0.4) * 52
       t.phase += dt * 4
+      // a hazard that's slipped past behind Mitsumi counts toward a "clear" dare
+      if (!t.passed && counts(t) && t.x + t.size * 0.75 < PX + 14) {
+        t.passed = true
+        if (s.goal?.kind === 'clear') s.goal.have++
+      }
       // a falling sticker drops to the road, then it's ordinary clutter
       if (t.kind === 'drop' && t.y > 0) {
         t.vy -= GRAVITY * 0.8 * dt
@@ -501,7 +629,8 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
         t.on = false
         if (el) el.style.opacity = '0'
         // stars grow along the curve, up to 22 each
-        s.score += (10 + 12 * boostOf(s.score)) * mult
+        s.score += (10 + 12 * boostOf(s.score)) * mult * paceOf(s.score)
+        if (s.goal?.kind === 'stars') s.goal.have++
         sfx.blip(1.5)
       } else if (isPower(t.kind)) {
         t.on = false
@@ -518,9 +647,12 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
         }
         say(POWERS[k].label)
         sfx.chime(1.4, 0.7)
+        if (s.goal?.kind === 'power') s.goal.have = 1
+        else if (Math.random() < 0.4) talk('power')
       } else if (t.kind === 'heart') {
         t.on = false
         if (el) el.style.opacity = '0'
+        if (s.lives < LIVES) talk('heal')
         s.lives = Math.min(LIVES, s.lives + 1)
         setLives(s.lives)
         music.setDanger(s.lives === 1)
@@ -538,6 +670,8 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
         s.hurt = 1.6
         sfx.thud()
         say('the golden heart took that one')
+        if (s.goal?.kind === 'clean' || s.goal?.kind === 'clear') missGoal()
+        else talk('hit')
         const f = field.current
         f?.classList.remove('is-hit')
         void f?.offsetWidth
@@ -546,6 +680,9 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
         s.lives--
         s.hurt = 1.6
         setLives(s.lives)
+        if (s.goal?.kind === 'clean' || s.goal?.kind === 'clear') missGoal()
+        else if (s.lives === 1) talk('low', undefined, true)
+        else talk('hit')
         music.setDanger(s.lives === 1)
         sfx.thud()
         const f = field.current
@@ -556,7 +693,7 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
     })
 
     const pts = Math.floor(s.score)
-    if (scoreEl.current) scoreEl.current.textContent = String(pts)
+    if (scoreEl.current) scoreEl.current.textContent = fmt(pts)
     if (s.lives <= 0) {
       end(pts)
       return

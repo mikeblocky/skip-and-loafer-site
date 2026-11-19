@@ -11,20 +11,24 @@
  * come, how strong the boosts are and the late-game events all read their values off this one
  * curve. Nothing switches on at a fixed score: each knob blends in over a stretch of the curve.
  *
- * With the defaults (all six friends ≈ 1½ minutes, 10k ≈ 7 minutes):
+ * With the defaults (all six friends ≈ 2 minutes, 10k ≈ 8 minutes; past 10k the points speed up
+ * (see paceOf in skipRules), so a clean run reaches 100k ≈ 15, 1M ≈ 21 and 10M ≈ 26 minutes):
  *
- *     score   0     1k    2.5k  5k    10k   20k   50k
- *     D       0     .23   .39   .52   .64   .74   .83
- *     speed   300   688   876   981   1043  1075  1092
+ *     score   0     1k    2.5k  5k    10k   20k   50k   100k  1M    10M
+ *     D       0     .18   .33   .45   .58   .68   .79   .85   .95   .98
+ *     speed   300   594   777   902   990   1043  1078  1089  1099  1100
+ *
+ * Top speed settles by ~100k; past that the road gets harder through denser patterns, more and
+ * stacked twists and the 10k+ events, which keep building all the way to a million.
  *
  * Tuning: everything to tweak lives in CURVE and TUNE below.
  */
 
 export const CURVE = {
   /** score at which the curve is a quarter of the way up; bigger = slower, longer game */
-  SCALE: 1500,
+  SCALE: 1900,
   /** how hard the tail leans toward the ceiling; smaller = longer, gentler late game */
-  POWER: 0.5,
+  POWER: 0.47,
 }
 
 export const TUNE = {
@@ -33,7 +37,7 @@ export const TUNE = {
     start: 300,
     top: 1100,
     /** how quickly speed reaches the ceiling compared with D (1 = same as D, higher = sooner) */
-    bend: 2.6,
+    bend: 2.3,
     /** how fast the road catches up to the speed it should be going (1 / seconds) */
     follow: 0.8,
     /** speed during a break, as a share of the usual speed */
