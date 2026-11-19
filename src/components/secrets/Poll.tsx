@@ -3,7 +3,8 @@ import { C, CHARACTERS } from '../../data'
 import { sfx } from '../../sfx'
 import { arcade } from '../../arcadeMusic'
 import { secrets } from '../../secrets'
-import { Chip, Clock, curve, GameBoardFold, GameEnd, GameHud, GameStart, lerp, pick, shuffle, useGameBoard, useGameMusic } from './GameKit'
+import { Chip, Clock, GameBoardFold, GameEnd, GameHud, GameStart, lerp, pick, shuffle, useGameBoard, useGameMusic } from './GameKit'
+import { POLL } from './gameCurves'
 
 /** Our own little reactions (not quotes from the series). */
 const REACTIONS: Record<string, string> = {
@@ -38,13 +39,13 @@ interface Spot {
  * The clock is shared: every find gives a little time back, every wrong tap takes some away.
  * Your walking buddy from the old poll is worth double.
  */
-const START_TIME = 25
-const MAX_TIME = 40
+const START_TIME = POLL.start
+const MAX_TIME = POLL.max
 /** 60 friends found = a star on the board */
-const WIN_AT = 60
+const WIN_AT = POLL.win
 
-const dOf = (found: number) => curve(found, 10, 0.75)
-const crowdOf = (d: number) => [4, 6, 9, 12, 16, 20][Math.min(5, Math.floor(d * 7))]
+const dOf = POLL.d
+const crowdOf = POLL.crowd
 const colsOf = (n: number) => (n <= 4 ? 2 : n <= 9 ? 3 : n <= 16 ? 4 : 5)
 
 let keyN = 0
@@ -52,22 +53,23 @@ function makeCrowd(found: number): { target: Char; spots: Spot[]; need: number }
   const d = dOf(found)
   const size = crowdOf(d)
   const target = pick(CHARACTERS)
-  const need = d > 0.45 && Math.random() < lerp(0, 0.55, d) ? (d > 0.65 && Math.random() < 0.4 ? 3 : 2) : 1
+  const roll = Math.random()
+  const need = roll < POLL.three(d) ? 3 : roll < POLL.three(d) + POLL.two(d) ? 2 : 1
   // decoys lean on the friends who look most alike in a crowd: everyone but the target
   const others = CHARACTERS.filter((c) => c.id !== target.id)
   const chars = shuffle([...Array.from({ length: need }, () => target), ...Array.from({ length: size - need }, () => pick(others))])
-  const odd = (from: number) => Math.random() < lerp(0, 0.85, Math.max(0, (d - from) / (1 - from)))
+  const odd = (chance: number) => Math.random() < chance
   return {
     target,
     need,
     spots: chars.map((char) => ({
       key: keyN++,
       char,
-      flip: odd(0.2) && Math.random() < 0.5,
-      turn: odd(0.35) ? pick([-1, 1]) * Math.round(lerp(15, 180, Math.random() * d)) : 0,
-      zoom: odd(0.5) ? lerp(1.4, 2.4, Math.random() * d) : 1,
+      flip: odd(POLL.flip(d)),
+      turn: odd(POLL.turn(d)) ? pick([-1, 1]) * Math.round(lerp(15, POLL.turnBy(d), Math.random())) : 0,
+      zoom: odd(POLL.zoom(d)) ? lerp(1.4, 2.4, Math.random() * d) : 1,
       ox: Math.random() * 60 - 30,
-      shadow: odd(0.72),
+      shadow: odd(POLL.shadow(d)),
       found: false,
       miss: false,
     })),
@@ -163,11 +165,12 @@ export function Poll() {
   // late on, the crowd shuffles itself every couple of seconds while you look
   const d = dOf(found)
   useEffect(() => {
-    if (phase !== 'play' || d < 0.6) return
+    const every = POLL.shuffle(d)
+    if (phase !== 'play' || !every) return
     const id = window.setInterval(() => {
       setCrowd((c) => c && { ...c, spots: shuffle(c.spots) })
       sfx.rustle()
-    }, lerp(3200, 1600, (d - 0.6) / 0.4))
+    }, every)
     return () => clearInterval(id)
   }, [phase, d, crowd?.target])
 
@@ -178,7 +181,7 @@ export function Poll() {
     if (spot.char.id !== crowd.target.id) {
       sfx.thud()
       setStreak(0)
-      addTime(-lerp(1.5, 3, d))
+      addTime(-POLL.missCost(d))
       setCrowd({ ...crowd, spots: crowd.spots.map((x) => (x.key === k ? { ...x, miss: true } : x)) })
       later(400, () => setCrowd((c) => c && { ...c, spots: c.spots.map((x) => (x.key === k ? { ...x, miss: false } : x)) }))
       say(`that's ${spot.char.name}!`)
@@ -200,7 +203,7 @@ export function Poll() {
     setStreak((x) => x + 1)
     const count = found + 1
     setFound(count)
-    addTime(lerp(2, 0.9, d) * crowd.need)
+    addTime(POLL.timeBack(d) * crowd.need)
     sfx.chime(1 + Math.min(streak, 8) * 0.05, 0.6)
     if (mine) {
       say(`your buddy! ×2`)
@@ -215,7 +218,7 @@ export function Poll() {
   }
 
   const playing = phase === 'play'
-  const rings = d < 0.3 ? 1 : d < 0.55 ? 1 - (d - 0.3) / 0.25 : 0
+  const rings = POLL.rings(d)
 
   return (
     <div className={`gm gm-poll${playing ? ' is-playing' : ''}`}>

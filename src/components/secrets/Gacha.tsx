@@ -4,7 +4,8 @@ import { sfx } from '../../sfx'
 import { arcade } from '../../arcadeMusic'
 import { secrets } from '../../secrets'
 import { fmt } from './skipRules'
-import { Chip, Clock, curve, GameBoardFold, GameEnd, GameHud, GameStart, lerp, shuffle, useGameBoard, useGameMusic } from './GameKit'
+import { Chip, Clock, GameBoardFold, GameEnd, GameHud, GameStart, shuffle, useGameBoard, useGameMusic } from './GameKit'
+import { GACHA } from './gameCurves'
 
 const RARITY = [
   { name: 'N', weight: 60, color: '#A9A3C9', pts: 100 },
@@ -40,16 +41,16 @@ interface Cap {
  * rounds: pairs and cleared trays give time back, misses cost a little (more later on), and
  * from round 5 the machine sometimes swaps two closed capsules after a miss.
  */
-const START_TIME = 40
-const MAX_TIME = 60
+const START_TIME = GACHA.start
+const MAX_TIME = GACHA.max
 /** round 8 cleared = a star on the board */
-const WIN_ROUND = 8
+const WIN_ROUND = GACHA.win
 
 /** how hard round n (1, 2, …) is, from 0 toward 1 */
-const dOf = (round: number) => curve(round - 1, 3, 0.8)
-const pairsOf = (round: number) => [3, 4, 6, 8, 10, 12][Math.min(round - 1, 5)]
+const dOf = (round: number) => GACHA.d(round - 1)
+const pairsOf = GACHA.pairs
 /** columns on a wide screen; phones cap it at 4 (see games.css) */
-const colsOf = (cards: number) => (cards <= 6 ? 3 : cards <= 16 ? 4 : cards <= 20 ? 5 : 6)
+const colsOf = (cards: number) => ({ 6: 3, 8: 4, 10: 5, 12: 4, 16: 4, 20: 5 } as Record<number, number>)[cards] ?? 6
 
 function rollRarity() {
   let n = Math.random() * RARITY.reduce((a, x) => a + x.weight, 0)
@@ -65,14 +66,14 @@ function rollRarity() {
 function makeTray(round: number): Cap[] {
   const pairs = pairsOf(round)
   const d = dOf(round)
-  const friends = Math.max(2, Math.min(CHARACTERS.length, Math.ceil(pairs * lerp(1, 0.35, d))))
+  const friends = Math.max(2, Math.min(CHARACTERS.length, Math.ceil(pairs * GACHA.friends(d))))
   const chars = shuffle(CHARACTERS).slice(0, friends)
   const used = new Set<string>()
   const kinds: { char: Char; r: number }[] = []
   for (let i = 0; kinds.length < pairs && i < 400; i++) {
     const char = chars[kinds.length % friends]
     // a rarer card now and then, more often later on
-    let r = Math.random() < lerp(0.1, 0.35, d) ? 2 + Math.round(Math.random() * 0.6) : rollRarity()
+    let r = Math.random() < GACHA.rare(d) ? 2 + Math.round(Math.random() * 0.6) : rollRarity()
     while (used.has(`${char.id}${r}`)) r = (r + 1) % 4
     if (used.has(`${char.id}${r}`)) continue
     used.add(`${char.id}${r}`)
@@ -139,7 +140,7 @@ export function Gacha() {
     // the capsules rattle out of the machine, then the cards inside get a short look
     sfx.whoosh(0.5, true, 0.12)
     for (let i = 0; i < 4; i++) later(80 + i * 120, () => sfx.clack(0.9 + i * 0.06))
-    const peek = lerp(2.8, 0.7, dOf(n)) + t.length * 0.05
+    const peek = GACHA.peek(dOf(n), t.length)
     later(peek * 1000, () => {
       setTray((x) => x.map((c) => ({ ...c, state: 'down' })))
       setPhase('play')
@@ -208,7 +209,7 @@ export function Gacha() {
         const pts = Math.round(RARITY[a.r].pts * mult * (1 + (round - 1) * 0.15))
         setScore((x) => x + pts)
         setStreak((x) => x + 1)
-        addTime(lerp(2.5, 0.9, d))
+        addTime(GACHA.pairBack(d))
         if (a.r === 3) {
           if (!arcade.sting('good')) sfx.jingle(0.6)
           say(`SSR ${a.char.name}!`)
@@ -221,7 +222,7 @@ export function Gacha() {
         if (t.every((x) => x.state === 'got')) {
           const bonus = 250 * round + Math.round(clock.current) * 10
           setScore((x) => x + bonus)
-          addTime(lerp(6, 3, d))
+          addTime(GACHA.clearBack(d))
           setPhase('clear')
           arcade.sting('big')
           say(round === WIN_ROUND ? 'round 8! the whole set!' : `tray ${round} done! +${fmt(bonus)}`)
@@ -230,11 +231,12 @@ export function Gacha() {
       } else {
         sfx.thud()
         setStreak(0)
-        const penalty = lerp(0, 1.6, d)
-        if (penalty > 0.2) addTime(-penalty)
+        const penalty = GACHA.missCost(d)
+        if (penalty > 0.05) addTime(-penalty)
         misses.current++
-        // from round 5, every third miss the machine swaps two closed capsules
-        if (round >= 5 && misses.current % 3 === 0) {
+        // later on, every few misses the machine swaps two closed capsules
+        const every = GACHA.swapEvery(d)
+        if (every && misses.current % every === 0) {
           const closed = t.map((x, k) => [x, k] as const).filter(([x]) => x.state === 'down').map(([, k]) => k)
           if (closed.length >= 2) {
             const [p, q] = shuffle(closed)

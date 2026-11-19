@@ -9,17 +9,11 @@ import { Leaderboard, SaveScore, savedName, useLeaderboard, type GameId } from '
 
 /**
  * Bits shared by the three newer hidden games (capsule gacha, the quiz and find your friends):
- * the difficulty curve, the HUD, the end screen with "save score", and the best on this device.
+ * the HUD, the end screen with "save score", and the best on this device.
  * Each game is a `.gm` box: HUD on top, the play area right under it, and the controls in the
  * thumb zone at the bottom. On phones mid-game it takes the whole screen (see games.css).
  */
 
-/**
- * Same shape as Skip to School's curve: 0 at the start, climbing briskly at first and then
- * easing toward 1 without ever flattening out. `n` is how far into the game you are (rounds,
- * questions, finds) and `scale` is where the curve is a quarter of the way up.
- */
-export const curve = (n: number, scale: number, power = 0.6) => 1 - Math.pow(1 + Math.max(0, n) / scale, -power)
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
 export const shuffle = <T,>(a: readonly T[]) => {

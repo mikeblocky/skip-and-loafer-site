@@ -37,7 +37,7 @@ const near = (v: number, spread: number) => outVolumes.filter((x) => Math.abs(x 
 type Make = (n: number) => Q
 
 /** generated questions, by kind */
-const MAKERS: { tier: number; make: Make }[] = [
+const MAKERS: { tier: number; make: Make; weight?: number }[] = [
   {
     tier: 0,
     make: (n) => {
@@ -123,7 +123,10 @@ const MAKERS: { tier: number; make: Make }[] = [
   },
   {
     tier: 3,
+    // chapter titles are the hardest thing to know, so they come up less and with fewer answers
+    weight: 0.35,
     make: (n) => {
+      n = Math.min(n, 4)
       const ch = pick(chapters)
       const pool = chapters.filter((c) => Math.abs(c.n - ch.n) <= 6).map((c) => `chapter ${c.n}`)
       return {
@@ -157,10 +160,20 @@ const FACTS: [number, string, string, string, ...string[]][] = [
 ]
 
 /** a question for tier t or below, with n options (fact questions use up to n of theirs) */
-export function makeQuestion(maxTier: number, n: number, recent: Set<string>): Q {
+/** pick an index by weight */
+function weighted(ws: number[]) {
+  let r = Math.random() * ws.reduce((a, b) => a + b, 0)
+  for (let i = 0; i < ws.length; i++) if ((r -= ws[i]) <= 0) return i
+  return 0
+}
+
+/**
+ * A question with n answers. `tiers` says how likely each tier is right now (see QUIZ.tiers in
+ * ./gameCurves): the hard ones blend in as the quiz goes on, and the easy ones never vanish.
+ */
+export function makeQuestion(tiers: number[], n: number, recent: Set<string>): Q {
   for (let tries = 0; tries < 40; tries++) {
-    // lean on the newest tier you've reached, but keep mixing in the easier ones
-    const tier = Math.max(0, maxTier - (Math.random() < 0.55 ? 0 : Math.floor(Math.random() * (maxTier + 1))))
+    const tier = weighted(tiers)
     const facts = FACTS.filter((f) => f[0] === tier)
     const makers = MAKERS.filter((m) => m.tier === tier)
     let q: Q
@@ -169,7 +182,7 @@ export function makeQuestion(maxTier: number, n: number, recent: Set<string>): Q
       q = { id: `x-${text}`, tier, text, hi, answer, options: shuffle([answer, ...shuffle(wrong).slice(0, n - 1)]), color: C.pink }
     } else {
       if (!makers.length) continue
-      q = pick(makers).make(n)
+      q = makers[weighted(makers.map((m) => m.weight ?? 1))].make(n)
     }
     if (q.options.length < 2 || recent.has(q.id)) continue
     return q

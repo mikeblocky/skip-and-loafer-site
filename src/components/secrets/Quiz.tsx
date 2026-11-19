@@ -2,24 +2,24 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { C } from '../../data'
 import { sfx } from '../../sfx'
 import { arcade } from '../../arcadeMusic'
-import { Chip, Clock, curve, GameBoardFold, GameEnd, GameHud, GameStart, Hearts, lerp, useGameBoard, useGameMusic } from './GameKit'
+import { Chip, Clock, GameBoardFold, GameEnd, GameHud, GameStart, Hearts, useGameBoard, useGameMusic } from './GameKit'
+import { QUIZ } from './gameCurves'
 import { makeQuestion, type Q } from './quizBank'
 
 /**
  * The quiz, as an endless run. Three hearts; a wrong answer or running out of time costs one.
  * Each question has its own clock, which gets shorter as you go, while the questions climb from
  * birth months to exact dates, chapter titles and family names, with more answers to pick from.
- * Fast answers score more, and a streak multiplies it. Eight in a row brings a heart back.
+ * Fast answers score more, and a streak multiplies it. A run of right answers brings a heart back (six at first, longer later on).
  */
-const LIVES = 3
+const LIVES = QUIZ.lives
 /** 40 right answers = a star on the board */
-const WIN_AT = 40
-const HEAL_EVERY = 8
+const WIN_AT = QUIZ.win
 
-const tierOf = (n: number) => (n < 4 ? 0 : n < 10 ? 1 : n < 18 ? 2 : 3)
-const optionsOf = (n: number) => (n < 6 ? 3 : n < 16 ? 4 : n < 28 ? 5 : 6)
+const tiersOf = (n: number) => QUIZ.tiers(QUIZ.d(n))
+const optionsOf = (n: number) => QUIZ.answers(QUIZ.d(n))
 /** seconds for question n: 12 at the start, heading toward 4 */
-const timeOf = (n: number) => lerp(12, 4, curve(n, 10, 0.9))
+const timeOf = (n: number) => QUIZ.clock(QUIZ.d(n))
 
 /** the question, with its key bit in colour */
 function Text({ q }: { q: Q }) {
@@ -49,12 +49,13 @@ export function Quiz() {
   const [limit, setLimit] = useState(12)
   const [isBest, setIsBest] = useState(false)
   const recent = useRef(new Set<string>())
+  const healRun = useRef(0)
   const left = useRef(12)
   const timer = useRef(0)
   useEffect(() => () => clearTimeout(timer.current), [])
 
   const ask = (count: number) => {
-    const next = makeQuestion(tierOf(count), optionsOf(count), recent.current)
+    const next = makeQuestion(tiersOf(count), optionsOf(count), recent.current)
     recent.current.add(next.id)
     if (recent.current.size > 24) recent.current.delete(recent.current.values().next().value!)
     const t = timeOf(count)
@@ -70,6 +71,7 @@ export function Quiz() {
 
   const start = () => {
     recent.current.clear()
+    healRun.current = 0
     setN(0)
     setRight(0)
     setLives(LIVES)
@@ -100,7 +102,9 @@ export function Quiz() {
       const s = streak + 1
       setStreak(s)
       sfx.chime(1 + Math.min(s, 10) * 0.05, 0.7)
-      if (s % HEAL_EVERY === 0 && lives < LIVES) {
+      // a heart back after a run of right answers (a longer run the further you get)
+      if (++healRun.current >= QUIZ.healEvery(QUIZ.d(n)) && lives < LIVES) {
+        healRun.current = 0
         livesNow = lives + 1
         setLives(livesNow)
         if (!arcade.sting('big')) window.setTimeout(() => sfx.jingle(0.5), 250)
@@ -108,6 +112,7 @@ export function Quiz() {
     } else {
       sfx.thud()
       setStreak(0)
+      healRun.current = 0
       livesNow = lives - 1
       setLives(livesNow)
       if (livesNow > 0) arcade.sting('bad')
@@ -189,7 +194,7 @@ export function Quiz() {
             lines={[
               'answer before the bar runs out. faster answers score more',
               'it starts easy and gets a lot harder. three wrong and you’re out',
-              'eight right in a row gives you a heart back',
+              'a run of right answers gives you a heart back',
             ]}
             onStart={start}
           />
