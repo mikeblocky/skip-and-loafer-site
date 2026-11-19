@@ -27,6 +27,8 @@ const TITLES: Record<string, string> = {
   nao: 'stylish aunt in the big city',
   yamada: 'sunny and full of energy',
   mukai: 'calm and quiet',
+  takamine: 'serious and steady',
+  kanechika: 'kind and unhurried',
 }
 
 type Char = (typeof CHARACTERS)[number]
