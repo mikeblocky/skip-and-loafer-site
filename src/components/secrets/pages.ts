@@ -2,8 +2,8 @@ import { C, CHARACTERS, RAINBOW } from '../../data'
 import type { IconName } from '../../icons'
 
 /**
- * "Pages" for the skip-to-school road. The run starts on the familiar notebook page; every
- * 10,000 points it turns to a freshly generated one: new paper, lines, margin, road line,
+ * "Pages" for the skip-to-school road. The run starts on the familiar notebook page; at each
+ * milestone (10k, 25k, 50k, 100k, 250k, 500k, 1M, …) it turns to a freshly generated one: new paper, lines, margin, road line,
  * background doodles, road clutter, flying hazard, and a different character leading the way.
  */
 export interface Sticker {

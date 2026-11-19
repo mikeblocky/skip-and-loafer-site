@@ -277,6 +277,45 @@
   background: var(--yellow);
   color: var(--ink);
 }
+/* side chatter: a small speech bubble down in the strip of paper under the road, out of the way
+   of anything you have to dodge */
+.sg-chat {
+  position: absolute;
+  left: 12px;
+  bottom: 8px;
+  z-index: 6;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  max-width: calc(100% - 24px);
+  padding: 5px 12px 6px 6px;
+  border-radius: 14px 14px 14px 4px;
+  background: #fff;
+  border: 1.5px solid color-mix(in oklab, var(--c), #fff 35%);
+  color: var(--ink);
+  font-size: 13.5px;
+  line-height: 1.25;
+  font-variation-settings: 'wght' 650, 'ROND' 100;
+  box-shadow: var(--shadow-1);
+  pointer-events: none;
+  animation: info-in 0.35s var(--spring);
+}
+.sg-chat b {
+  flex: none;
+  padding: 1px 7px 2px;
+  border-radius: 999px;
+  background: var(--c);
+  color: #fff;
+  font-size: 12px;
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+}
+/* the points multiplier past 10k, in amber like the other "more points" things */
+.sg-pace {
+  --c: #f5900f;
+}
+.sg-goal {
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--c), #fff 40%);
+}
 .sg-overlay {
   position: absolute;
   inset: 0;
@@ -481,5 +520,151 @@
   }
   .sg-overlay .sg-how {
     font-size: 12.5px;
+  }
+}
+
+/* hop pads: only on phones mid-run (see .is-full below) */
+.sg-pads {
+  display: none;
+}
+
+/*
+ * Phones mid-run: the game takes the whole screen so it's easy to see and to play with either
+ * hand. The HUD sits in the top row beside the ×, the road fills the middle, and a big hop pad
+ * sits under each thumb at the bottom. Title and leaderboard step aside until the run ends.
+ */
+@media (max-width: 760px) {
+  .sx-panel.is-wide:has(.skipgame.is-full) {
+    min-height: 100%;
+    padding: max(14px, env(safe-area-inset-top)) 10px 0;
+  }
+  .sx-panel.is-wide:has(.skipgame.is-full) .sx-title,
+  .skipgame.is-full .sg-board-toggle,
+  .skipgame.is-full .sg-board {
+    display: none;
+  }
+  /*
+   * Two zones, the way a phone is held. Eyes: the HUD and the road sit together in the middle of
+   * the screen, centred in the space between the × row and the pads. Thumbs: the hop pads sit
+   * along the bottom edge, where both thumbs rest when you hold a phone in two hands. The ×
+   * keeps the top row to itself, out of the way of both.
+   */
+  .skipgame.is-full {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - max(14px, env(safe-area-inset-top)));
+    padding-top: 58px;
+  }
+  /* a size up now that the title is gone */
+  .sx-panel.is-wide .skipgame.is-full .sg-hud {
+    flex: none;
+    min-height: 40px;
+    margin: auto 0 6px;
+    padding: 0 6px;
+    font-size: 13px;
+  }
+  .sx-panel.is-wide .skipgame.is-full .sg-hud b {
+    font-size: 19px;
+  }
+  .skipgame.is-full .sg-lives svg {
+    width: 20px;
+    height: 20px;
+  }
+  .skipgame.is-full .sg-gang i {
+    width: 10px;
+    height: 10px;
+  }
+  /* the best score can wait; the live one matters */
+  .skipgame.is-full .sg-hud > span:last-child {
+    display: none;
+  }
+  .skipgame.is-full .sg-powers {
+    inset: calc(100% + 12px) 12px auto;
+  }
+  /* sized from JS to the zoomed world; gives way on short screens */
+  .skipgame.is-full .sg-field {
+    flex: 0 1 auto;
+    min-height: 0;
+    margin-bottom: auto;
+  }
+  /* call-outs and chatter a touch bigger, easier to read at a glance */
+  .skipgame.is-full .sg-shout {
+    font-size: 15px;
+  }
+  .skipgame.is-full .sg-chat {
+    font-size: 14px;
+  }
+
+  /*
+   * The pads split the bottom of the screen in two, right where thumbs rest when you hold a
+   * phone: each runs from the screen's edge to the middle, so a thumb lands on one wherever it
+   * sits. A soft tint at rest, solid while pressed.
+   */
+  .skipgame.is-full .sg-pads {
+    flex: none;
+    position: relative;
+    display: flex;
+    gap: 10px;
+    height: clamp(128px, 21dvh, 176px);
+    margin: 0 -4px;
+    padding: 26px 0 max(10px, env(safe-area-inset-bottom));
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .sg-pad {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    min-width: 0;
+    border: 2px solid color-mix(in oklab, var(--c), #fff 45%);
+    border-radius: 22px 22px 34px 34px;
+    background: color-mix(in oklab, var(--c), #fff 84%);
+    color: var(--c);
+    font: inherit;
+    font-size: 17px;
+    font-variation-settings: 'wght' 900, 'ROND' 100;
+    box-shadow: 0 5px 0 color-mix(in oklab, var(--c), #fff 55%);
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      transform 0.07s ease,
+      box-shadow 0.07s ease,
+      background-color 0.07s ease,
+      color 0.07s ease;
+  }
+  /* the outer corner hugs the screen's edge a little tighter, like the thumb's arc */
+  .sg-pad.is-left {
+    border-bottom-left-radius: 44px;
+  }
+  .sg-pad.is-right {
+    border-bottom-right-radius: 44px;
+  }
+  .sg-pad svg {
+    rotate: -90deg;
+  }
+  .sg-pad:active {
+    transform: translateY(4px);
+    background: var(--c);
+    color: #fff;
+    box-shadow: 0 1px 0 color-mix(in oklab, var(--c), #fff 55%);
+  }
+  /* one quiet line between the road and the pads */
+  .sg-pad-hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 7px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+    font-variation-settings: 'wght' 700, 'ROND' 100;
+    pointer-events: none;
   }
 }
