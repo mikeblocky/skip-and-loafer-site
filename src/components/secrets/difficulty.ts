@@ -11,7 +11,7 @@
  * come, how strong the boosts are and the late-game events all read their values off this one
  * curve. Nothing switches on at a fixed score: each knob blends in over a stretch of the curve.
  *
- * With the defaults (all six friends ≈ 2 minutes, 10k ≈ 8 minutes; past 10k the points speed up
+ * With the defaults (the first six friends ≈ 2 minutes, 10k ≈ 8 minutes; past 10k the points speed up
  * (see paceOf in skipRules), so a clean run reaches 100k ≈ 15, 1M ≈ 21 and 10M ≈ 26 minutes):
  *
  *     score   0     1k    2.5k  5k    10k   20k   50k   100k  1M    10M

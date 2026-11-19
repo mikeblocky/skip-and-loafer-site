@@ -8,7 +8,7 @@ import { FIRST_PAGE, type Page } from './pages'
 import {
   BUFFER, DOODLES, FLOOR, FRIEND_GAP, FRIEND_H, FRIENDS, isPower, JUMP, LIVES, MIN_WORLD_W, PHONE_BEHIND, PHONE_FRIEND_GAP, PHONE_VIEW,
   fmt, PLAYER_H, POOL, POWERS, PX, SKIP,
-  START_SPEED, TINTS, WON_TINT, WORLD_H, type Kind, type Mode, type Timed, type Twist,
+  START_SPEED, TINTS, WON_TINT, JOIN_AT, lineGap, WORLD_H, type Kind, type Mode, type Timed, type Twist,
 } from './skipRules'
 import { newGame, runSkipLoop } from './skipLoop'
 import { API, Leaderboard, NAME_KEY, useLeaderboard } from './SkipBoard'
@@ -18,7 +18,7 @@ import { SkipHud } from './SkipHud'
  * Skip to School. Tap (or Space) to hop, again mid-air to skip. Road clutter has to be hopped,
  * paper planes cruise at skip height so a careless double-hop runs into them, stars are points
  * and hearts heal. A friend catches up at each milestone and copies your hops a beat later;
- * when all six are running with you, you've won, and you can keep going for the leaderboard.
+ * when everyone is running with you, you've won, and you can keep going for the leaderboard.
  */
 export function SkipGame() {
   const field = useRef<HTMLDivElement>(null)
@@ -128,7 +128,9 @@ export function SkipGame() {
   worldW.current = view.w
   /** friends huddle closer behind Mitsumi when the phone camera is zoomed in */
   const friendGap = useRef(FRIEND_GAP)
-  friendGap.current = view.camX > 0 ? PHONE_FRIEND_GAP : FRIEND_GAP
+  // the longer the line, the closer they run, so everyone fits behind Mitsumi
+  const runners = page.leader === 'mitsumi' ? team.length : CHARACTERS.length - 1
+  friendGap.current = view.camX > 0 ? lineGap(PHONE_FRIEND_GAP, PHONE_BEHIND - 8, runners) : lineGap(FRIEND_GAP, PX - 12, runners)
 
   const reset = () => {
     const s = g.current
@@ -292,7 +294,8 @@ export function SkipGame() {
     return () => window.removeEventListener('keydown', onKey)
   })
 
-  const tint = won ? WON_TINT : TINTS[Math.min(team.length, TINTS.length - 1)]
+  // the paper warms step by step as the line grows
+  const tint = won ? WON_TINT : TINTS[Math.min(TINTS.length - 1, Math.round((team.length / JOIN_AT.length) * (TINTS.length - 1)))]
   /** phones mid-run: the game takes the whole screen, with hop pads under both thumbs */
   const full = view.phone && phase === 'run'
 
@@ -363,7 +366,7 @@ export function SkipGame() {
               ref={(el) => {
                 if (el) friendEls.current[k] = el
               }}
-              style={{ left: PX - friendGap.current * (k + 1), height: FRIEND_H, zIndex: 3 - k, '--oc': f.color } as CSSProperties}
+              style={{ left: PX - friendGap.current * (k + 1), height: FRIEND_H, zIndex: CHARACTERS.length - k, '--oc': f.color } as CSSProperties}
             >
               <img src={f.src} alt={f.name} draggable={false} />
             </div>
@@ -491,7 +494,7 @@ export function SkipGame() {
                 <b>skip to school!</b>
                 <span className="sg-how">tap or press space to play · again mid-air to skip</span>
                 <span className="sg-how">hop the clutter, mind the paper planes, grab stars, hearts and power-ups</span>
-                <span className="sg-how">pick up all six friends on the way to win</span>
+                <span className="sg-how">pick up all your friends on the way to win</span>
               </>
             )}
           </div>

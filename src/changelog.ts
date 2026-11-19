@@ -61,7 +61,7 @@ export const UPDATES: Update[] = [
         how: 'Go to the Anime page and play the Season 1 ending, “Hanauta to Mawarimichi”, with the lyrics on. When the song gets to スキップ (skip), that line turns gold for a moment. Tap it before it goes.',
         items: [
           'Tap or press space to hop, and tap again in the air to skip. Hop over the clutter, watch out for paper planes, and grab stars, hearts and power-ups.',
-          'Friends catch up with you as your score goes up. Get all six to win, then keep going for the leaderboard.',
+          'Friends catch up with you as your score goes up. Get everyone to win, then keep going for the leaderboard.',
           'The game starts off easier and lasts a lot longer now. After 10k, points come in way faster, so 100k or even a million is possible.',
           'Your friends talk while you run, and sometimes they dare you to do something. Each friend has their own little tune for it, and finishing a dare gets you a boost.',
         ],
