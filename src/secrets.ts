@@ -14,8 +14,8 @@ export interface SecretInfo {
 export const SECRETS: SecretInfo[] = [
   { id: 'gacha', title: 'capsule gacha' },
   { id: 'skip', title: 'skip to school' },
-  { id: 'poll', title: 'walk to school poll' },
-  { id: 'quiz', title: 'birthday quiz' },
+  { id: 'poll', title: 'find your friends' },
+  { id: 'quiz', title: 'skip and loafer quiz' },
 ]
 
 const KEY = 'sl-secrets'
@@ -26,11 +26,15 @@ interface Saved {
   dex: Record<string, { best: number; count: number }>
   pulls: number
   skipBest: number
+  /** best scores in the other games (quizBest was out of 5 before the quiz became endless) */
   quizBest: number
+  gachaBest: number
+  pollBest: number
+  /** who you'd walk to school with: your buddy in find your friends */
   vote: string | null
 }
 
-const blank = (): Saved => ({ found: [], dex: {}, pulls: 0, skipBest: 0, quizBest: 0, vote: null })
+const blank = (): Saved => ({ found: [], dex: {}, pulls: 0, skipBest: 0, quizBest: 0, gachaBest: 0, pollBest: 0, vote: null })
 
 function load(): Saved {
   try {

@@ -1,11 +1,12 @@
 /**
- * Leaderboard for the hidden "skip to school" game.
+ * Leaderboards for the hidden games: one board per game, picked with ?game= (skip by default,
+ * so Skip to School's board and its saved scores carry on as they were).
  *
  * Runs on the server only (a Vercel-style function, and through the dev server locally), so the
  * Redis password in REDIS_URL never reaches the browser.
  *
- *   GET  /api/leaderboard            → { entries }
- *   POST /api/leaderboard {name, score, won}  → { entries, rank, best }
+ *   GET  /api/leaderboard?game=quiz            → { entries }
+ *   POST /api/leaderboard?game=quiz {name, score, won}  → { entries, rank, best }
  *
  * Each name keeps its best score only. Names are typed by players, so they're cleaned up and
  * capped; posts are rate-limited per address. Scores come from the browser, so this is a
@@ -17,6 +18,7 @@ declare const process: { env: Record<string, string | undefined> }
 
 interface Req {
   method?: string
+  url?: string
   headers: Record<string, string | string[] | undefined>
   body?: unknown
   socket?: { remoteAddress?: string }
@@ -30,15 +32,27 @@ interface Res {
   end(body?: string): unknown
 }
 
-const KEY = {
-  scores: 'skip:scores', // sorted set: name key → best score
-  names: 'skip:names', // hash: name key → name as typed
-  won: 'skip:won', // set: name keys that reached school with everyone
-  rate: (ip: string) => `skip:rate:${ip}`,
-}
+/**
+ * The games with a board, and the highest score each one accepts. Skip to School's is generous:
+ * past 10k its score grows by orders of magnitude (a great run reaches millions).
+ */
+const GAMES = {
+  skip: 1_000_000_000_000,
+  gacha: 10_000_000,
+  quiz: 10_000_000,
+  poll: 10_000_000,
+} as const
+type Game = keyof typeof GAMES
+
+/** Redis keys for one game's board; skip keeps the keys it has always had. */
+const keys = (game: Game) => ({
+  scores: `${game}:scores`, // sorted set: name key → best score
+  names: `${game}:names`, // hash: name key → name as typed
+  won: `${game}:won`, // set: name keys that finished the game (skip: reached school with everyone)
+})
+/** one rate limit per address, shared by every board */
+const rateKey = (ip: string) => `skip:rate:${ip}`
 const TOP = 10
-/** generous: past 10k the score grows by orders of magnitude (a great run reaches millions) */
-const MAX_SCORE = 1_000_000_000_000
 const POSTS_PER_MINUTE = 8
 
 type Client = ReturnType<typeof createClient>
@@ -75,11 +89,17 @@ export function cleanName(raw: unknown): string | null {
   return capped.length ? capped : null
 }
 
-async function top(r: Client) {
+function gameOf(req: Req): Game | null {
+  const q = new URL(req.url ?? '/', 'http://x').searchParams.get('game') ?? 'skip'
+  return Object.hasOwn(GAMES, q) ? (q as Game) : null
+}
+
+async function top(r: Client, game: Game) {
+  const KEY = keys(game)
   const rows: { value: string; score: number }[] = await r.zRangeWithScores(KEY.scores, 0, TOP - 1, { REV: true })
   if (!rows.length) return []
-  const keys = rows.map((x) => x.value)
-  const [names, won] = await Promise.all([r.hmGet(KEY.names, keys), r.smIsMember(KEY.won, keys)])
+  const ids = rows.map((x) => x.value)
+  const [names, won] = await Promise.all([r.hmGet(KEY.names, ids), r.smIsMember(KEY.won, ids)])
   return rows.map((x, i: number) => ({ name: names[i] ?? x.value, score: x.score, won: Boolean(won[i]) }))
 }
 
@@ -115,9 +135,12 @@ function send(res: Res, status: number, data: unknown) {
 
 export default async function handler(req: Req, res: Res) {
   try {
+    const game = gameOf(req)
+    if (!game) return send(res, 400, { error: 'no such game' })
+    const KEY = keys(game)
     if (req.method === 'GET') {
       const r = await db()
-      return send(res, 200, { entries: await top(r) })
+      return send(res, 200, { entries: await top(r, game) })
     }
     if (req.method !== 'POST') return send(res, 405, { error: 'method not allowed' })
 
@@ -125,20 +148,20 @@ export default async function handler(req: Req, res: Res) {
     const name = cleanName(body.name)
     const score = Math.floor(Number(body.score))
     if (!name) return send(res, 400, { error: 'type a name' })
-    if (!Number.isFinite(score) || score <= 0 || score > MAX_SCORE) return send(res, 400, { error: 'that score looks off' })
+    if (!Number.isFinite(score) || score <= 0 || score > GAMES[game]) return send(res, 400, { error: 'that score looks off' })
 
     const r = await db()
     const fwd = req.headers['x-forwarded-for']
     const ip = (Array.isArray(fwd) ? fwd[0] : fwd)?.split(',')[0].trim() || req.socket?.remoteAddress || 'unknown'
-    const hits = await r.incr(KEY.rate(ip))
-    if (hits === 1) await r.expire(KEY.rate(ip), 60)
+    const hits = await r.incr(rateKey(ip))
+    if (hits === 1) await r.expire(rateKey(ip), 60)
     if (hits > POSTS_PER_MINUTE) return send(res, 429, { error: 'slow down a little' })
 
     const key = name.toLowerCase()
     await r.zAdd(KEY.scores, { score, value: key }, { GT: true })
     await r.hSet(KEY.names, key, name)
     if (body.won === true) await r.sAdd(KEY.won, key)
-    const [rank, best, entries] = await Promise.all([r.zRevRank(KEY.scores, key), r.zScore(KEY.scores, key), top(r)])
+    const [rank, best, entries] = await Promise.all([r.zRevRank(KEY.scores, key), r.zScore(KEY.scores, key), top(r, game)])
     return send(res, 200, { entries, rank: rank === null ? null : rank + 1, best })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'error'
