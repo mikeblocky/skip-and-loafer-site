@@ -123,6 +123,22 @@ const OWN: Record<string, Partial<Record<TalkEvent, string[]>>> = {
     twist: ['hm. interesting'],
     page: ['this way. no need to rush'],
   },
+  takamine: {
+    join: ['I had to run. I hate being late'],
+    hit: ['watch your footing'],
+    idle: ['let’s keep a steady pace', 'I went over today’s notes on the train'],
+    done: ['well done. really'],
+    miss: ['we’ll get it next time'],
+    page: ['stay close, everyone'],
+  },
+  kanechika: {
+    join: ['my, everyone’s in a hurry this morning'],
+    hit: ['oh dear. are you alright?'],
+    idle: ['no running in the halls, but out here is fine', 'ah, to be young and late again'],
+    done: ['splendid! full marks'],
+    break: ['a short rest never hurt anyone'],
+    page: ['follow me, everyone. mind the traffic'],
+  },
 }
 
 /** a line for this character and moment: their own lines win half the time */

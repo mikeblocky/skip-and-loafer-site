@@ -89,10 +89,22 @@ export const TIMED = ['clover', 'note', 'sun', 'bolt', 'goldheart'] as const
 export type Timed = (typeof TIMED)[number]
 export const isPower = (k: string): k is Power => k in POWERS
 
-/** everyone who can catch up with Mitsumi; six of them, picked at random, join each run */
+/** everyone who can catch up with Mitsumi; they all join over a run, in a random order */
 export const FRIENDS = CHARACTERS.filter((c) => c.id !== 'mitsumi')
-/** score at which each friend catches up; when the last one joins, you've won */
-export const JOIN_AT = [85, 205, 360, 550, 780, 1050]
+/**
+ * Score at which each friend catches up; when the last one joins, you've won. The first six come
+ * quickly; after that each one takes about 1.3× the score of the one before, so the line keeps
+ * growing through the mid-game however many friends there are.
+ */
+const FIRST_JOINS = [85, 205, 360, 550, 780, 1050]
+export const JOIN_AT = FRIENDS.map((_, i) =>
+  i < FIRST_JOINS.length ? FIRST_JOINS[i] : Math.round((1050 * Math.pow(1.3, i - FIRST_JOINS.length + 1)) / 50) * 50,
+)
+/**
+ * How far apart the friends run behind Mitsumi: their usual gap, closing up as the line gets
+ * longer so everyone still fits in the room behind her (`room` world units).
+ */
+export const lineGap = (base: number, room: number, count: number) => Math.min(base, room / Math.max(1, count))
 /** after the win, a new level each time the score grows by this factor (so they keep coming at 1M) */
 const LEVEL_STEP = 1.3
 /** every so often, a breather: no hazards for a few seconds */

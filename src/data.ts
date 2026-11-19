@@ -35,15 +35,17 @@ export const CHARACTERS: Character[] = [
   { id: 'ujie', name: 'Ujie', src: '/characters/ujie.webp', side: 'left', color: C.green },
   { id: 'fumi', name: 'Fumi', src: '/characters/fumi.webp', side: 'left', color: C.mint },
   { id: 'nao', name: 'Nao', src: '/characters/nao.webp', side: 'left', color: C.amber },
+  { id: 'takamine', name: 'Takamine', src: '/characters/takamine.webp', side: 'left', color: C.magenta },
   { id: 'shima', name: 'Shima', src: '/characters/shima.webp', side: 'right', color: C.sky },
   { id: 'yuzuki', name: 'Yuzuki', src: '/characters/yuzuki.webp', side: 'right', color: C.orange },
   { id: 'yasaka', name: 'Yasaka', src: '/characters/yasaka.webp', side: 'right', color: C.red },
   { id: 'yamada', name: 'Yamada', src: '/characters/yamada.webp', side: 'right', color: C.teal },
   { id: 'mukai', name: 'Mukai', src: '/characters/mukai.webp', side: 'right', color: C.indigo },
+  { id: 'kanechika', name: 'Kanechika', src: '/characters/kanechika.webp', side: 'right', color: C.blue },
 ]
 
 // Left-to-right order of the group shot during the intro.
-export const CLUSTER_ORDER = ['nao', 'fumi', 'ujie', 'mika', 'makoto', 'mitsumi', 'shima', 'yuzuki', 'yasaka', 'yamada', 'mukai']
+export const CLUSTER_ORDER = ['takamine', 'nao', 'fumi', 'ujie', 'mika', 'makoto', 'mitsumi', 'shima', 'yuzuki', 'yasaka', 'yamada', 'mukai', 'kanechika']
 
 export { VOLUMES } from './volumes'
 
@@ -76,12 +78,12 @@ export interface Birthday {
 }
 
 export const BIRTHDAYS: Birthday[] = [
-  { name: 'Kanechika', m: 2, d: 1, color: C.violet },
+  { name: 'Kanechika', m: 2, d: 1, color: C.violet, img: 'kanechika' },
   { name: 'Mitsumi', m: 3, d: 3, color: C.orange, img: 'mitsumi' },
   { name: 'Makoto', m: 4, d: 17, color: C.green, img: 'makoto' },
   { name: 'Kazakami', m: 4, d: 24, color: C.amber },
   { name: 'Mukai', m: 5, d: 19, color: '#3560DC', img: 'mukai' },
-  { name: 'Takamine', m: 6, d: 30, color: C.red },
+  { name: 'Takamine', m: 6, d: 30, color: C.red, img: 'takamine' },
   { name: 'Mika', m: 7, d: 29, color: C.pink, img: 'mika' },
   { name: 'Yamada', m: 8, d: 6, color: C.orange, img: 'yamada' },
   { name: 'Chris', m: 8, d: 24, color: C.indigo },

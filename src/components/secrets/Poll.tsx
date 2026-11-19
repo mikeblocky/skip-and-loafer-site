@@ -19,6 +19,8 @@ const REACTIONS: Record<string, string> = {
   nao: "She'll drive the conversation and know the best café on the way.",
   yamada: 'It turns into a race by the second corner. He wins. Probably.',
   mukai: 'A quiet walk. Comfortable silence, and the odd good joke.',
+  takamine: "You'll be right on time, and you'll both have done the reading.",
+  kanechika: 'A slow, kind walk, with a story or two along the way.',
 }
 
 type Char = (typeof CHARACTERS)[number]

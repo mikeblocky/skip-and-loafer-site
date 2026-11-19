@@ -208,6 +208,10 @@ const MOTIFS: Record<string, { voice: Lead; notes: [number, number][] }> = {
   yamada: { voice: 'glock', notes: [[79, 1], [79, 1], [83, 1], [86, 1], [83, 1], [91, 3]] },
   // low and steady, saying just enough
   mukai: { voice: 'kalimba', notes: [[74, 2], [76, 2], [74, 2], [71, 4]] },
+  // neat and certain, every step in place
+  takamine: { voice: 'whistle', notes: [[79, 1], [81, 1], [83, 1], [81, 1], [79, 2], [86, 4]] },
+  // gentle and unhurried, a little old-fashioned
+  kanechika: { voice: 'glock', notes: [[74, 2], [79, 2], [78, 1], [76, 1], [74, 2], [79, 4]] },
 }
 /** break time: the band drops to a relaxed half-time groove */
 let resting = false
