@@ -488,22 +488,33 @@
     height: 16px;
     margin: 4px 2px 12px;
   }
-  /* the play area fills the middle; grids sit low enough for thumbs, lifted off the bottom
-     edge the same way Skip to School's hop pads are */
+  /* the play area fills the space under the HUD, with the cards, faces or question and answers
+     in the middle of it, where they're easy to see and still in easy reach of a thumb */
   .gm.is-playing .gm-stage {
     flex: 1 1 auto;
     min-height: 0;
-    justify-content: flex-end;
-    padding-bottom: max(calc(env(safe-area-inset-bottom) + 10px), clamp(18px, (100dvh - 700px) * 0.5 + 18px, 120px));
+    justify-content: center;
+    padding-bottom: max(calc(env(safe-area-inset-bottom) + 10px), 24px);
   }
+  /* quiz: the question and its answers stay together as one block in the middle */
   .gm-quiz.is-playing .gm-stage {
-    justify-content: flex-start;
-    padding: 8px 0 0;
+    flex: none;
+    min-height: 0;
+    margin-top: auto;
+    padding: 0;
+  }
+  /* find your friends: the "find …" prompt sits right above the crowd, both in the middle */
+  .gm-poll.is-playing .fr-ask {
+    margin-top: auto;
+  }
+  .gm-poll.is-playing .gm-stage {
+    flex: none;
+    margin-bottom: auto;
   }
   .gm.is-playing .gm-controls {
     flex: none;
-    margin-top: auto;
-    padding-bottom: max(calc(env(safe-area-inset-bottom) + 10px), clamp(18px, (100dvh - 700px) * 0.5 + 18px, 120px));
+    margin-bottom: auto;
+    padding-bottom: max(calc(env(safe-area-inset-bottom) + 10px), 24px);
   }
   .gm-quiz .quiz-opt {
     min-height: 64px;
