@@ -544,23 +544,22 @@
     display: none;
   }
   /*
-   * Two zones, the way a phone is held. Eyes: the HUD and the road sit together in the middle of
-   * the screen, centred in the space between the × row and the pads. Thumbs: the hop pads sit
-   * along the bottom edge, where both thumbs rest when you hold a phone in two hands. The ×
-   * keeps the top row to itself, out of the way of both.
+   * Two zones, the way a phone is held. Eyes: the HUD and the road sit high on the screen, the
+   * HUD in the top row beside the × and the road right under it. Thumbs: the hop pads sit low,
+   * lifted a little off the bottom edge, where both thumbs rest when you hold a phone in two
+   * hands. Any spare room on a tall phone goes between the two.
    */
   .skipgame.is-full {
     display: flex;
     flex-direction: column;
     height: calc(100dvh - max(14px, env(safe-area-inset-top)));
-    padding-top: 58px;
   }
-  /* a size up now that the title is gone */
+  /* shares the top row with the ×, a size up now that the title is gone */
   .sx-panel.is-wide .skipgame.is-full .sg-hud {
     flex: none;
-    min-height: 40px;
-    margin: auto 0 6px;
-    padding: 0 6px;
+    min-height: 52px;
+    margin: 0 0 8px;
+    padding: 0 64px 0 6px;
     font-size: 13px;
   }
   .sx-panel.is-wide .skipgame.is-full .sg-hud b {
@@ -605,9 +604,11 @@
     position: relative;
     display: flex;
     gap: 10px;
-    height: clamp(128px, 21dvh, 176px);
     margin: 0 -4px;
-    padding: 26px 0 max(10px, env(safe-area-inset-bottom));
+    /* the taller the phone, the further the pads rise off the bottom edge, so they stay where
+       thumbs rest (about a fifth of the way up): no lift up to ~700px, then about half of each
+       extra pixel, up to 140px */
+    padding: 26px 0 max(calc(env(safe-area-inset-bottom) + 10px), clamp(22px, (100dvh - 700px) * 0.5 + 22px, 140px));
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
@@ -621,6 +622,7 @@
     justify-content: center;
     gap: 0;
     min-width: 0;
+    height: clamp(100px, 16dvh, 140px);
     border: 2px solid color-mix(in oklab, var(--c), #fff 45%);
     border-radius: 22px 22px 34px 34px;
     background: color-mix(in oklab, var(--c), #fff 84%);
