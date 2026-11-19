@@ -40,7 +40,7 @@ const RETURNING = (() => {
 })()
 
 /** the gang peeking up from the bottom of a card's header, like the Message guide */
-const src = (id: string) => `/characters/${id}${id === 'ujie' || id === 'yasaka' ? '.webp' : '.png'}`
+const src = (id: string) => `/characters/${id}.webp`
 const NOTICE_CAST = [
   { id: 'makoto', right: 112, w: 74, top: 34 },
   { id: 'yuzuki', right: -8, w: 86, top: 24 },

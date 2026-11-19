@@ -29,17 +29,21 @@ export interface Character {
 
 // Order inside a side = front (closest to the middle) to back.
 export const CHARACTERS: Character[] = [
-  { id: 'mitsumi', name: 'Mitsumi', src: '/characters/mitsumi.png', side: 'left', color: C.pink },
-  { id: 'makoto', name: 'Makoto', src: '/characters/makoto.png', side: 'left', color: C.violet },
-  { id: 'mika', name: 'Mika', src: '/characters/mika.png', side: 'left', color: C.yellow },
+  { id: 'mitsumi', name: 'Mitsumi', src: '/characters/mitsumi.webp', side: 'left', color: C.pink },
+  { id: 'makoto', name: 'Makoto', src: '/characters/makoto.webp', side: 'left', color: C.violet },
+  { id: 'mika', name: 'Mika', src: '/characters/mika.webp', side: 'left', color: C.yellow },
   { id: 'ujie', name: 'Ujie', src: '/characters/ujie.webp', side: 'left', color: C.green },
-  { id: 'shima', name: 'Shima', src: '/characters/shima.png', side: 'right', color: C.sky },
-  { id: 'yuzuki', name: 'Yuzuki', src: '/characters/yuzuki.png', side: 'right', color: C.orange },
+  { id: 'fumi', name: 'Fumi', src: '/characters/fumi.webp', side: 'left', color: C.mint },
+  { id: 'nao', name: 'Nao', src: '/characters/nao.webp', side: 'left', color: C.amber },
+  { id: 'shima', name: 'Shima', src: '/characters/shima.webp', side: 'right', color: C.sky },
+  { id: 'yuzuki', name: 'Yuzuki', src: '/characters/yuzuki.webp', side: 'right', color: C.orange },
   { id: 'yasaka', name: 'Yasaka', src: '/characters/yasaka.webp', side: 'right', color: C.red },
+  { id: 'yamada', name: 'Yamada', src: '/characters/yamada.webp', side: 'right', color: C.teal },
+  { id: 'mukai', name: 'Mukai', src: '/characters/mukai.webp', side: 'right', color: C.indigo },
 ]
 
 // Left-to-right order of the group shot during the intro.
-export const CLUSTER_ORDER = ['ujie', 'mika', 'makoto', 'mitsumi', 'shima', 'yuzuki', 'yasaka']
+export const CLUSTER_ORDER = ['nao', 'fumi', 'ujie', 'mika', 'makoto', 'mitsumi', 'shima', 'yuzuki', 'yasaka', 'yamada', 'mukai']
 
 export { VOLUMES } from './volumes'
 
@@ -67,7 +71,7 @@ export interface Birthday {
   m: number
   d: number
   color: string
-  /** id of a character image in /characters, when there is one */
+  /** id of a character image in /characters (a .webp), when there is one */
   img?: string
 }
 
@@ -76,10 +80,10 @@ export const BIRTHDAYS: Birthday[] = [
   { name: 'Mitsumi', m: 3, d: 3, color: C.orange, img: 'mitsumi' },
   { name: 'Makoto', m: 4, d: 17, color: C.green, img: 'makoto' },
   { name: 'Kazakami', m: 4, d: 24, color: C.amber },
-  { name: 'Mukai', m: 5, d: 19, color: '#3560DC' },
+  { name: 'Mukai', m: 5, d: 19, color: '#3560DC', img: 'mukai' },
   { name: 'Takamine', m: 6, d: 30, color: C.red },
   { name: 'Mika', m: 7, d: 29, color: C.pink, img: 'mika' },
-  { name: 'Yamada', m: 8, d: 6, color: C.orange },
+  { name: 'Yamada', m: 8, d: 6, color: C.orange, img: 'yamada' },
   { name: 'Chris', m: 8, d: 24, color: C.indigo },
   { name: 'Shima', m: 10, d: 9, color: C.amber, img: 'shima' },
   { name: 'Ririka', m: 10, d: 30, color: '#CC3DC0' },

@@ -53,8 +53,8 @@ export const newGame = () => ({
   lastTalk: -99, // clock time someone last said something
   lastSpeaker: '',
   idleTalk: 16, // seconds of quiet before someone fills the silence
-  fy: [0, 0, 0, 0, 0, 0],
-  fvy: [0, 0, 0, 0, 0, 0],
+  fy: CHARACTERS.map(() => 0),
+  fvy: CHARACTERS.map(() => 0),
   pwShown: '',
   order: [] as typeof FRIENDS,
   things: [] as Thing[],

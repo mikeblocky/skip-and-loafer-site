@@ -89,6 +89,7 @@ export const TIMED = ['clover', 'note', 'sun', 'bolt', 'goldheart'] as const
 export type Timed = (typeof TIMED)[number]
 export const isPower = (k: string): k is Power => k in POWERS
 
+/** everyone who can catch up with Mitsumi; six of them, picked at random, join each run */
 export const FRIENDS = CHARACTERS.filter((c) => c.id !== 'mitsumi')
 /** score at which each friend catches up; when the last one joins, you've won */
 export const JOIN_AT = [85, 205, 360, 550, 780, 1050]

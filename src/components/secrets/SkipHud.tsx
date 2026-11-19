@@ -29,8 +29,9 @@ export function SkipHud({ lives, powers, rest, goal, pace, team, won, score, bes
         {powers.goldheart > 0 && <Icon name="heart" color={POWERS.goldheart.color} size={22} className="sg-goldheart" />}
       </span>
       <span className="sg-gang" aria-label={`${team.length} of ${JOIN_AT.length} friends`}>
-        {FRIENDS.map((f, i) => (
-          <i key={f.id} className={i < team.length ? 'is-in' : ''} style={{ '--c': (team[i] ?? f).color } as CSSProperties} />
+        {/* one dot per friend who can join; it takes their colour once they have */}
+        {JOIN_AT.map((_, i) => (
+          <i key={i} className={i < team.length ? 'is-in' : ''} style={{ '--c': (team[i] ?? FRIENDS[i]).color } as CSSProperties} />
         ))}
         {won && <b className="sg-made">made it!</b>}
       </span>

@@ -92,6 +92,37 @@ const OWN: Record<string, Partial<Record<TalkEvent, string[]>>> = {
     break: ['snack break!'],
     page: ['easy pace, everyone. easy pace'],
   },
+  fumi: {
+    join: ['surprise! I came all the way from back home to cheer you on'],
+    hit: ['Mitsumi! you okay?'],
+    idle: ['everything here is so busy compared to home', 'send me a photo of your school later!'],
+    done: ["that's the Mitsumi I know!"],
+    page: ["follow me, I know a shortcut. probably"],
+  },
+  nao: {
+    join: ['you forgot your lunch, so I ran it over'],
+    hit: ['careful! no scraped knees on my watch'],
+    idle: ["I'll make something nice for dinner tonight", 'running in these shoes. the things I do for you'],
+    done: ['look at you go!'],
+    break: ['deep breaths. you’re doing great'],
+    page: ['alright, I’m in charge now'],
+  },
+  yamada: {
+    join: ['hey hey, wait for me!'],
+    hit: ["haha, you good? that was a big one"],
+    idle: ['race you to the gate!', 'I could do this all day'],
+    done: ['whoa, that was awesome!'],
+    power: ["let's gooo!"],
+    page: ['full speed ahead!'],
+  },
+  mukai: {
+    join: ['…morning'],
+    hit: ['that looked like it hurt'],
+    idle: ['I should have brought a book', 'the gate closes soon. just saying'],
+    done: ['…nice'],
+    twist: ['hm. interesting'],
+    page: ['this way. no need to rush'],
+  },
 }
 
 /** a line for this character and moment: their own lines win half the time */

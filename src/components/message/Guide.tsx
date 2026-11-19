@@ -109,7 +109,7 @@ export function Guide() {
           <span
             key={c.id}
             className={`gd-hero-char${c.id === 'mitsumi' ? ' is-lead' : ''}`}
-            style={{ backgroundImage: `url(/characters/${c.id}.png)`, right: c.right, width: c.w, top: c.top }}
+            style={{ backgroundImage: `url(/characters/${c.id}.webp)`, right: c.right, width: c.w, top: c.top }}
           />
         ))}
         <i className="gd-tape" />

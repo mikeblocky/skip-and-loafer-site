@@ -200,6 +200,14 @@ const MOTIFS: Record<string, { voice: Lead; notes: [number, number][] }> = {
   yuzuki: { voice: 'whistle', notes: [[79, 2], [86, 2], [83, 1], [79, 1], [91, 3]] },
   // in no hurry at all
   yasaka: { voice: 'kalimba', notes: [[81, 3], [79, 1], [76, 2], [79, 4]] },
+  // bright and homey, a tune from the countryside
+  fumi: { voice: 'whistle', notes: [[76, 1], [79, 1], [81, 2], [79, 1], [83, 3]] },
+  // warm, settling down like coming home
+  nao: { voice: 'kalimba', notes: [[79, 2], [83, 2], [81, 1], [79, 1], [74, 4]] },
+  // loud and bouncy, all the way to the top
+  yamada: { voice: 'glock', notes: [[79, 1], [79, 1], [83, 1], [86, 1], [83, 1], [91, 3]] },
+  // low and steady, saying just enough
+  mukai: { voice: 'kalimba', notes: [[74, 2], [76, 2], [74, 2], [71, 4]] },
 }
 /** break time: the band drops to a relaxed half-time groove */
 let resting = false

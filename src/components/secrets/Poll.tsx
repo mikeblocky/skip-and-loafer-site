@@ -15,6 +15,10 @@ const REACTIONS: Record<string, string> = {
   shima: 'Somehow every street feels like a scene from a movie.',
   yuzuki: "She'll tell you exactly what she thinks of your outfit. Kindly. Mostly.",
   yasaka: 'No rush. There is always time to grab a snack.',
+  fumi: 'All the news from back home, and a lot of catching up to do.',
+  nao: "She'll drive the conversation and know the best café on the way.",
+  yamada: 'It turns into a race by the second corner. He wins. Probably.',
+  mukai: 'A quiet walk. Comfortable silence, and the odd good joke.',
 }
 
 type Char = (typeof CHARACTERS)[number]
