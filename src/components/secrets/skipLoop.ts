@@ -9,7 +9,7 @@ import {
   GROUND, isPower, JOIN_AT, JUMP, LIVES, MAYHEM_AT, mayhem, MOON, fmt, pageAt, pageOf, paceOf, PLAYER_H, POWERS, PX, rushOf, stackOdds, START_SPEED,
   tierOf, TIMED, TWIST_AT, twistTiming, TWISTS, type ComboName, type Kind, type Mode, type Power, type Thing, type Timed, type Twist,
 } from './skipRules'
-import { goalChip, goalReward, makeGoal, dareText, STAR_BOOST, type Goal, type GoalKind } from './skipGoals'
+import { GOAL_BOOST, goalChip, goalReward, makeGoal, dareText, STAR_BOOST, type Goal, type GoalKind } from './skipGoals'
 import { IDLE_TALK, lineFor, TALK_GAP, type TalkEvent } from './skipTalk'
 
 /** Everything the frame loop carries between frames. It lives in a ref, so frames never re-render. */
@@ -152,6 +152,11 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
     if (late > 0) ids.forEach((i) => (s.things[i].x += late * s.speed * pace(s.things[i])))
     s.lastHit = Math.max(s.lastHit, ...hz.map(arrival))
   }
+  /** an arc of stars right ahead, all within a hop; longer as boosts grow */
+  const starShower = () => {
+    const n = 6 + Math.round(2 * boostOf(s.score))
+    for (let j = 0; j < n; j++) spawn('star', worldW.current + 20 + j * 38, 20 + Math.sin((j / (n - 1)) * Math.PI) * 70)
+  }
   /** start a breather: the road eases off for a few seconds (never shortens one already running) */
   const breathe = (secs: number) => (s.calm = Math.max(s.calm, secs))
   const rand = ([a, b]: readonly [number, number]) => a + Math.random() * (b - a)
@@ -204,11 +209,20 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
     // worth more the harder the road, and it keeps pace with the points late on
     const pts = Math.round(goalReward(difficulty(s.score)) * paceOf(s.score))
     s.score += pts
-    say(`dare done! +${fmt(pts)}`, 1800)
+    // the dare's boost, on right away
+    const boost = GOAL_BOOST[g.kind]
+    const k = boost.power
+    if (k === 'sparkle') starShower()
+    else if (k === 'clover') {
+      // a shield already up gets one more block
+      s.shieldHits = s.pw.clover > 0 ? s.shieldHits + 1 : 1
+      s.pw.clover = Math.max(s.pw.clover, 0) + POWERS.clover.secs
+    } else s.pw[k] = Math.max(s.pw[k], 0) + POWERS[k].secs * (1 + 0.48 * boostOf(s.score))
+    say(`dare done! +${fmt(pts)} · ${boost.name}!`, 2000)
     if (!music.motif(g.by, 'done')) sfx.chime(1.5, 0.8)
     talk('done', g.by, true)
-    // and a little gift: a heart if you're missing one, otherwise a star shower
-    spawn(s.lives < LIVES ? 'heart' : 'sparkle', worldW.current + 40, 45)
+    // and a heart along with it if you're missing one
+    if (s.lives < LIVES) spawn('heart', worldW.current + 40, 45)
   }
   const missGoal = () => {
     const g = s.goal
@@ -636,11 +650,8 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
         t.on = false
         if (el) el.style.opacity = '0'
         const k = t.kind
-        if (k === 'sparkle') {
-          // an arc of stars right ahead, all within a hop; longer as boosts grow
-          const n = 6 + Math.round(2 * boostOf(s.score))
-          for (let j = 0; j < n; j++) spawn('star', w + 20 + j * 38, 20 + Math.sin((j / (n - 1)) * Math.PI) * 70)
-        } else {
+        if (k === 'sparkle') starShower()
+        else {
           // the clover stays short and single-use; the rest last a little longer as the curve climbs
           s.pw[k] = k === 'clover' ? POWERS[k].secs : POWERS[k].secs * (1 + 0.48 * boostOf(s.score))
             if (k === 'clover') s.shieldHits = 1

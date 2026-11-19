@@ -6,6 +6,7 @@
  * nothing bad happens. Targets follow the difficulty curve, so they stay a stretch all run.
  */
 import { lerp } from './difficulty'
+import type { Power } from './skipRules'
 
 export type GoalKind = 'stars' | 'clean' | 'grounded' | 'clear' | 'air' | 'power'
 
@@ -78,6 +79,21 @@ export function goalChip(goal: Goal) {
     case 'power':
       return `grab a power-up${time}`
   }
+}
+
+/**
+ * Meeting a dare also switches on a boost, straight away, that fits what you just did: stars
+ * bring the star magnet, a clean stretch earns the lucky shield, holding back on skips unlocks
+ * triple skip, a long dodge streak brings the golden heart, air time rains a star shower, and
+ * grabbing a power-up doubles your points. A boost already running gets topped up instead.
+ */
+export const GOAL_BOOST: Record<GoalKind, { power: Power; name: string }> = {
+  stars: { power: 'sun', name: 'star magnet' },
+  clean: { power: 'clover', name: 'lucky shield' },
+  grounded: { power: 'bolt', name: 'triple skip' },
+  clear: { power: 'goldheart', name: 'golden heart' },
+  air: { power: 'sparkle', name: 'star shower' },
+  power: { power: 'note', name: 'double points' },
 }
 
 /** bonus points for meeting a dare: worth more the harder the road */
