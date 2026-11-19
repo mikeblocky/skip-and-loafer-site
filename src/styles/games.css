@@ -1,0 +1,537 @@
+/*
+ * The three newer hidden games (capsule pairs, the quiz, find your friends). Each is a `.gm`
+ * box: HUD, clock bar, play area, and controls at the bottom. On phones mid-game it takes the
+ * whole screen like Skip to School: HUD in the top row beside the ×, the play area right under
+ * it, and anything you tap sits low, lifted off the bottom edge to where thumbs rest.
+ */
+.gm {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.gm-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 8px;
+  padding: 0 4px;
+  min-height: 30px;
+  font-size: 15px;
+  color: var(--muted);
+  font-variation-settings: 'wght' 700, 'ROND' 100;
+  font-feature-settings: 'tnum';
+}
+.gm-hud b {
+  font-size: 18px;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.gm-hud-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+}
+.gm-hearts {
+  display: inline-flex;
+  gap: 2px;
+}
+.gm-score {
+  color: var(--orange);
+}
+.gm-best {
+  color: var(--pink);
+}
+.gm-chip {
+  white-space: nowrap;
+}
+
+/* the time left: a soft bar that drains, red and pulsing for the last few seconds */
+.gm-clock {
+  position: relative;
+  height: 14px;
+  margin: 0 4px 12px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--c), #fff 86%);
+  overflow: hidden;
+}
+.gm-clock i {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--c);
+  transform-origin: left center;
+  transition: transform 0.12s linear;
+}
+.gm-clock span {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  translate: 0 -50%;
+  color: #fff;
+  font-size: 10.5px;
+  line-height: 1;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+  font-feature-settings: 'tnum';
+  mix-blend-mode: difference;
+  filter: invert(1) grayscale(1) contrast(9);
+}
+.gm-clock.is-low i {
+  background: var(--red);
+  animation: gm-low 0.5s ease-in-out infinite alternate;
+}
+@keyframes gm-low {
+  to {
+    opacity: 0.55;
+  }
+}
+
+.gm-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 340px;
+}
+.gm-shout {
+  --c: var(--pink);
+  top: 8px;
+  pointer-events: none;
+}
+
+/* start and end cards */
+.gm-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 520px;
+  padding: 6px 4px;
+  text-align: center;
+  animation: info-in 0.4s var(--soft) both;
+}
+.gm-card-title {
+  font-size: clamp(24px, 3.4vw, 34px);
+  color: var(--c);
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.gm-card > span {
+  font-size: 16px;
+  font-variation-settings: 'wght' 700, 'ROND' 100;
+  text-wrap: balance;
+}
+.gm-card .sg-how {
+  color: var(--muted);
+  font-size: 14px;
+}
+.gm-card em {
+  font-style: normal;
+  color: color-mix(in oklab, var(--c, var(--ink)), #000 18%);
+}
+.gm-card .sg-pts {
+  --c: var(--orange);
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.gm-card .sg-new {
+  --c: var(--pink);
+}
+.gm-go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 200px;
+  min-height: 54px;
+  margin-top: 8px;
+  font-size: 17px;
+}
+.gm-card:has(.poll-grid) {
+  max-width: 640px;
+}
+.gm-card .poll-grid {
+  width: 100%;
+  margin-top: 6px;
+}
+.gm-card .poll-react {
+  margin: 4px 0 0;
+  min-height: 2.6em;
+}
+
+/* ---------- capsule pairs ---------- */
+.gp-tray {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: 8px;
+  width: min(100%, calc(var(--cols) * 118px));
+  perspective: 900px;
+}
+.gp-cap {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  border-radius: 18px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  animation: gp-drop 0.45s var(--spring) both;
+}
+@keyframes gp-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.7);
+  }
+}
+.gp-inner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.32s var(--spring);
+}
+.gp-cap.is-up .gp-inner,
+.gp-cap.is-got .gp-inner {
+  transform: rotateY(180deg);
+}
+.gp-back,
+.gp-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+}
+/* closed: a capsule, pink top, white bottom */
+.gp-back {
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: 3px solid color-mix(in oklab, var(--pink), #fff 55%);
+  box-shadow: var(--shadow-1);
+  transition: transform var(--t-hover) var(--spring);
+}
+.gp-back i {
+  position: absolute;
+  inset: 0 0 50%;
+  background: radial-gradient(circle at 30% 34%, rgb(255 255 255 / 0.6) 0 9%, transparent 10%), var(--pink);
+}
+.gp-back::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid color-mix(in oklab, var(--pink), #fff 55%);
+}
+.gp-cap.is-down:hover .gp-back {
+  transform: translateY(-2px);
+}
+.gp-cap.is-down:active .gp-back {
+  transform: scale(0.95);
+}
+/* open: the card, framed in its rarity colour */
+.gp-face {
+  transform: rotateY(180deg);
+  background: #fff;
+  border: 4px solid var(--rc);
+}
+.gp-art {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in oklab, var(--c), #fff 72%);
+}
+.gp-art img {
+  position: absolute;
+  left: 50%;
+  top: 6%;
+  height: 290%;
+  translate: -50% 0;
+  pointer-events: none;
+}
+.gp-face .gc-rar {
+  top: 4px;
+  left: 4px;
+  padding: 1px 6px 2px;
+  font-size: 10.5px;
+  background: var(--rc);
+}
+.gp-face b {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 2px 2px 4px;
+  background: rgb(255 255 255 / 0.88);
+  font-size: 12px;
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+  text-align: center;
+}
+.gp-cap.r3 .gp-face {
+  border-color: transparent;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    linear-gradient(135deg, #F53D84, #FBBA14, #12B266, #246BE8, #7A45E0) border-box;
+}
+.gp-cap.r2 .gp-art::after,
+.gp-cap.r3 .gp-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgb(255 255 255 / 0.6) 45%, transparent 60%) -200% 0 / 300% 100% no-repeat;
+  animation: gc-shine 2.4s ease-in-out 0.4s infinite;
+  mix-blend-mode: soft-light;
+}
+.gp-cap.is-got {
+  animation: gp-got 0.45s var(--spring);
+}
+.gp-cap.is-got .gp-face {
+  box-shadow: 0 0 0 3px #fff, 0 0 16px color-mix(in oklab, var(--rc), transparent 35%);
+  opacity: 0.6;
+  transition: opacity 0.6s 0.4s;
+}
+@keyframes gp-got {
+  50% {
+    transform: scale(1.1);
+  }
+}
+.gp-cap.is-swap .gp-back {
+  animation: gc-shake 0.14s linear 4;
+}
+.gp-tray.is-peek .gp-cap {
+  cursor: default;
+}
+
+/* ---------- quiz ---------- */
+.qz-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 560px;
+  padding: 10px 8px;
+  text-align: center;
+  animation: info-in 0.35s var(--soft) both;
+}
+.qz-n {
+  color: var(--muted);
+  font-size: 13px;
+  font-variation-settings: 'wght' 750, 'ROND' 100;
+}
+.qz-card .quiz-q {
+  margin: 0;
+  font-size: clamp(21px, 3vw, 27px);
+  line-height: 1.3;
+  text-wrap: balance;
+}
+.qz-card .quiz-q b {
+  color: color-mix(in oklab, var(--c), #000 12%);
+}
+.qz-gain {
+  position: absolute;
+  right: 6px;
+  top: -6px;
+  color: var(--green);
+  font-size: 18px;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+  animation: qz-gain 0.9s var(--soft) both;
+  pointer-events: none;
+}
+@keyframes qz-gain {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  70% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+}
+.gm-quiz .gm-stage {
+  min-height: 220px;
+}
+.gm-quiz .quiz-opts {
+  margin-top: 14px;
+}
+/* an odd one out at the end takes the whole row */
+.gm-quiz .quiz-opt:last-child:nth-child(odd) {
+  grid-column: span 2;
+}
+.gm-quiz .quiz-opt {
+  min-height: 60px;
+  padding: 10px 12px;
+  font-size: 16px;
+  line-height: 1.2;
+  text-wrap: balance;
+  touch-action: manipulation;
+}
+
+/* ---------- find your friends ---------- */
+.fr-ask {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-variation-settings: 'wght' 750, 'ROND' 100;
+  animation: info-in 0.3s var(--spring) both;
+}
+.fr-ask b {
+  padding: 2px 12px 4px;
+  border-radius: 999px;
+  background: var(--c);
+  color: #fff;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.fr-buddy {
+  padding: 2px 8px 3px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--amber, #f5900f), #fff 80%);
+  color: #b36200;
+  font-size: 12px;
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+}
+.fr-crowd {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: 8px;
+  width: min(100%, calc(var(--cols) * 112px));
+}
+.fr-face {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  /* the colour ring gives people away early on, and fades out as it gets harder */
+  background: color-mix(in oklab, color-mix(in oklab, var(--c), #d9d3c7 calc((1 - var(--ring)) * 100%)), #fff 74%);
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 0 6px color-mix(in oklab, var(--c), #e8e4dc calc((1 - var(--ring)) * 100%));
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--t-hover) var(--spring),
+    opacity 0.3s;
+  animation: info-in 0.3s var(--spring) both;
+}
+.fr-face img {
+  position: absolute;
+  left: 50%;
+  top: 5%;
+  height: 300%;
+  translate: -50% 0;
+  transform-origin: 50% 12%;
+  pointer-events: none;
+}
+.fr-face.is-shadow img {
+  filter: brightness(0) opacity(0.75);
+}
+.fr-face:active {
+  transform: scale(0.93);
+}
+.fr-face.is-found {
+  transform: scale(0.86);
+  opacity: 0.4;
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 0 6px var(--green);
+}
+.fr-face.is-found img {
+  filter: none;
+}
+.fr-face.is-miss {
+  animation: gc-shake 0.14s linear 2;
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 0 6px var(--red);
+}
+
+/* ---------- phones ---------- */
+@media (max-width: 760px) {
+  .sx-panel:has(.gm.is-playing) {
+    justify-content: flex-start;
+    padding: max(14px, env(safe-area-inset-top)) 10px 0;
+  }
+  .sx-panel:has(.gm.is-playing) .sx-title {
+    display: none;
+  }
+  .gm.is-playing {
+    height: calc(100dvh - max(14px, env(safe-area-inset-top)));
+  }
+  /* shares the top row with the × */
+  .gm.is-playing .gm-hud {
+    flex: none;
+    flex-wrap: nowrap;
+    min-height: 52px;
+    margin: 0;
+    padding: 0 60px 0 4px;
+    font-size: 13px;
+  }
+  .gm.is-playing .gm-hud b {
+    font-size: 19px;
+  }
+  /* the live score matters; best can wait */
+  .gm.is-playing .gm-hud-best {
+    display: none;
+  }
+  .gm.is-playing .gm-clock {
+    flex: none;
+    height: 16px;
+    margin: 4px 2px 12px;
+  }
+  /* the play area fills the middle; grids sit low enough for thumbs, lifted off the bottom
+     edge the same way Skip to School's hop pads are */
+  .gm.is-playing .gm-stage {
+    flex: 1 1 auto;
+    min-height: 0;
+    justify-content: flex-end;
+    padding-bottom: max(calc(env(safe-area-inset-bottom) + 10px), clamp(18px, (100dvh - 700px) * 0.5 + 18px, 120px));
+  }
+  .gm-quiz.is-playing .gm-stage {
+    justify-content: flex-start;
+    padding: 8px 0 0;
+  }
+  .gm.is-playing .gm-controls {
+    flex: none;
+    margin-top: auto;
+    padding-bottom: max(calc(env(safe-area-inset-bottom) + 10px), clamp(18px, (100dvh - 700px) * 0.5 + 18px, 120px));
+  }
+  .gm-quiz .quiz-opt {
+    min-height: 64px;
+    border-radius: 18px;
+    font-size: 16.5px;
+  }
+  .gm-quiz .quiz-opts.is-6 .quiz-opt {
+    min-height: 56px;
+  }
+  .gp-tray {
+    grid-template-columns: repeat(var(--pcols), minmax(0, 1fr));
+    gap: 7px;
+    /* short phones: narrower, so six rows still fit under the HUD */
+    width: min(100%, calc((100dvh - 230px) / var(--prows) * var(--pcols)));
+  }
+  .gp-face b {
+    font-size: 11px;
+  }
+  .fr-crowd {
+    gap: 9px;
+    width: 100%;
+    max-width: calc(var(--cols) * 104px);
+  }
+  .fr-ask {
+    flex: none;
+    font-size: 22px;
+  }
+  .gm-stage {
+    min-height: 300px;
+  }
+}
