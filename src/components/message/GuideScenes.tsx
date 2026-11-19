@@ -6,10 +6,10 @@ import { reduced } from './geometry'
 
 // where each face sits in the character art (fractions of the image), for round avatars
 export const FACES = {
-  mitsumi: { src: '/characters/mitsumi.png', x: 0.54, y: 0.105 },
-  shima: { src: '/characters/shima.png', x: 0.47, y: 0.085 },
-  yuzuki: { src: '/characters/yuzuki.png', x: 0.51, y: 0.12 },
-  mika: { src: '/characters/mika.png', x: 0.49, y: 0.13 },
+  mitsumi: { src: '/characters/mitsumi.webp', x: 0.54, y: 0.105 },
+  shima: { src: '/characters/shima.webp', x: 0.47, y: 0.085 },
+  yuzuki: { src: '/characters/yuzuki.webp', x: 0.51, y: 0.12 },
+  mika: { src: '/characters/mika.webp', x: 0.49, y: 0.13 },
 } as const
 
 // the art is 900×1950; .gd-bust shows it 211px tall, so it is this wide and the box is 96px

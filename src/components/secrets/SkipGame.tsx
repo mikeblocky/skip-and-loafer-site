@@ -133,8 +133,8 @@ export function SkipGame() {
   const reset = () => {
     const s = g.current
     Object.assign(s, { y: 0, vy: 0, hops: 0, speed: START_SPEED, dist: 0, score: 0, lives: LIVES, hurt: 0, next: 1.2, friends: 0, won: false, pwShown: '', buffer: 0 })
-    s.fy = [0, 0, 0, 0, 0, 0]
-    s.fvy = [0, 0, 0, 0, 0, 0]
+    s.fy = CHARACTERS.map(() => 0)
+    s.fvy = CHARACTERS.map(() => 0)
     s.pw = { clover: 0, note: 0, sun: 0, bolt: 0, goldheart: 0 }
     s.shieldHits = 0
     s.tier = 0

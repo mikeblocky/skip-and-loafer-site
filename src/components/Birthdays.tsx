@@ -274,7 +274,7 @@ export function Birthdays() {
           <div className="bd-info" key={b.name} style={{ '--c': b.color } as CSSProperties}>
             <div className="bd-face">
               {b.img ? (
-                <span className="bd-portrait" style={{ backgroundImage: `url(/characters/${b.img}${b.img === 'ujie' || b.img === 'yasaka' ? '.webp' : '.png'})` }} />
+                <span className="bd-portrait" style={{ backgroundImage: `url(/characters/${b.img}.webp)` }} />
               ) : (
                 <span className="bd-initial">{b.name[0]}</span>
               )}
