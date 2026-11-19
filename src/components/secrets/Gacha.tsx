@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { CHARACTERS, C } from '../../data'
 import { sfx } from '../../sfx'
+import { arcade } from '../../arcadeMusic'
 import { secrets } from '../../secrets'
 import { fmt } from './skipRules'
-import { Chip, Clock, curve, GameBoardFold, GameEnd, GameHud, GameStart, lerp, shuffle, useGameBoard } from './GameKit'
+import { Chip, Clock, curve, GameBoardFold, GameEnd, GameHud, GameStart, lerp, shuffle, useGameBoard, useGameMusic } from './GameKit'
 
 const RARITY = [
   { name: 'N', weight: 60, color: '#A9A3C9', pts: 100 },
@@ -94,6 +95,7 @@ function Face({ c }: { c: Cap }) {
 
 export function Gacha() {
   const kit = useGameBoard('gacha', 'gachaBest')
+  useGameMusic()
   const [phase, setPhase] = useState<'ready' | 'peek' | 'play' | 'clear' | 'over'>('ready')
   const [round, setRound] = useState(1)
   const [tray, setTray] = useState<Cap[]>([])
@@ -132,6 +134,8 @@ export function Gacha() {
     setSwapped([])
     misses.current = 0
     setPhase('peek')
+    // the band picks up a little with every tray, and is flat out by the last one for a star
+    arcade.setLevel((n - 1) / (WIN_ROUND - 1))
     // the capsules rattle out of the machine, then the cards inside get a short look
     sfx.whoosh(0.5, true, 0.12)
     for (let i = 0; i < 4; i++) later(80 + i * 120, () => sfx.clack(0.9 + i * 0.06))
@@ -152,13 +156,15 @@ export function Gacha() {
     setStreak(0)
     setIsBest(false)
     sfx.click(1.2)
+    arcade.start('gacha')
+    arcade.setDanger(false)
     deal(1)
   }
 
   const end = (final: number) => {
     setPhase('over')
     setIsBest(kit.record(final))
-    sfx.thud()
+    arcade.stop(true)
   }
 
   // the clock only runs while you're opening capsules
@@ -170,6 +176,7 @@ export function Gacha() {
       clock.current -= (now - last) / 1000
       last = now
       setTime(clock.current)
+      arcade.setDanger(clock.current < 8)
       if (clock.current <= 0) {
         clearInterval(id)
         end(scoreRef.current)
@@ -203,7 +210,7 @@ export function Gacha() {
         setStreak((x) => x + 1)
         addTime(lerp(2.5, 0.9, d))
         if (a.r === 3) {
-          sfx.jingle(0.6)
+          if (!arcade.sting('good')) sfx.jingle(0.6)
           say(`SSR ${a.char.name}!`)
         } else sfx.chime(1 + a.r * 0.1 + Math.min(streak, 6) * 0.04, 0.7)
         // every pair joins your collection
@@ -216,6 +223,7 @@ export function Gacha() {
           setScore((x) => x + bonus)
           addTime(lerp(6, 3, d))
           setPhase('clear')
+          arcade.sting('big')
           say(round === WIN_ROUND ? 'round 8! the whole set!' : `tray ${round} done! +${fmt(bonus)}`)
           later(1300, () => deal(round + 1))
         }

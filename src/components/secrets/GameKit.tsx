@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { C } from '../../data'
 import { Icon } from '../../icons'
 import { sfx } from '../../sfx'
+import { arcade } from '../../arcadeMusic'
 import { secrets } from '../../secrets'
 import { fmt } from './skipRules'
 import { Leaderboard, SaveScore, savedName, useLeaderboard, type GameId } from './SkipBoard'
@@ -30,6 +31,20 @@ export const shuffle = <T,>(a: readonly T[]) => {
   return b
 }
 export const pick = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
+
+/**
+ * While a game is open the site uses its softer sound (like Skip to School), and closing the
+ * game mid-run stops its band.
+ */
+export function useGameMusic() {
+  useEffect(() => {
+    sfx.setMellow(true)
+    return () => {
+      arcade.stop()
+      sfx.setMellow(false)
+    }
+  }, [])
+}
 
 type BestKey = 'gachaBest' | 'quizBest' | 'pollBest'
 

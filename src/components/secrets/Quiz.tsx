@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { C } from '../../data'
 import { sfx } from '../../sfx'
-import { Chip, Clock, curve, GameBoardFold, GameEnd, GameHud, GameStart, Hearts, lerp, useGameBoard } from './GameKit'
+import { arcade } from '../../arcadeMusic'
+import { Chip, Clock, curve, GameBoardFold, GameEnd, GameHud, GameStart, Hearts, lerp, useGameBoard, useGameMusic } from './GameKit'
 import { makeQuestion, type Q } from './quizBank'
 
 /**
@@ -34,6 +35,7 @@ function Text({ q }: { q: Q }) {
 
 export function Quiz() {
   const kit = useGameBoard('quiz', 'quizBest')
+  useGameMusic()
   const [phase, setPhase] = useState<'ready' | 'ask' | 'show' | 'over'>('ready')
   const [q, setQ] = useState<Q | null>(null)
   const [n, setN] = useState(0)
@@ -61,6 +63,8 @@ export function Quiz() {
     setTime(t)
     setQ(next)
     setPicked(null)
+    // the band speeds up with the questions, flat out by question 30
+    arcade.setLevel(count / 30)
     setPhase('ask')
   }
 
@@ -74,6 +78,8 @@ export function Quiz() {
     setIsBest(false)
     setGain(null)
     sfx.click(1.2)
+    arcade.start('quiz')
+    arcade.setDanger(false)
     ask(0)
   }
 
@@ -97,20 +103,23 @@ export function Quiz() {
       if (s % HEAL_EVERY === 0 && lives < LIVES) {
         livesNow = lives + 1
         setLives(livesNow)
-        window.setTimeout(() => sfx.jingle(0.5), 250)
-      }
+        if (!arcade.sting('big')) window.setTimeout(() => sfx.jingle(0.5), 250)
+      } else if (s % 5 === 0) arcade.sting('good')
     } else {
       sfx.thud()
       setStreak(0)
       livesNow = lives - 1
       setLives(livesNow)
+      if (livesNow > 0) arcade.sting('bad')
     }
+    arcade.setDanger(livesNow === 1)
     // a wrong answer stays up a little longer, so you can see the right one
     timer.current = window.setTimeout(
       () => {
         if (livesNow <= 0) {
           setPhase('over')
           setIsBest(kit.record(scoreNow))
+          arcade.stop(true)
           return
         }
         setN(n + 1)

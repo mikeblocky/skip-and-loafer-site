@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { C, CHARACTERS } from '../../data'
 import { sfx } from '../../sfx'
+import { arcade } from '../../arcadeMusic'
 import { secrets } from '../../secrets'
-import { Chip, Clock, curve, GameBoardFold, GameEnd, GameHud, GameStart, lerp, pick, shuffle, useGameBoard } from './GameKit'
+import { Chip, Clock, curve, GameBoardFold, GameEnd, GameHud, GameStart, lerp, pick, shuffle, useGameBoard, useGameMusic } from './GameKit'
 
 /** Our own little reactions (not quotes from the series). */
 const REACTIONS: Record<string, string> = {
@@ -75,6 +76,7 @@ function makeCrowd(found: number): { target: Char; spots: Spot[]; need: number }
 
 export function Poll() {
   const kit = useGameBoard('poll', 'pollBest')
+  useGameMusic()
   const [buddy, setBuddy] = useState(secrets.get().vote)
   useEffect(() => secrets.subscribe(() => setBuddy(secrets.get().vote)), [])
   const [phase, setPhase] = useState<'ready' | 'play' | 'over'>('ready')
@@ -113,6 +115,8 @@ export function Poll() {
   const next = (count: number) => {
     setCrowd(makeCrowd(count))
     shown.current = performance.now()
+    // the band follows the crowd: busier and faster as you go, flat out by 50 found
+    arcade.setLevel(count / 50)
   }
 
   const start = () => {
@@ -126,13 +130,15 @@ export function Poll() {
     setIsBest(false)
     setPhase('play')
     sfx.click(1.2)
+    arcade.start('poll')
+    arcade.setDanger(false)
     next(0)
   }
 
   const end = () => {
     setPhase('over')
     setIsBest(kit.record(scoreRef.current))
-    sfx.thud()
+    arcade.stop(true)
   }
 
   useEffect(() => {
@@ -144,6 +150,7 @@ export function Poll() {
       clock.current -= (now - last) / 1000
       last = now
       setTime(clock.current)
+      arcade.setDanger(clock.current < 6)
       if (clock.current <= 0) {
         clearInterval(id)
         end()
@@ -195,9 +202,12 @@ export function Poll() {
     setFound(count)
     addTime(lerp(2, 0.9, d) * crowd.need)
     sfx.chime(1 + Math.min(streak, 8) * 0.05, 0.6)
-    if (mine) say(`your buddy! ×2`)
+    if (mine) {
+      say(`your buddy! ×2`)
+      arcade.sting('good')
+    } else if (count % 10 === 0 && count !== WIN_AT) arcade.sting('big')
     if (count === WIN_AT) {
-      sfx.jingle(0.6)
+      if (!arcade.sting('big')) sfx.jingle(0.6)
       say('sixty friends found!')
     }
     setCrowd({ ...crowd, spots })
