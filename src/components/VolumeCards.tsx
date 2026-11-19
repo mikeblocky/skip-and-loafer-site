@@ -1,5 +1,5 @@
 import { useEffect, useRef, type CSSProperties } from 'react'
-import { gsap, Draggable, velocityTracker } from '../gsap'
+import { gsap, Draggable, GRAB, velocityTracker } from '../gsap'
 import { VOLUMES } from '../data'
 import { LATEST_VOLUME } from '../volumes'
 import { Icon } from '../icons'
@@ -54,8 +54,7 @@ export function VolumeCards({ hidden, onOpen }: { hidden: number | null; onOpen:
       inertia: true,
       edgeResistance: 0.8,
       minimumMovement: 6,
-      cursor: 'grab',
-      activeCursor: 'grabbing',
+      ...GRAB,
       onPress(this: Draggable) {
         vt.reset(this.x, 0)
         notch = Math.round(this.x / ((t.querySelector<HTMLElement>('.vcard')?.offsetWidth ?? 200) + 18))

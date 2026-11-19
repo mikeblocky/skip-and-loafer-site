@@ -63,7 +63,7 @@
   box-shadow: var(--shadow-2);
   touch-action: none;
   user-select: none;
-  cursor: pointer;
+  cursor: var(--cur-pointer);
   transition: background-color 2.5s ease;
 }
 .sg-world {
@@ -369,7 +369,7 @@
   align-items: center;
   gap: 8px;
   margin: 6px 0 2px;
-  cursor: default;
+  cursor: var(--cur);
 }
 .sg-save input {
   width: 190px;

@@ -15,6 +15,8 @@ import { FlexText } from './components/FlexText'
 import { Icon } from './icons'
 import { Timer } from './components/Timer'
 import { Secrets } from './components/secrets/Secrets'
+import { Notes } from './components/Notes'
+import { ClickBurst } from './components/ClickBurst'
 import { sfx } from './sfx'
 
 function loadImg(src: string) {
@@ -266,6 +268,8 @@ export default function App() {
       )}
 
       {ready && <Secrets />}
+      <Notes ready={ready} />
+      <ClickBurst />
 
       <div className="wipe" aria-hidden="true">
         {['#F53D84', '#FBBA14', '#246BE8', '#12B266', '#7A45E0', '#F86E1A'].map((c) => (

@@ -33,4 +33,7 @@ export function velocityTracker() {
   }
 }
 
+/** the site's own grab hands (see styles/cursors.css), for every Draggable */
+export const GRAB = { cursor: 'var(--cur-grab)', activeCursor: 'var(--cur-grabbing)' } as const
+
 export { gsap, Draggable, InertiaPlugin }

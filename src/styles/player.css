@@ -24,7 +24,7 @@
   height: 100%;
   object-fit: cover;
   /* tapping the picture only shows the controls, so no "clickable" hand */
-  cursor: default;
+  cursor: var(--cur);
 }
 .pl-frame:fullscreen {
   border-radius: 0;
@@ -124,7 +124,7 @@
   position: relative;
   flex: 1;
   height: 22px;
-  cursor: pointer;
+  cursor: var(--cur-pointer);
   touch-action: none;
   outline: none;
 }

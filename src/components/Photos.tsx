@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { gsap, Draggable, velocityTracker } from '../gsap'
+import { gsap, Draggable, GRAB, velocityTracker } from '../gsap'
 import { sfx } from '../sfx'
 
 const rand = gsap.utils.random
@@ -86,8 +86,7 @@ export function Photos({ srcs, bodyRef }: { srcs: string[]; bodyRef: React.RefOb
         inertia: true,
         zIndexBoost: true,
         edgeResistance: 0.75,
-        cursor: 'grab',
-        activeCursor: 'grabbing',
+        ...GRAB,
         onPress(this: Draggable) {
           vt.reset(this.x, this.y)
           sfx.grab(sfx.panOf(this.pointerX))

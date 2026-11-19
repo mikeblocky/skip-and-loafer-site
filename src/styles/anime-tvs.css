@@ -17,7 +17,7 @@
   padding-top: clamp(34px, 4.5vw, 58px);
   transform: rotate(var(--t));
   transition: transform 0.45s var(--spring);
-  cursor: pointer;
+  cursor: var(--cur-pointer);
 }
 .tv:hover,
 .tv:focus-visible {

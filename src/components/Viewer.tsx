@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
-import { gsap, Draggable } from '../gsap'
+import { gsap, Draggable, GRAB } from '../gsap'
 import { C, VOLUMES } from '../data'
 import { Icon, SCATTER_ICONS } from '../icons'
 import { useCoverColors } from '../coverColors'
@@ -112,6 +112,7 @@ export function Viewer({
     const [d] = Draggable.create(proxy, {
       trigger: stage.current,
       type: 'x',
+      ...GRAB,
       inertia: true,
       minimumMovement: 5,
       snap: {

@@ -31,12 +31,12 @@
   --rot: 0deg;
   position: absolute;
   inset: 0;
-  cursor: grab;
+  cursor: var(--cur-grab);
   touch-action: none;
   user-select: none;
 }
 .bd-wheel:active {
-  cursor: grabbing;
+  cursor: var(--cur-grabbing);
 }
 .bd-ring {
   display: block;
@@ -91,7 +91,7 @@
   font-size: max(12px, calc(var(--D) * 0.02));
   font-variation-settings: 'wght' 900, 'ROND' 100;
   font-feature-settings: 'tnum';
-  cursor: pointer;
+  cursor: var(--cur-pointer);
   box-shadow: var(--shadow-1);
   transition:
     scale 0.35s var(--spring),

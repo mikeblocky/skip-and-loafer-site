@@ -16,12 +16,12 @@
   display: grid;
   place-items: center;
   perspective: 1800px;
-  cursor: grab;
+  cursor: var(--cur-grab);
   touch-action: none;
   user-select: none;
 }
 .viewer-stage:active {
-  cursor: grabbing;
+  cursor: var(--cur-grabbing);
 }
 .book3d {
   position: relative;

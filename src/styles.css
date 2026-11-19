@@ -1,4 +1,5 @@
 @import './styles/base.css';
+@import './styles/cursors.css';
 @import './styles/stage.css';
 @import './styles/chrome.css';
 @import './styles/countdown.css';
@@ -19,3 +20,4 @@
 @import './styles/skip-game.css';
 @import './styles/skip-game-events.css';
 @import './styles/poll-quiz.css';
+@import './styles/notes.css';

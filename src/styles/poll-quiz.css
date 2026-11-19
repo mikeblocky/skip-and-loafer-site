@@ -136,7 +136,7 @@
   transform: scale(0.96);
 }
 .quiz-opt:disabled {
-  cursor: default;
+  cursor: var(--cur);
 }
 .quiz-opt.is-right {
   background: var(--green);

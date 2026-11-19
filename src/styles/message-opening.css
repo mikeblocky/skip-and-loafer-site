@@ -16,7 +16,7 @@
   z-index: 2;
 }
 .post.is-tappable {
-  cursor: pointer;
+  cursor: var(--cur-pointer);
 }
 .rx-box {
   position: absolute;
@@ -161,7 +161,7 @@
 }
 .rx-report:disabled {
   text-decoration: none;
-  cursor: default;
+  cursor: var(--cur);
 }
 
 /* narrow windows and phones: the guide sits above the desk */

@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
-import { gsap, Draggable, velocityTracker } from '../gsap'
+import { gsap, Draggable, GRAB, velocityTracker } from '../gsap'
 import { C, CHARACTERS, RAINBOW } from '../data'
 import { Icon, SCATTER_ICONS, type IconName } from '../icons'
 import { sfx } from '../sfx'
@@ -278,8 +278,7 @@ export const Stage = forwardRef<StageHandle, { aspects: Record<string, number> }
         inertia: true,
         zIndexBoost: true,
         edgeResistance: 0.65,
-        cursor: 'grab',
-        activeCursor: 'grabbing',
+        ...GRAB,
         onPress(this: Draggable) {
           vt.reset(this.x, this.y)
           el.classList.add('held')
@@ -317,6 +316,7 @@ export const Stage = forwardRef<StageHandle, { aspects: Record<string, number> }
         inertia: true,
         zIndexBoost: true,
         edgeResistance: 0.7,
+        ...GRAB,
         onPress(this: Draggable) {
           vt.reset(this.x, this.y)
           gsap.to(el, { scale: base() * 1.35, duration: 0.3, ease: 'back.out(1.4)', overwrite: 'auto' })

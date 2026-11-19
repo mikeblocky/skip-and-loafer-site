@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { gsap, Draggable } from '../gsap'
+import { gsap, Draggable, GRAB } from '../gsap'
 import { BIRTHDAYS, C, RAINBOW } from '../data'
 import { Icon, SCATTER_ICONS } from '../icons'
 import { FlexText } from './FlexText'
@@ -199,6 +199,7 @@ export function Birthdays() {
     const [d] = Draggable.create(el, {
       type: 'rotation',
       inertia: true,
+      ...GRAB,
       minimumMovement: 4,
       snap: (v: number) => nearestTurn(v, -list[nearestIndex(v)].a),
       onPress() {
