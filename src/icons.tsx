@@ -1,7 +1,11 @@
 import type { CSSProperties } from 'react'
 import {
   BookOpen,
+  Bookmark,
+  Captions,
+  Check,
   Candy,
+  CakeSlice,
   ChevronRight,
   Circle,
   Citrus,
@@ -9,6 +13,7 @@ import {
   Clock,
   Cloud,
   Clover,
+  Coffee,
   Drama,
   Flame,
   Flower,
@@ -16,28 +21,40 @@ import {
   GraduationCap,
   Heart,
   HeartCrack,
+  KeyRound,
   Luggage,
   Mail,
+  Minimize2,
   Maximize2,
   MessageCircle,
   Moon,
   Mountain,
   Music2,
   PartyPopper,
+  Phone,
   Pause,
   Pencil,
   Play,
+  Popcorn,
   Redo,
   RotateCcw,
   School,
+  ScrollText,
+  Settings,
   Send,
   ShoppingBag,
   ShoppingBasket,
+  Shovel,
   Smile,
+  Snowflake,
   Sparkles,
+  Square,
+  Stamp,
   Star,
   Sun,
+  Ticket,
   Umbrella,
+  Volume1,
   Volume2,
   VolumeX,
   Waves,
@@ -114,8 +131,26 @@ const SHAPES = {
   torii: Torii,
   gradcap: GraduationCap,
   clock: Clock,
+  gear: Settings,
+  stop: Square,
+  soundLow: Volume1,
+  captions: Captions,
+  check: Check,
+  shrink: Minimize2,
   /** a gacha capsule */
   capsule: Capsule,
+  /** the Secret Santa quests */
+  key: KeyRound,
+  ticket: Ticket,
+  shovel: Shovel,
+  snow: Snowflake,
+  coffee: Coffee,
+  bookmark: Bookmark,
+  cake: CakeSlice,
+  popcorn: Popcorn,
+  stamp: Stamp,
+  phone: Phone,
+  list: ScrollText,
 } satisfies Record<string, LucideIcon>
 
 export type IconName = keyof typeof SHAPES
@@ -128,7 +163,7 @@ export const SCATTER_ICONS: IconName[] = [
 const STROKE = 2.4
 /** Closed shapes get a soft fill of their own colour; open lines would fill into odd slivers, so they stay bare. */
 const FILL_OPACITY = 0.3
-const LINE_ONLY = new Set<IconName>(['squiggle', 'arrow', 'close', 'chev', 'replay', 'wave'])
+const LINE_ONLY = new Set<IconName>(['squiggle', 'arrow', 'close', 'chev', 'replay', 'wave', 'check', 'shrink'])
 
 export function Icon({
   name,

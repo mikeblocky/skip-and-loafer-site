@@ -7,6 +7,7 @@
  */
 import { lerp } from './difficulty'
 import type { Power } from './skipRules'
+import { t, type Key } from '../../i18n'
 
 export type GoalKind = 'stars' | 'clean' | 'grounded' | 'clear' | 'air' | 'power'
 
@@ -24,21 +25,14 @@ export interface Goal {
 /** while a star dare runs, this extra share of spawns turn into stars */
 export const STAR_BOOST = 0.32
 
-/** how each dare is put, with {n} for the target */
-const DARES: Record<GoalKind, string[]> = {
-  stars: ['bet you can’t grab {n} stars!', 'race you to {n} stars!'],
-  clean: ['{n} seconds without a single bump. go!', 'try not to trip for {n} seconds'],
-  grounded: ['no skipping for {n} seconds. hops only!', 'keep it simple: {n}s of single hops'],
-  clear: ['clear {n} things in a row, no bumps!', 'dodge the next {n}, clean'],
-  air: ['spend {n} seconds in the air!', 'pretend the road is lava: {n}s airborne'],
-  power: ['grab a power-up, quick!', 'next power-up is yours, don’t miss it!'],
-}
+/** how each dare is put, with {n} for the target: `dare.<kind>` in the dictionaries, alternatives split by | */
+const KINDS: GoalKind[] = ['stars', 'clean', 'grounded', 'clear', 'air', 'power']
 
 const pick = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
 
 /** a fresh dare at difficulty d, never the same kind as the last one */
 export function makeGoal(d: number, last: GoalKind | null, by: string): Goal {
-  const kinds = (Object.keys(DARES) as GoalKind[]).filter((k) => k !== last)
+  const kinds = KINDS.filter((k) => k !== last)
   const kind = pick(kinds)
   const r = Math.round
   const g = (need: number, left: number): Goal => ({ kind, need, have: 0, left, by })
@@ -59,26 +53,13 @@ export function makeGoal(d: number, last: GoalKind | null, by: string): Goal {
 }
 
 /** how the friend puts it */
-export const dareText = (goal: Goal) => pick(DARES[goal.kind]).replace('{n}', String(goal.need))
+export const dareText = (goal: Goal) => pick(t(`dare.${goal.kind}` as Key, { n: goal.need }).split('|'))
 
 /** the short chip in the HUD while it runs */
 export function goalChip(goal: Goal) {
   const have = Math.floor(goal.have)
-  const time = Number.isFinite(goal.left) ? ` · ${Math.ceil(goal.left)}s` : ''
-  switch (goal.kind) {
-    case 'stars':
-      return `stars ${have}/${goal.need}${time}`
-    case 'clean':
-      return `no bumps ${have}/${goal.need}s`
-    case 'grounded':
-      return `no skips ${have}/${goal.need}s`
-    case 'clear':
-      return `clear ${have}/${goal.need}${time}`
-    case 'air':
-      return `air time ${have}/${goal.need}s${time}`
-    case 'power':
-      return `grab a power-up${time}`
-  }
+  const time = Number.isFinite(goal.left) ? t('chip.time', { n: Math.ceil(goal.left) }) : ''
+  return t(`chip.${goal.kind}` as Key, { have, need: goal.need, time })
 }
 
 /**
@@ -87,13 +68,13 @@ export function goalChip(goal: Goal) {
  * triple skip, a long dodge streak brings the golden heart, air time rains a star shower, and
  * grabbing a power-up doubles your points. A boost already running gets topped up instead.
  */
-export const GOAL_BOOST: Record<GoalKind, { power: Power; name: string }> = {
-  stars: { power: 'sun', name: 'star magnet' },
-  clean: { power: 'clover', name: 'lucky shield' },
-  grounded: { power: 'bolt', name: 'triple skip' },
-  clear: { power: 'goldheart', name: 'golden heart' },
-  air: { power: 'sparkle', name: 'star shower' },
-  power: { power: 'note', name: 'double points' },
+export const GOAL_BOOST: Record<GoalKind, { power: Power; name: Key }> = {
+  stars: { power: 'sun', name: 'boost.sun' },
+  clean: { power: 'clover', name: 'boost.clover' },
+  grounded: { power: 'bolt', name: 'boost.bolt' },
+  clear: { power: 'goldheart', name: 'boost.goldheart' },
+  air: { power: 'sparkle', name: 'boost.sparkle' },
+  power: { power: 'note', name: 'boost.note' },
 }
 
 /** bonus points for meeting a dare: worth more the harder the road */

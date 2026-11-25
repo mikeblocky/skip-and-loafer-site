@@ -3,6 +3,7 @@ import { gsap } from '../../gsap'
 import { C } from '../../data'
 import { Icon } from '../../icons'
 import { reduced } from './geometry'
+import { useT } from '../../i18n'
 
 // where each face sits in the character art (fractions of the image), for round avatars
 export const FACES = {
@@ -49,16 +50,16 @@ export function MiniBox({ className }: { className: string }) {
 }
 
 const GOOD = [
-  { icon: 'book', color: C.blue, text: 'a scene or chapter you love' },
-  { icon: 'star', color: C.amber, text: 'your favourite character and why' },
-  { icon: 'sun', color: C.orange, text: 'something kind for whoever reads it' },
-  { icon: 'film', color: C.violet, text: 'a manga or anime you’d recommend' },
+  { icon: 'book', color: C.blue, text: 'msg.good1' },
+  { icon: 'star', color: C.amber, text: 'msg.good2' },
+  { icon: 'sun', color: C.orange, text: 'msg.good3' },
+  { icon: 'film', color: C.violet, text: 'msg.good4' },
 ] as const
 const BAD = [
-  { icon: 'bubble', text: 'real names, socials, phone numbers or addresses' },
-  { icon: 'arrow', text: 'links or ads' },
-  { icon: 'book', text: 'spoilers for new chapters without a warning' },
-  { icon: 'heartbreak', text: 'anything mean, hateful or adult' },
+  { icon: 'bubble', text: 'msg.bad1' },
+  { icon: 'arrow', text: 'msg.bad2' },
+  { icon: 'book', text: 'msg.bad3' },
+  { icon: 'heartbreak', text: 'msg.bad4' },
 ] as const
 
 /** Runs a looping scene timeline inside a box; stills it on a telling frame for reduced motion. */
@@ -87,6 +88,7 @@ const SLOTS = [
 
 /** Yuzuki's letter: each good thing flies in, lands on the page and gets a tick. */
 export function GoodBox() {
+  const { t } = useT()
   const ref = useLoop((q, tl) => {
     const tiles = q('.gb-tile')
     const ticks = q('.gb-tick')
@@ -131,14 +133,14 @@ export function GoodBox() {
           ))}
         </div>
       </div>
-      <h4>Lovely things to write</h4>
+      <h4>{t('msg.goodTitle')}</h4>
       <ul className="gd-chips">
         {GOOD.map((g) => (
           <li key={g.text} style={{ '--fc': g.color } as CSSProperties}>
             <span className="gd-chip-ico">
               <Icon name={g.icon} color="#fff" size={18} />
             </span>
-            {g.text}
+            {t(g.text)}
             <span className="gd-mark">✓</span>
           </li>
         ))}
@@ -149,6 +151,7 @@ export function GoodBox() {
 
 /** Mika keeps the letter clean: each thing that shouldn't go in is stamped out and knocked away. */
 export function BadBox() {
+  const { t } = useT()
   const ref = useLoop((q, tl) => {
     const tiles = q('.bb-tile')
     const xs = q('.bb-x')
@@ -199,14 +202,14 @@ export function BadBox() {
           ))}
         </div>
       </div>
-      <h4>Please don’t share</h4>
+      <h4>{t('msg.badTitle')}</h4>
       <ul className="gd-chips">
         {BAD.map((g) => (
           <li key={g.text}>
             <span className="gd-chip-ico">
               <Icon name={g.icon} color={C.red} size={18} />
             </span>
-            {g.text}
+            {t(g.text)}
             <span className="gd-mark">✕</span>
           </li>
         ))}

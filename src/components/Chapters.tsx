@@ -4,6 +4,7 @@ import { C, releaseWindow } from '../data'
 import { chapterByNumber, type Volume } from '../volumes'
 import { Icon } from '../icons'
 import { sfx } from '../sfx'
+import { useT } from '../i18n'
 
 
 function Starburst() {
@@ -27,31 +28,33 @@ function useCountdown() {
   }, [])
   const diff = Math.max(0, releaseWindow(now).next - now)
   const p = (n: number) => String(n).padStart(2, '0')
-  return `${Math.floor(diff / 864e5)}d ${p(Math.floor((diff % 864e5) / 36e5))}:${p(Math.floor((diff % 36e5) / 6e4))}:${p(Math.floor((diff % 6e4) / 1e3))}`
+  return { d: Math.floor(diff / 864e5), hms: `${p(Math.floor((diff % 864e5) / 36e5))}:${p(Math.floor((diff % 36e5) / 6e4))}:${p(Math.floor((diff % 6e4) / 1e3))}` }
 }
 
 function Upcoming({ n, color }: { n: number; color: string }) {
   const left = useCountdown()
+  const { t } = useT()
   return (
     <article className="ch-card is-upcoming" style={{ '--c': color } as CSSProperties}>
       <span className="ch-top">
         <span className="ch-num">{n}</span>
-        <span className="ch-kind">next</span>
+        <span className="ch-kind">{t('ch.next')}</span>
       </span>
-      <span className="ch-timer">{left}</span>
-      <span className="ch-title">Not out yet</span>
+      <span className="ch-timer">{t('ch.timer', left)}</span>
+      <span className="ch-title">{t('ch.notYet')}</span>
     </article>
   )
 }
 
 function ChapterCard({ n, color }: { n: number; color: string }) {
   const ch = chapterByNumber.get(n)
+  const { t } = useT()
   if (!ch) return <Upcoming n={n} color={color} />
   return (
     <article className={`ch-card${ch.latest ? ' is-latest' : ''}`} style={{ '--c': color } as CSSProperties}>
       {ch.latest && (
         <>
-          <span className="ch-sticker" aria-label="Latest chapter">
+          <span className="ch-sticker" aria-label={t('ch.latestLabel')}>
             <Starburst />
             <b>NEW</b>
           </span>
@@ -61,13 +64,13 @@ function ChapterCard({ n, color }: { n: number; color: string }) {
       )}
       <span className="ch-top">
         <span className="ch-num">{n}</span>
-        {ch.latest && <span className="ch-kind">latest</span>}
+        {ch.latest && <span className="ch-kind">{t('ch.latest')}</span>}
       </span>
       <span className="ch-title">{ch.title}</span>
       <span className="ch-links">
         {ch.jp.map((u, k) => (
           <a key={u} className="ch-link" href={u} target="_blank" rel="noopener noreferrer">
-            {ch.jp.length > 1 ? `Part ${k + 1}` : 'Read'} <span aria-hidden="true">↗</span>
+            {ch.jp.length > 1 ? t('ch.part', { n: k + 1 }) : t('ch.read')} <span aria-hidden="true">↗</span>
           </a>
         ))}
       </span>
@@ -78,9 +81,10 @@ function ChapterCard({ n, color }: { n: number; color: string }) {
 /** Everything about one volume: tags, where to buy, and a card per main chapter. */
 export function ChapterPanel({ vol, color }: { vol: Volume; color: string }) {
   const ref = useRef<HTMLElement>(null)
+  const { t } = useT()
   // side stories and extras (x.5 and friends) stay out of the list
   const main = vol.chapters.filter((n) => Number.isInteger(n))
-  const range = main.length > 1 ? `ch. ${main[0]}–${main[main.length - 1]}` : `ch. ${main[0]}`
+  const range = main.length > 1 ? t('vol.range', { a: main[0], b: main[main.length - 1] }) : t('vol.one', { n: main[0] })
 
   useLayoutEffect(() => {
     const el = ref.current
@@ -99,7 +103,7 @@ export function ChapterPanel({ vol, color }: { vol: Volume; color: string }) {
   }, [vol.n])
 
   return (
-    <aside className="v-panel" ref={ref} style={{ '--c': color } as CSSProperties} aria-label={`Volume ${vol.n} chapters`}>
+    <aside className="v-panel" ref={ref} style={{ '--c': color } as CSSProperties} aria-label={t('vol.chapters', { n: vol.n })}>
       <header className="vp-head">
         <div className="vp-title">
           <span className="vp-vol">vol.</span>
@@ -108,8 +112,8 @@ export function ChapterPanel({ vol, color }: { vol: Volume; color: string }) {
         <div className="vp-row">
           <div className="vp-tags">
             <span className="tag">{range}</span>
-            {vol.anime && <span className="tag tag-anime">anime · {vol.anime}</span>}
-            {vol.inProgress && <span className="tag tag-live">in progress</span>}
+            {vol.anime && <span className="tag tag-anime">{t('vol.anime', { n: vol.anime.replace(/\D/g, '') })}</span>}
+            {vol.inProgress && <span className="tag tag-live">{t('vol.inProgress')}</span>}
           </div>
           {(vol.buyEn || vol.buyJp) && (
             <div className="vp-buy">
@@ -118,7 +122,8 @@ export function ChapterPanel({ vol, color }: { vol: Volume; color: string }) {
                   <Icon name="bag" color="currentColor" size={22} />
                   <span className="buy-text">
                     <b>
-                      English<span className="bt-more"> edition</span>
+                      {t('vol.en')}
+                      <span className="bt-more">{t('vol.enMore')}</span>
                     </b>
                     <small>Penguin Random House</small>
                   </span>
@@ -129,7 +134,7 @@ export function ChapterPanel({ vol, color }: { vol: Volume; color: string }) {
                   <Icon name="bag" color="currentColor" size={22} />
                   <span className="buy-text">
                     <b>
-                      <span className="bt-more">Japanese edition </span>
+                      <span className="bt-more">{t('vol.jpMore')}</span>
                       <span lang="ja">日本語版</span>
                     </b>
                     <small>Amazon Japan</small>

@@ -1,0 +1,1398 @@
+/* ───────── Secret Santa quests ─────────
+   Flat colours only, like the rest of the site's paper and stickers: no gradients. */
+
+/* the Ueno Park ticket, tucked into the first update */
+.qt {
+  position: relative;
+  display: flex;
+  margin: 22px 0 4px;
+  max-width: 380px;
+  border-radius: 12px;
+  background: #fff6e4;
+  color: var(--ink);
+  box-shadow: var(--shadow-2);
+  rotate: -1.5deg;
+  overflow: hidden;
+}
+.qt-stub {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  width: 74px;
+  padding: 10px 6px;
+  background: var(--sky);
+  color: #fff;
+  border-right: 2px dashed rgb(255 255 255 / 0.7);
+  font-size: 11px;
+  font-variation-settings: 'wght' 800, 'ROND' 100;
+}
+.qt-stub span {
+  writing-mode: vertical-rl;
+  font-family: var(--jp);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+.qt-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+}
+.qt-head {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.qt-jp {
+  font-family: var(--jp);
+  font-weight: 900;
+  font-size: 17px;
+}
+.qt-en {
+  font-size: 12px;
+  color: var(--muted);
+  font-variation-settings: 'wght' 700, 'ROND' 100;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.qt-scratch {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 42px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1.5px solid rgb(29 27 44 / 0.1);
+  overflow: hidden;
+}
+.qt-code {
+  font-size: 19px;
+  letter-spacing: 0.08em;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+  color: var(--blue);
+  user-select: all;
+}
+.qt-foil {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: var(--cur-pointer);
+  border-radius: 7px;
+}
+.qt-foil:focus-visible {
+  outline: 3px solid var(--sky);
+  outline-offset: 2px;
+}
+.qt-fine {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-variation-settings: 'wght' 650, 'ROND' 100;
+}
+.qt.is-used .qt-code {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.qt-stamp {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  padding: 2px 10px;
+  border: 2.5px solid var(--red);
+  border-radius: 6px;
+  color: var(--red);
+  font-style: normal;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+  rotate: 12deg;
+  opacity: 0.8;
+}
+
+/* the ticket gate inside volume 1's cover */
+.qg-slot {
+  position: absolute;
+  /* top corner by the hinge: the chapter list and its chips (beside the book on wide screens,
+     over its lower half on phones) never reach up here */
+  left: 7%;
+  top: 4%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 11px 6px;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.9);
+  color: var(--ink);
+  box-shadow: var(--shadow-1);
+  cursor: var(--cur-pointer);
+  transition: transform var(--t-hover) var(--spring);
+}
+/* on phones the chapter list's header lies over the open book: let taps fall through it to the
+   book (and the gate inside its cover), except on its own links */
+.vp-head {
+  pointer-events: none;
+}
+.vp-head :is(a, button) {
+  pointer-events: auto;
+}
+.qg-slot:hover {
+  transform: scale(1.06);
+}
+.qg-slot .qg-jp {
+  font-family: var(--jp);
+  font-weight: 900;
+  font-size: 14px;
+  letter-spacing: 0.2em;
+}
+.qg-mouth {
+  width: 52px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--ink);
+}
+.qg-en {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  font-variation-settings: 'wght' 800, 'ROND' 100;
+}
+
+/* pop-ups: a small card over blurred paper */
+.qs {
+  position: fixed;
+  inset: 0;
+  z-index: 8400;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.qg-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(255 253 247 / 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  animation: fade-in 0.3s ease both;
+}
+.qg-card,
+.qb-card,
+.ql-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(380px, 100%);
+  padding: 26px 22px 22px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: var(--shadow-3);
+  text-align: center;
+  animation: sx-in 0.5s var(--spring) both;
+}
+.qg-card h3,
+.qb-card h3,
+.ql-card h3 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.qg-card p,
+.qb-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  font-variation-settings: 'wght' 600, 'ROND' 100;
+}
+.qg-card > .qg-jp {
+  font-family: var(--jp);
+  font-weight: 900;
+  color: var(--sky);
+  letter-spacing: 0.3em;
+}
+.qg-card input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: 2px solid var(--hair);
+  border-radius: 14px;
+  background: var(--paper);
+  font: inherit;
+  font-size: 20px;
+  text-align: center;
+  letter-spacing: 0.08em;
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+  color: var(--ink);
+}
+.qg-card input:focus {
+  outline: none;
+  border-color: var(--sky);
+}
+.qg-card input[aria-invalid='true'] {
+  border-color: var(--red);
+}
+.qg-err {
+  min-height: 1.3em;
+  color: var(--red) !important;
+  font-size: 13.5px !important;
+}
+.qg-fine {
+  font-size: 12.5px !important;
+}
+.qg-row {
+  display: flex;
+  gap: 10px;
+}
+
+/* ── the RPG talk box ── */
+.qd {
+  place-items: end center;
+  padding: 0;
+  background: rgb(29 27 44 / 0.08);
+  animation: fade-in 0.4s ease both;
+  cursor: var(--cur-pointer);
+  user-select: none;
+}
+.qd.is-dark {
+  background: none;
+}
+.qd-cast {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  perspective: 1200px;
+}
+.qd-char {
+  position: absolute;
+  bottom: 0;
+  height: min(78vh, 720px);
+  /* the same shape as the character pictures, so the hat lands in the same place as on the page */
+  aspect-ratio: 900 / 1950;
+  transform-origin: 50% 55%;
+}
+.qd-char.is-left {
+  left: max(2vw, calc(50% - 560px));
+}
+.qd-char.is-right {
+  right: max(2vw, calc(50% - 560px));
+}
+.qd-fig {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.qd-fig img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: 50% 100%;
+}
+/* the whole figure dims (hat and all) while the other one is talking */
+.qd-fig {
+  filter: drop-shadow(0 10px 18px rgb(29 27 44 / 0.25)) brightness(0.72) saturate(0.7);
+  transition: filter 0.3s;
+}
+.qd-char.is-talking .qd-fig {
+  filter: drop-shadow(0 10px 18px rgb(29 27 44 / 0.25));
+}
+.qd.is-dark .qd-fig {
+  filter: drop-shadow(0 0 22px rgb(140 160 255 / 0.25)) brightness(0.6) saturate(0.6);
+}
+.qd.is-dark .qd-char.is-talking .qd-fig {
+  filter: drop-shadow(0 0 22px rgb(140 160 255 / 0.3));
+}
+/* the "!" over Shima's head when the gate goes off */
+.qd-bang {
+  position: absolute;
+  left: 66%;
+  top: -14%;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 3px solid var(--ink);
+  background: var(--yellow);
+  color: var(--ink);
+  font-size: 34px;
+  line-height: 1;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+  animation: qd-bang 0.5s var(--spring) both;
+}
+@keyframes qd-bang {
+  from {
+    scale: 0;
+    rotate: -30deg;
+  }
+}
+.qd-box {
+  position: relative;
+  z-index: 1;
+  width: min(760px, calc(100% - 32px));
+  min-height: 132px;
+  margin-bottom: 24px;
+  padding: 26px 26px 22px;
+  border: 4px solid var(--ink);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow:
+    0 0 0 4px #fff,
+    0 6px 0 4px var(--c),
+    var(--shadow-3);
+}
+.qd-name {
+  position: absolute;
+  left: 20px;
+  top: -20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 16px 6px;
+  border-radius: 12px;
+  background: var(--c);
+  color: #fff;
+  font-size: 17px;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+  box-shadow: 0 0 0 3px var(--ink);
+}
+.qd-name small {
+  font-size: 12px;
+  opacity: 0.85;
+  font-variation-settings: 'wght' 700, 'ROND' 100;
+}
+.qd-text {
+  position: relative;
+  margin: 0;
+  font-size: clamp(17px, 2.2vw, 21px);
+  line-height: 1.45;
+  font-variation-settings: 'wght' 650, 'ROND' 100;
+  color: var(--ink);
+}
+/* the rest of the line takes up its room already, so the text never reflows while typing */
+.qd-ghost {
+  visibility: hidden;
+}
+.qd-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.qd-more {
+  position: absolute;
+  right: 16px;
+  bottom: 8px;
+  display: grid;
+  opacity: 0;
+}
+.qd-more.is-on {
+  opacity: 1;
+  animation: qd-nudge 0.7s ease-in-out infinite alternate;
+}
+@keyframes qd-nudge {
+  to {
+    translate: 0 5px;
+  }
+}
+
+/* the puff of snow when the hat lands on Shima */
+.qd-puff {
+  position: absolute;
+  left: 30%;
+  top: -10%;
+  width: 34%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 6px dotted #fff;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ── flashbacks: washed out like an old photo, with when and where at the top ── */
+.qd.is-past {
+  background: #e9e0cd;
+}
+.qd.is-past .qd-fig {
+  filter: grayscale(1) sepia(0.45) contrast(0.9) brightness(0.92);
+}
+.qd.is-past .qd-char.is-talking .qd-fig {
+  filter: grayscale(1) sepia(0.45) contrast(0.95);
+}
+.qd.is-past .qd-box {
+  border-color: #6b5a45;
+  background: #fbf6ea;
+  box-shadow:
+    0 0 0 4px #fbf6ea,
+    0 6px 0 4px #b9a687,
+    var(--shadow-2);
+}
+.qd.is-past .qd-name {
+  background: #8a7559;
+  box-shadow: 0 0 0 3px #6b5a45;
+}
+.qd-when {
+  position: absolute;
+  top: 26px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 2;
+  padding: 7px 16px 8px;
+  border-radius: 999px;
+  background: #6b5a45;
+  color: #fbf6ea;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  font-variation-settings: 'wght' 800, 'ROND' 100;
+  animation: sx-in 0.6s var(--spring) 0.2s both;
+}
+/* ??? talking: the box goes dark */
+.qd.is-unknown .qd-box {
+  background: var(--ink);
+  border-color: var(--ink);
+  box-shadow:
+    0 0 0 4px #fff,
+    0 6px 0 4px #4a4766,
+    var(--shadow-3);
+}
+.qd.is-unknown .qd-text {
+  color: #fff;
+  font-style: italic;
+}
+.qd.is-unknown .qd-name {
+  background: #4a4766;
+}
+
+/* Shima's Santa hat, in % of his picture: on the page and in the talk scenes alike */
+.santa-hat {
+  position: absolute;
+  /* sits up on the crown of his hair, a little smaller than his head */
+  left: 31.5%;
+  /* pulled down over the hair, the way a real hat sits, with the brim just above the eyes */
+  top: -4.8%;
+  width: 30%;
+  rotate: -10deg;
+  overflow: visible;
+  pointer-events: none;
+}
+.char-inner {
+  position: relative;
+}
+
+/* ???'s seal: a snowflake stamped inside the cover of the book with the shrine gate */
+.qg-seal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  border: 3px double var(--ink);
+  background: rgb(255 255 255 / 0.9);
+  rotate: -12deg;
+}
+.qg-seal b {
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+
+/* the back of the list: ???'s riddles */
+.ql-back {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 6px;
+  background: #fff4dc;
+  box-shadow: 0 0 0 1px rgb(29 27 44 / 0.4);
+}
+.ql-back ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ql-back li {
+  display: flex;
+  gap: 8px;
+  font-size: 15px;
+  line-height: 1.35;
+  font-style: italic;
+  color: var(--muted);
+  font-variation-settings: 'wght' 600, 'ROND' 100;
+}
+.ql-back li.is-now {
+  color: var(--ink);
+  font-variation-settings: 'wght' 750, 'ROND' 100;
+}
+.ql-back li.is-done {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+.ql-back .qh-box {
+  margin-top: 2px;
+}
+
+/* ── the void: deep night and falling snow, under everything as it all falls away ── */
+.qv {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: #15122a;
+}
+.qv i {
+  position: absolute;
+  top: -20px;
+  left: var(--x);
+  display: grid;
+  opacity: 0.75;
+  scale: var(--s);
+  animation: qv-fall 9s linear infinite;
+  animation-delay: calc(var(--d) * -1);
+}
+@keyframes qv-fall {
+  to {
+    transform: translate(40px, 105vh) rotate(180deg);
+  }
+}
+
+/* ── task 1: a torn scrap of the list, blowing across the page ── */
+.qsc {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 4200;
+  visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 58px;
+  height: 44px;
+  padding: 6px 8px;
+  background: #fff;
+  border: 1.5px solid var(--hair);
+  box-shadow: var(--shadow-2);
+  clip-path: polygon(0 8%, 22% 0, 40% 6%, 63% 0, 82% 7%, 100% 2%, 97% 50%, 100% 96%, 74% 100%, 51% 92%, 29% 100%, 8% 94%, 3% 52%);
+  cursor: var(--cur-pointer);
+}
+.qsc i {
+  height: 3px;
+  border-radius: 2px;
+  background: rgb(29 27 44 / 0.35);
+}
+.qsc i:nth-child(2) {
+  width: 70%;
+}
+.qsc i:nth-child(3) {
+  width: 85%;
+  background: var(--red);
+  opacity: 0.6;
+}
+.qsc:focus-visible {
+  outline: 3px solid var(--sky);
+}
+
+/* ── task 2: the list, in pieces ── */
+.ql-card {
+  width: min(480px, 100%);
+  gap: 10px;
+  text-align: left;
+  align-items: stretch;
+}
+.ql-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 24px;
+}
+.ql-help {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  font-variation-settings: 'wght' 650, 'ROND' 100;
+}
+.ql-x {
+  position: fixed;
+  top: 22px;
+  right: 22px;
+  z-index: 2;
+}
+.ql-paper {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ql-paper li + li {
+  margin-top: -6px;
+  transition: margin 0.4s var(--spring);
+}
+.ql-paper.is-whole li + li {
+  /* the tear depth: the teeth slot into each other */
+  margin-top: -16px;
+}
+.ql-piece {
+  display: block;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  /* a fine ink edge, so the shape of each tear reads */
+  filter: drop-shadow(0 0 0.7px rgb(29 27 44 / 0.7)) drop-shadow(0 2px 2px rgb(29 27 44 / 0.12));
+  transition:
+    translate 0.3s var(--spring),
+    filter 0.2s;
+}
+.ql-piece:hover:not(:disabled),
+.ql-piece:focus-visible {
+  translate: 4px 0;
+  outline: none;
+  filter: drop-shadow(0 0 0 var(--sky)) drop-shadow(0 2px 4px rgb(29 27 44 / 0.2));
+}
+.ql-piece.is-picked {
+  translate: 14px 0;
+  filter: drop-shadow(2px 0 0 var(--sky)) drop-shadow(-2px 0 0 var(--sky)) drop-shadow(0 2px 0 var(--sky)) drop-shadow(0 -2px 0 var(--sky));
+}
+.ql-piece:disabled {
+  cursor: var(--cur);
+}
+.ql-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  /* room top and bottom for the torn edges to live in */
+  padding: 24px 14px;
+  background: #fff4dc;
+  color: var(--ink);
+}
+.ql-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--c), #fff 85%);
+}
+.ql-line {
+  display: flex;
+  flex-direction: column;
+  font-size: 15px;
+  line-height: 1.25;
+  font-variation-settings: 'wght' 600, 'ROND' 100;
+}
+.ql-line b {
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.ql-line small {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.ql-sign {
+  align-self: flex-end;
+  color: var(--muted);
+  font-size: 14px;
+  font-style: italic;
+  font-variation-settings: 'wght' 700, 'ROND' 100;
+}
+
+/* ── task 3: drifts of snow near the edges of each page ── */
+.qm {
+  position: fixed;
+  z-index: 4000;
+  display: grid;
+  translate: -50% -50%;
+  cursor: var(--cur-pointer);
+  animation: qm-in 0.8s var(--spring) 0.6s both;
+}
+.qm svg {
+  filter: drop-shadow(0 3px 0 #d5e2f0);
+}
+.qm:focus-visible {
+  outline: 3px solid var(--sky);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+@keyframes qm-in {
+  from {
+    opacity: 0;
+  }
+}
+.qm-flake {
+  position: fixed;
+  z-index: 4001;
+  width: 7px;
+  height: 7px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 1px #d3e2f2;
+  pointer-events: none;
+}
+
+/* ── the checklist and the sack, bottom left ── */
+.qh {
+  position: fixed;
+  left: 22px;
+  bottom: 22px;
+  z-index: 5100;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  max-width: calc(100vw - 180px);
+  animation: sx-in 0.5s var(--spring) both;
+}
+.qh-card {
+  flex: none;
+  width: 250px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid var(--hair);
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+.qh-card:not(.is-open) {
+  width: auto;
+}
+.qh-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+  text-align: left;
+}
+.qh-head span {
+  flex: 1;
+}
+.qh-now {
+  max-width: 230px;
+  margin: -4px 14px 10px 40px;
+  font-size: 12.5px;
+  line-height: 1.3;
+  color: var(--muted);
+  font-variation-settings: 'wght' 700, 'ROND' 100;
+}
+.qh-tasks {
+  margin: 0;
+  padding: 0 14px 10px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.qh-tasks li {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.3;
+  color: var(--muted);
+  font-variation-settings: 'wght' 650, 'ROND' 100;
+}
+.qh-tasks li.is-done {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+.qh-tasks li.is-now {
+  color: var(--ink);
+  font-variation-settings: 'wght' 800, 'ROND' 100;
+}
+.qh-sub {
+  display: block;
+  margin-top: 4px;
+  font-size: 12.5px;
+  font-style: italic;
+  color: var(--muted);
+  font-variation-settings: 'wght' 600, 'ROND' 100;
+}
+.qh-box {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  border-radius: 5px;
+  border: 2px solid var(--hair);
+}
+.is-done > .qh-box {
+  background: var(--green);
+  border-color: var(--green);
+}
+.is-now > .qh-box {
+  border-color: var(--red);
+}
+.qh-list {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: calc(100% - 28px);
+  margin: 0 14px 12px;
+  padding: 8px;
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--red), #fff 88%);
+  color: var(--red);
+  font-size: 13.5px;
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+}
+.qh-sack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.qp {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 9px 9px 6px;
+  border-radius: 16px;
+  background: #fff;
+  border: 2px solid var(--red);
+  box-shadow: var(--shadow-2);
+  touch-action: none;
+}
+.qp-tag {
+  padding: 2px 7px 3px;
+  border-radius: 999px;
+  background: var(--red);
+  color: #fff;
+  font-size: 10.5px;
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+}
+.qp-hint {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 12.5px;
+  white-space: nowrap;
+  font-variation-settings: 'wght' 700, 'ROND' 100;
+  pointer-events: none;
+  animation: sx-in 0.3s var(--spring) both;
+}
+
+/* the key from the snow */
+.qb-card {
+  padding-top: 0;
+  margin-top: 60px;
+}
+.qb-key {
+  display: grid;
+  place-items: center;
+  width: 124px;
+  height: 124px;
+  margin: -62px 0 4px;
+  border-radius: 50%;
+  background: #fff3c4;
+  border: 4px solid var(--yellow);
+  box-shadow:
+    0 0 0 8px #fff,
+    var(--shadow-2);
+}
+.qb-kicker {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--sky);
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+}
+.qb-card button {
+  margin-top: 10px;
+}
+
+@media (max-width: 760px) {
+  .qd-char {
+    height: min(52vh, 460px);
+  }
+  .qd-box {
+    margin-bottom: 14px;
+    padding: 22px 18px 20px;
+    min-height: 120px;
+  }
+  .qh {
+    left: 14px;
+    bottom: 84px;
+    max-width: calc(100vw - 28px);
+    flex-wrap: wrap;
+  }
+  .qh-card.is-open {
+    width: min(250px, calc(100vw - 28px));
+  }
+  .ql-x {
+    top: 14px;
+    right: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qv i,
+  .qd-more.is-on {
+    animation: none;
+  }
+}
+
+/* ── painted backdrops behind a scene ── */
+.qd-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: fade-in 0.6s ease both;
+}
+.qd.has-bg {
+  background: none;
+}
+.qd.is-past .qd-bg {
+  /* faded like an old photo, but a memory keeps a little of its colour */
+  filter: grayscale(0.45) sepia(0.4) contrast(0.92);
+}
+/* the winter lights twinkle */
+.sb-light {
+  animation: sb-twinkle 2.6s ease-in-out infinite alternate;
+}
+@keyframes sb-twinkle {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.35;
+  }
+}
+
+/* ── narration: no name, a paper box, the voice of the fic ── */
+.qd.is-narration .qd-box {
+  background: #fbf6ea;
+  border-color: #8a7559;
+  box-shadow:
+    0 0 0 4px #fbf6ea,
+    0 6px 0 4px #cdbb98,
+    var(--shadow-3);
+}
+.qd.is-narration .qd-text {
+  font-style: italic;
+  font-size: clamp(16px, 2vw, 19px);
+  line-height: 1.5;
+  color: #5a4d3c;
+  font-variation-settings: 'wght' 600, 'ROND' 100;
+}
+.qd.is-narration .qd-text em,
+.qd.is-narration .qd-fx-em {
+  font-style: normal;
+}
+.qd.is-narration:not(.is-past) .qd-char .qd-fig {
+  filter: drop-shadow(0 10px 18px rgb(29 27 44 / 0.25)) brightness(0.85) saturate(0.85);
+}
+/* the talk box glows for a magic moment */
+.qd.is-glow .qd-box {
+  box-shadow:
+    0 0 0 4px #fff,
+    0 6px 0 4px var(--c),
+    0 0 0 12px rgb(251 186 20 / 0.35),
+    0 0 40px 10px rgb(251 186 20 / 0.45);
+  transition: box-shadow 0.6s;
+}
+.qd-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── text effects inside a line ── */
+.qd-hide {
+  visibility: hidden;
+}
+.qd-fx-em {
+  font-style: italic;
+}
+.qd-fx-small {
+  font-size: 0.86em;
+  opacity: 0.62;
+}
+.qd-fx-big {
+  font-size: 1.32em;
+  line-height: 1;
+  font-variation-settings: 'wght' 950, 'ROND' 100;
+}
+.qd-ch {
+  display: inline-block;
+}
+.qd-fx-shake .qd-ch {
+  animation: qd-shake 0.16s steps(2) infinite;
+  animation-delay: calc(var(--k) * -0.05s);
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+}
+@keyframes qd-shake {
+  0% {
+    translate: -1.5px 1px;
+  }
+  50% {
+    translate: 1.5px -1px;
+  }
+  100% {
+    translate: -1px -1.5px;
+  }
+}
+.qd-fx-wave .qd-ch {
+  animation: qd-wave 1.1s ease-in-out infinite;
+  animation-delay: calc(var(--k) * 0.07s);
+}
+@keyframes qd-wave {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -5px;
+  }
+}
+.qd-fx-glow .qd-ch {
+  color: #c98a00;
+  text-shadow: 0 0 10px rgb(251 186 20 / 0.7);
+  animation: qd-glow 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--k) * 0.06s);
+}
+.qd.is-unknown .qd-fx-glow .qd-ch {
+  color: #ffd36b;
+}
+@keyframes qd-glow {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* ── the chapter card: a sticker-style title, like the rest of the site ── */
+.qc {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(255 253 247 / 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: fade-in 0.4s ease both;
+}
+.qc-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(440px, 100%);
+  padding: 28px 24px 22px;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: var(--shadow-3);
+  text-align: center;
+  rotate: -1.5deg;
+  animation: sx-in 0.55s var(--spring) both;
+}
+.qc-kicker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px 6px;
+  border-radius: 999px;
+  background: var(--sky);
+  color: #fff;
+  font-size: 12.5px;
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+}
+.qc-title {
+  margin: 4px 0 0;
+  font-size: clamp(34px, 6vw, 48px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--red);
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.qc-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  font-variation-settings: 'wght' 650, 'ROND' 100;
+}
+.qc-go {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 6px;
+  color: var(--sky);
+  font-size: 14px;
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sb-light,
+  .qd-fx-shake .qd-ch,
+  .qd-fx-wave .qd-ch,
+  .qd-fx-glow .qd-ch {
+    animation: none;
+  }
+}
+
+/* ── Santa's route: every task a stop on one line, ticket to key ── */
+.qr {
+  display: flex;
+  align-items: flex-start;
+  margin: 0 14px 6px;
+  padding: 0;
+  list-style: none;
+}
+.qr li {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+/* the line between stops: solid where you've been, dotted ahead */
+.qr li + li::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 50%;
+  width: 100%;
+  border-top: 2px dotted #d8d2c6;
+  z-index: 0;
+}
+.qr li.is-done + li::before,
+.qr li.is-done + li.is-at::before {
+  border-top-style: solid;
+  border-color: var(--green);
+}
+.qr-dot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #d8d2c6;
+}
+.qr li.is-done .qr-dot {
+  background: var(--green);
+  border-color: var(--green);
+}
+.qr li.is-at .qr-dot {
+  border-color: var(--red);
+  animation: qr-pulse 1.6s ease-in-out infinite;
+}
+@keyframes qr-pulse {
+  50% {
+    scale: 1.12;
+  }
+}
+.qr small {
+  font-size: 10.5px;
+  color: var(--red);
+  font-variation-settings: 'wght' 850, 'ROND' 100;
+}
+.qh-card .qh-now {
+  margin: 0 14px 10px;
+  max-width: none;
+}
+.qh-card:not(.is-open) {
+  width: 250px;
+}
+.qh-letters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 14px 10px;
+  font-size: 12.5px;
+  color: var(--muted);
+  font-variation-settings: 'wght' 700, 'ROND' 100;
+}
+
+/* a lantern: dark until its riddle is solved */
+.qn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 7px;
+  background: #efeae0;
+}
+.qn.is-on {
+  background: #fff3c4;
+  box-shadow: 0 0 0 2px var(--yellow);
+}
+.ql-back li {
+  align-items: flex-start;
+}
+
+/* the letters off the backs of the tags */
+.ql-letters {
+  display: inline-flex;
+  gap: 4px;
+}
+.ql-letters b {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1.5px dashed #d8d2c6;
+  color: var(--ink);
+  font-size: 13px;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.ql-letters b.is-on {
+  border: 1.5px solid var(--sky);
+  background: #eaf7fe;
+}
+
+/* ── their little lines while you play ── */
+.qk {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  z-index: 5200;
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(440px, calc(100vw - 32px));
+  pointer-events: none;
+}
+.qk-bubble {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 8px 14px 8px 8px;
+  border-radius: 18px;
+  background: #fff;
+  border: 2px solid var(--c);
+  box-shadow: var(--shadow-2);
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--ink);
+  font-variation-settings: 'wght' 650, 'ROND' 100;
+  animation: sx-in 0.4s var(--spring) both;
+}
+.qk-bubble b {
+  display: block;
+  color: var(--c);
+  font-size: 12px;
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.qk-face {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: color-mix(in oklab, var(--c), #fff 85%);
+  background-size: 240% auto;
+  background-position: 48% 2%;
+  background-repeat: no-repeat;
+}
+@media (max-width: 760px) {
+  .qk {
+    bottom: 150px;
+  }
+}
+
+/* Mitsumi's hat: her head sits a touch lower than Shima's in her picture */
+.santa-hat.is-mitsumi {
+  left: 32%;
+  top: -4%;
+  rotate: 8deg;
+}
+.qd-puff.is-mitsumi {
+  left: 31%;
+  top: -7%;
+}
+
+/* snow falling over a scene (and, once it's all over, over the site) */
+.qd-snow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.qd-snow.is-page {
+  position: fixed;
+  z-index: 4500;
+}
+.qd-snow i {
+  position: absolute;
+  top: -24px;
+  left: var(--x);
+  display: grid;
+  opacity: 0.9;
+  scale: var(--s);
+  animation: qv-fall 10s linear infinite;
+  animation-delay: calc(var(--d) * -1);
+}
+.qd-snow.is-page i {
+  opacity: 0.8;
+  animation-duration: 14s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .qd-snow i {
+    animation: none;
+    top: var(--x);
+  }
+}
+
+/* the reward line on the key card */
+.qb-card .qb-reward {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #eaf7fe;
+  color: var(--ink);
+  font-size: 14px;
+  text-align: left;
+}
+.qb-reward svg {
+  flex: none;
+  margin-top: 2px;
+}

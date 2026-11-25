@@ -2,6 +2,9 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
 import { C, NEXT_CHAPTER_NUMBER, releaseWindow } from '../data'
 import { FlexText, type Word } from './FlexText'
 import { sfx } from '../sfx'
+import { formatTime, settings, useSettings } from '../settings'
+import { useT, type Lang } from '../i18n'
+import { questHint } from '../quest'
 
 function useNow() {
   const [now, setNow] = useState(() => Date.now())
@@ -35,7 +38,7 @@ export function Block({ d, quiet = false }: { d: string; quiet?: boolean }) {
       first.current = false
       return
     }
-    if (quiet) return
+    if (quiet || !settings.get().clacks) return
     const id = window.setTimeout(() => sfx.clack(0.85 + Math.random() * 0.35), 230)
     return () => clearTimeout(id)
   }, [d])
@@ -84,28 +87,34 @@ function Unit({ value, label, i }: { value: number; label: string; i: number }) 
   )
 }
 
-const fmt = (t: number, tz?: string) =>
-  new Intl.DateTimeFormat('en-US', {
-    timeZone: tz,
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(t)
-
-const HEAD: Word[] = [
-  { t: 'Next', w: 900, c: C.pink },
-  { t: 'chapter', w: 320, oblique: true, c: C.teal },
-  ...(NEXT_CHAPTER_NUMBER !== null ? [{ t: String(NEXT_CHAPTER_NUMBER), w: 900, c: C.orange }] : []),
-  { t: 'will', w: 640, c: C.blue },
-  { t: 'be', w: 420, oblique: true, c: C.red },
-  { t: 'released', w: 760, c: C.green },
-  { t: 'in', w: 900, c: C.violet },
+/** the headline's words take these looks in turn; the chapter number is always big and orange */
+const LOOKS: Omit<Word, 't'>[] = [
+  { w: 900, c: C.pink },
+  { w: 320, oblique: true, c: C.teal },
+  { w: 640, c: C.blue },
+  { w: 420, oblique: true, c: C.red },
+  { w: 760, c: C.green },
+  { w: 900, c: C.violet },
 ]
+/** scripts where a fake slant looks wrong: keep their words upright */
+const UPRIGHT = new Set<Lang>(['ja', 'ko', 'zh-Hans', 'zh-Hant', 'th'])
+
+/** "Next|chapter|{n}|…" from the language file → styled words (English comes out as it always was) */
+function headline(src: string, lang: Lang): Word[] {
+  let k = 0
+  return src.split('|').map((part) => {
+    if (part.includes('{n}')) return { t: part.replace('{n}', String(NEXT_CHAPTER_NUMBER)), w: 900, c: C.orange }
+    const look = LOOKS[k++ % LOOKS.length]
+    return { t: part, ...look, oblique: look.oblique && !UPRIGHT.has(lang) }
+  })
+}
 
 export function Countdown() {
   const now = useNow()
+  // 12/24h and which time zones to show come from settings
+  const { zone } = useSettings()
+  const { t, lang } = useT()
+  const head = headline(t(NEXT_CHAPTER_NUMBER !== null ? 'cd.title' : 'cd.titleNoNum'), lang)
   const clock = useRef<HTMLDivElement>(null)
   const { next } = releaseWindow(now)
   const diff = Math.max(0, next - now)
@@ -128,19 +137,20 @@ export function Countdown() {
 
   return (
     <section className="view view-countdown">
-      <FlexText className="cd-title" words={HEAD} data-intro="ui" data-safe="" />
+      <FlexText key={lang} className="cd-title" words={head} data-intro="ui" data-safe="" />
 
-      <div className="clock" ref={clock} data-safe="">
-        <Unit i={0} value={days} label="days" />
-        <Unit i={1} value={hours} label="hours" />
-        <Unit i={2} value={mins} label="minutes" />
-        <Unit i={3} value={secs} label="seconds" />
+      {/* Secret Santa: one of ???'s riddles says to knock on the clock at the right second */}
+      <div className="clock" ref={clock} data-safe="" onClick={() => questHint({ kind: 'clock', secs })}>
+        <Unit i={0} value={days} label={t('cd.days')} />
+        <Unit i={1} value={hours} label={t('cd.hours')} />
+        <Unit i={2} value={mins} label={t('cd.minutes')} />
+        <Unit i={3} value={secs} label={t('cd.seconds')} />
       </div>
 
       <p className="cd-when" data-intro="ui" data-safe="">
-        <span style={{ color: C.pink }}>{fmt(next, 'Asia/Tokyo')} JST</span>
-        <span className="cd-dot" />
-        <span style={{ color: C.blue }}>{fmt(next)} local</span>
+        {zone !== 'local' && <span style={{ color: C.pink }}>{t('cd.jst', { time: formatTime(next, 'Asia/Tokyo') })}</span>}
+        {zone === 'both' && <span className="cd-dot" />}
+        {zone !== 'jst' && <span style={{ color: C.blue }}>{t('cd.local', { time: formatTime(next) })}</span>}
       </p>
     </section>
   )

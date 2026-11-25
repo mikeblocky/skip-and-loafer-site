@@ -1,6 +1,7 @@
 import { C, CHARACTERS } from '../../data'
 import type { IconName } from '../../icons'
 import { TUNE, difficulty, lerp, stage } from './difficulty'
+import { currentLocale, type Key } from '../../i18n'
 
 /**
  * The long road. Past 10,000 points the run keeps going by orders of magnitude: points come in
@@ -23,7 +24,7 @@ export const paceOf = (score: number) => 1 + Math.max(0, score - PACE_FROM) / PA
 /** short, readable numbers for the big ones: 12,345 · 250k · 1.2M */
 export const fmt = (n: number) => {
   const v = Math.floor(n)
-  if (v < 100000) return v.toLocaleString('en-US')
+  if (v < 100000) return v.toLocaleString(currentLocale())
   if (v < 1e6) return `${Math.floor(v / 1000)}k`
   if (v < 1e9) return `${(v / 1e6).toFixed(v < 1e7 ? 2 : 1).replace(/\.?0+$/, '')}M`
   return `${(v / 1e9).toFixed(2).replace(/\.?0+$/, '')}B`
@@ -75,14 +76,14 @@ export const POOL = 24
  * Power-ups, each one of the site's stickers. Every pickup floats low enough to grab by running
  * through it or with a single hop (bottoms 15–95 units up; a hop reaches ~168).
  */
-export const POWERS: Record<string, { icon: IconName; color: string; label: string; secs: number }> = {
-  clover: { icon: 'clover', color: C.green, label: 'lucky shield!', secs: 6 },
-  note: { icon: 'note', color: C.violet, label: 'double points!', secs: 8 },
-  sun: { icon: 'sun', color: C.amber, label: 'star magnet!', secs: 7 },
-  bolt: { icon: 'bolt', color: C.orange, label: 'triple skip!', secs: 8 },
-  sparkle: { icon: 'sparkle', color: C.pink, label: 'star shower!', secs: 0 },
+export const POWERS: Record<string, { icon: IconName; color: string; label: Key; secs: number }> = {
+  clover: { icon: 'clover', color: C.green, label: 'pw.clover', secs: 6 },
+  note: { icon: 'note', color: C.violet, label: 'pw.note', secs: 8 },
+  sun: { icon: 'sun', color: C.amber, label: 'pw.sun', secs: 7 },
+  bolt: { icon: 'bolt', color: C.orange, label: 'pw.bolt', secs: 8 },
+  sparkle: { icon: 'sparkle', color: C.pink, label: 'pw.sparkle', secs: 0 },
   // a temporary 4th heart: soaks up the next hit, or fades when its time runs out
-  goldheart: { icon: 'heart', color: '#FFB300', label: 'golden heart: +1 for a while!', secs: 12 },
+  goldheart: { icon: 'heart', color: '#FFB300', label: 'pw.goldheart', secs: 12 },
 }
 export type Power = 'clover' | 'note' | 'sun' | 'bolt' | 'sparkle' | 'goldheart'
 export const TIMED = ['clover', 'note', 'sun', 'bolt', 'goldheart'] as const
@@ -138,17 +139,17 @@ export const boostOf = (score: number) => stage(score, 0, 3300)
 /** the golden heart gets offered more and more often from the win to 6,000 */
 export const goldOdds = (score: number) => 0.35 * stage(score, 1050, 6000)
 export const TWISTS = {
-  tilt: { label: 'the road tilts!', from: TWIST_AT },
-  mirror: { label: 'mirror world!', from: TWIST_AT },
-  zoom: { label: 'zoomed in!', from: TWIST_AT },
-  dark: { label: 'lights out!', from: TWIST_AT },
-  sway: { label: 'sea legs!', from: TWIST_AT },
+  tilt: { label: 'tw.tilt' as Key, from: TWIST_AT },
+  mirror: { label: 'tw.mirror' as Key, from: TWIST_AT },
+  zoom: { label: 'tw.zoom' as Key, from: TWIST_AT },
+  dark: { label: 'tw.dark' as Key, from: TWIST_AT },
+  sway: { label: 'tw.sway' as Key, from: TWIST_AT },
   // ── new events, 10k+ ──
-  quake: { label: 'earthquake!', from: MAYHEM_AT }, // the whole picture shakes hard
-  moon: { label: 'moon gravity!', from: MAYHEM_AT }, // floaty hops that reach the paper planes
-  rush: { label: 'rush hour!', from: MAYHEM_AT }, // a burst of speed past the usual top speed
-  storm: { label: 'paper plane storm!', from: MAYHEM_AT }, // planes pour in at every height
-  flicker: { label: 'flickering lights!', from: MAYHEM_AT }, // the lights strobe on and off
+  quake: { label: 'tw.quake' as Key, from: MAYHEM_AT }, // the whole picture shakes hard
+  moon: { label: 'tw.moon' as Key, from: MAYHEM_AT }, // floaty hops that reach the paper planes
+  rush: { label: 'tw.rush' as Key, from: MAYHEM_AT }, // a burst of speed past the usual top speed
+  storm: { label: 'tw.storm' as Key, from: MAYHEM_AT }, // planes pour in at every height
+  flicker: { label: 'tw.flicker' as Key, from: MAYHEM_AT }, // the lights strobe on and off
 } as const
 export type Twist = keyof typeof TWISTS
 /** moon gravity: hops float this much longer (and higher) */

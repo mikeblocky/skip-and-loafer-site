@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import { C } from '../../data'
 import type { IconName } from '../../icons'
 import { safeColor } from '../../letterRules'
+import { currentLocale, type Key } from '../../i18n'
 
 /** Every size the animations need, from the sheet's width. The CSS reads the same numbers. */
 export function geometry(vw: number) {
@@ -58,15 +59,15 @@ export const vars = (g: Geo, color: string) =>
   }) as CSSProperties
 
 /** Each paper has its own icon (stamp, seal, picker) and an ink dark enough to read on white. */
-export const PAPER: Record<string, { name: string; icon: IconName; ink: string }> = {
-  '#F53D84': { name: 'Sakura', icon: 'sakura', ink: '#F53D84' },
-  '#246BE8': { name: 'Star', icon: 'star', ink: '#246BE8' },
-  '#FBBA14': { name: 'Sun', icon: 'sun', ink: '#E39400' },
-  '#12B266': { name: 'Clover', icon: 'clover', ink: '#00A65A' },
-  '#F86E1A': { name: 'Flame', icon: 'flame', ink: '#F86E1A' },
-  '#7A45E0': { name: 'Moon', icon: 'moon', ink: '#7A45E0' },
+export const PAPER: Record<string, { name: Key; icon: IconName; ink: string }> = {
+  '#F53D84': { name: 'msg.paper.sakura', icon: 'sakura', ink: '#F53D84' },
+  '#246BE8': { name: 'msg.paper.star', icon: 'star', ink: '#246BE8' },
+  '#FBBA14': { name: 'msg.paper.sun', icon: 'sun', ink: '#E39400' },
+  '#12B266': { name: 'msg.paper.clover', icon: 'clover', ink: '#00A65A' },
+  '#F86E1A': { name: 'msg.paper.flame', icon: 'flame', ink: '#F86E1A' },
+  '#7A45E0': { name: 'msg.paper.moon', icon: 'moon', ink: '#7A45E0' },
 }
 export const paper = (c: string) => PAPER[safeColor(c)]
 
-export const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
-export const dateOf = (t: number) => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+export { reducedMotion as reduced } from '../../settings'
+export const dateOf = (t: number) => new Date(t).toLocaleDateString(currentLocale(), { month: 'short', day: 'numeric' })

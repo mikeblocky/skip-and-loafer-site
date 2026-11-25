@@ -3,11 +3,15 @@ import { C } from '../data'
 import { Icon } from '../icons'
 import { sfx } from '../sfx'
 import { longDate, shortDate, UPDATES } from '../changelog'
+import { settings } from '../settings'
+import { rich, useT } from '../i18n'
+import { TICKET_UPDATE } from '../quest'
+import { Ticket } from './quest/Ticket'
 
 /**
  * Two little cards that greet people. The fan-site notice shows once, on someone's first visit.
  * The "what's new" card shows once per update to people who've been here before, and anyone
- * can open it again from the button by the sound toggle to flip back through older updates.
+ * can open it again from the button by the settings gear to flip back through older updates.
  */
 
 const NOTICE_KEY = 'sl-fan-notice'
@@ -33,7 +37,7 @@ const write = (k: string, v: string) => {
  */
 const RETURNING = (() => {
   try {
-    return Object.keys(localStorage).some((k) => k.startsWith('sl-') && k !== NOTICE_KEY && k !== SEEN_KEY && k !== 'sl-sound')
+    return Object.keys(localStorage).some((k) => k.startsWith('sl-') && k !== NOTICE_KEY && k !== SEEN_KEY && k !== 'sl-sound' && k !== 'sl-settings')
   } catch {
     return false
   }
@@ -73,6 +77,7 @@ function Card({
   const close = useRef<HTMLButtonElement>(null)
   const closeFn = useRef(onClose)
   closeFn.current = onClose
+  const { t } = useT()
   // focus the × when the card opens, Escape closes it, and focus goes back where it was after
   useEffect(() => {
     const before = document.activeElement as HTMLElement | null
@@ -88,7 +93,7 @@ function Card({
     // swap: this card replaces another one, so the blurred backdrop is already up
     <div className={`nt${swap ? ' is-swap' : ''}`} role="dialog" aria-modal="true" aria-label={label}>
       <div className="nt-backdrop" onClick={onClose} />
-      <button className="round-btn nt-x" ref={close} onClick={onClose} aria-label="Close">
+      <button className="round-btn nt-x" ref={close} onClick={onClose} aria-label={t('common.close')}>
         <Icon name="close" color={C.ink} size={22} />
       </button>
       <div className="nt-card">
@@ -110,25 +115,20 @@ function Card({
 }
 
 function Notice({ onClose, swap, again }: { onClose: () => void; swap?: boolean; again?: boolean }) {
+  const { t } = useT()
   return (
-    <Card label="About this site" color={C.pink} title="Hi!" cast={NOTICE_CAST} onClose={onClose} swap={swap}>
+    <Card label={t('notice.label')} color={C.pink} title={t('notice.title')} cast={NOTICE_CAST} onClose={onClose} swap={swap}>
       <div className="nt-body nt-notice">
-        <p>This is a fan site! I made it because I really like Skip and Loafer.</p>
-        <p>
-          It’s not official, and it’s not connected to <b>Takamatsu‑sensei</b>, <b>Kodansha</b>, or anyone who works on
-          the manga or anime.
-        </p>
-        <p>
-          All the characters, art and music belong to Takamatsu‑sensei, the anime production team and the musicians. If you like the series, please support it by buying the
-          volumes or watching the anime on an official site.
-        </p>
-        <p>Have fun looking around :)</p>
+        <p>{t('notice.p1')}</p>
+        <p>{rich(t('notice.p2'))}</p>
+        <p>{t('notice.p3')}</p>
+        <p>{t('notice.p4')}</p>
       </div>
       <footer className="nt-foot">
         {/* opened again from "about this site": no need to promise it won't show */}
-        <span className="nt-fine">{again ? '' : 'You’ll only see this once.'}</span>
+        <span className="nt-fine">{again ? '' : t('notice.once')}</span>
         <button className="nt-btn" onClick={onClose} style={{ '--c': C.pink } as CSSProperties}>
-          Okay
+          {t('notice.ok')}
         </button>
       </footer>
     </Card>
@@ -148,6 +148,8 @@ function News({
   onAbout: () => void
   swap?: boolean
 }) {
+  const { t, locale } = useT()
+  const englishOnly = t('news.englishOnly')
   const [at, setAt] = useState(start)
   const [dir, setDir] = useState(0)
   const strip = useRef<HTMLDivElement>(null)
@@ -158,105 +160,122 @@ function News({
     setAt(n)
     sfx.rustle()
   }
-  // keep the picked thumbnail in view in the history strip
+  // keep the picked thumbnail in view in the history strip (its first child is the sliding pill)
   useEffect(() => {
-    const el = strip.current?.children[at] as HTMLElement | undefined
+    const el = strip.current?.children[at + 1] as HTMLElement | undefined
     el?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
   }, [at])
 
   return (
-    <Card label="What's new" color={C.blue} title="What’s new" cast={NEWS_CAST} onClose={onClose} swap={swap}>
-      <article key={u.id} className={`nt-body nt-entry${dir > 0 ? ' from-right' : dir < 0 ? ' from-left' : ''}`}>
-        <div className="nt-head">
-          <span className="nt-thumb is-big" style={{ '--c': u.color } as CSSProperties}>
-            <Icon name={u.icon} color={u.color} size={30} />
-          </span>
-          <div>
-            <h3>
-              {u.title}
-              {at < unseen && <b className="nt-new">new</b>}
-            </h3>
-            <time dateTime={u.at}>{longDate(u.at)}</time>
+    <Card label={t('news.title')} color={C.blue} title={t('news.title')} cast={NEWS_CAST} onClose={onClose} swap={swap}>
+      {/* wide screens: the history down the left like Settings' sections; phones: a strip under the update */}
+      <div className="nt-main">
+        <nav className="nt-history" aria-label={t('news.earlier')}>
+          <button className="nt-arrow is-prev" onClick={() => go(at - 1)} disabled={at === 0} aria-label={t('news.newer')}>
+            <Icon name="chev" color={C.blue} size={18} />
+          </button>
+          <div className="nt-strip" ref={strip} style={{ '--i': at, '--c': u.color } as CSSProperties}>
+            <span className="nt-pick-pill" aria-hidden="true" />
+            {UPDATES.map((x, i) => (
+              <button
+                key={x.id}
+                className={`nt-pick${i === at ? ' is-on' : ''}`}
+                onClick={() => go(i)}
+                aria-label={`${x.title}, ${shortDate(x.at, locale)}`}
+                aria-current={i === at ? 'true' : undefined}
+                title={x.title}
+              >
+                <span className="nt-thumb" style={{ '--c': x.color } as CSSProperties}>
+                  <Icon name={x.icon} color={x.color} size={20} />
+                  {i < unseen && <i className="nt-dot" />}
+                </span>
+                {/* wide screens list the titles down the side; phones show just the date */}
+                <span className="nt-pick-text">
+                  <span className="nt-pick-title" lang="en">
+                    {x.title}
+                  </span>
+                  <span className="nt-when">{shortDate(x.at, locale)}</span>
+                </span>
+              </button>
+            ))}
           </div>
-        </div>
-        {u.shot && (
-          // a snapshot, taped onto the card like a photo
-          <figure className="nt-shot" style={{ '--c': u.color } as CSSProperties}>
-            <img src={u.shot.src} alt={u.shot.alt} loading="lazy" decoding="async" />
-            <i className="nt-shot-tape" />
-          </figure>
-        )}
-        <p className="nt-intro">{u.intro}</p>
-        <ul className="nt-items">
-          {u.items.map((t, i) => (
-            <li key={i} style={{ '--c': u.color } as CSSProperties}>
-              {t}
-            </li>
-          ))}
-        </ul>
-        {u.parts?.map((p) => (
-          // a bigger update, one part per thing: its title, a looping clip, how to get there, and a list
-          <section key={p.title} className="nt-part" style={{ '--c': p.color } as CSSProperties}>
-            <h4>
-              <span className="nt-thumb">
-                <Icon name={p.icon} color={p.color} size={18} />
-              </span>
-              {p.title}
-            </h4>
-            {p.clip && (
-              <figure className="nt-shot">
-                <img src={p.clip.src} alt={p.clip.alt} loading="lazy" decoding="async" />
-                <i className="nt-shot-tape" />
-              </figure>
-            )}
-            {p.how && (
-              <p className="nt-how">
-                <b>How to find it</b>
-                {p.how}
-              </p>
-            )}
-            <ul className="nt-items">
-              {p.items.map((t, i) => (
-                <li key={i}>{t}</li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </article>
+          <button className="nt-arrow" onClick={() => go(at + 1)} disabled={at === UPDATES.length - 1} aria-label={t('news.older')}>
+            <Icon name="chev" color={C.blue} size={18} />
+          </button>
+        </nav>
 
-      <nav className="nt-history" aria-label="Earlier updates">
-        <button className="nt-arrow is-prev" onClick={() => go(at - 1)} disabled={at === 0} aria-label="Newer update">
-          <Icon name="chev" color={C.blue} size={18} />
-        </button>
-        <div className="nt-strip" ref={strip}>
-          {UPDATES.map((x, i) => (
-            <button
-              key={x.id}
-              className={`nt-pick${i === at ? ' is-on' : ''}`}
-              onClick={() => go(i)}
-              aria-label={`${x.title}, ${shortDate(x.at)}`}
-              aria-current={i === at ? 'true' : undefined}
-              title={x.title}
-            >
-              <span className="nt-thumb" style={{ '--c': x.color } as CSSProperties}>
-                <Icon name={x.icon} color={x.color} size={20} />
-                {i < unseen && <i className="nt-dot" />}
-              </span>
-              <span className="nt-when">{shortDate(x.at)}</span>
-            </button>
+        <article key={u.id} className={`nt-body nt-entry${dir > 0 ? ' from-right' : dir < 0 ? ' from-left' : ''}`}>
+          <div className="nt-head">
+            <span className="nt-thumb is-big" style={{ '--c': u.color } as CSSProperties}>
+              <Icon name={u.icon} color={u.color} size={30} />
+            </span>
+            <div>
+              <h3>
+                <span lang="en">{u.title}</span>
+                {at < unseen && <b className="nt-new">{t('news.new')}</b>}
+              </h3>
+              <time dateTime={u.at}>{longDate(u.at, locale)}</time>
+            </div>
+          </div>
+          {u.shot && (
+            // a snapshot, taped onto the card like a photo
+            <figure className="nt-shot" style={{ '--c': u.color } as CSSProperties}>
+              <img src={u.shot.src} alt={u.shot.alt} loading="lazy" decoding="async" />
+              <i className="nt-shot-tape" />
+            </figure>
+          )}
+          {/* the updates themselves are only written in English so far: say so, and mark them as English */}
+          {englishOnly && <p className="nt-en">{englishOnly}</p>}
+          <p className="nt-intro" lang="en">
+            {u.intro}
+          </p>
+          <ul className="nt-items" lang="en">
+            {u.items.map((item, i) => (
+              <li key={i} style={{ '--c': u.color } as CSSProperties}>
+                {item}
+              </li>
+            ))}
+          </ul>
+          {u.parts?.map((p) => (
+            // a bigger update, one part per thing: its title, a looping clip, how to get there, and a list
+            <section key={p.title} className="nt-part" style={{ '--c': p.color } as CSSProperties}>
+              <h4 lang="en">
+                <span className="nt-thumb">
+                  <Icon name={p.icon} color={p.color} size={18} />
+                </span>
+                {p.title}
+              </h4>
+              {p.clip && (
+                <figure className="nt-shot">
+                  <img src={p.clip.src} alt={p.clip.alt} loading="lazy" decoding="async" />
+                  <i className="nt-shot-tape" />
+                </figure>
+              )}
+              {p.how && (
+                <p className="nt-how">
+                  <b>{t('news.how')}</b>
+                  <span lang="en">{p.how}</span>
+                </p>
+              )}
+              <ul className="nt-items" lang="en">
+                {p.items.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
+            </section>
           ))}
-        </div>
-        <button className="nt-arrow" onClick={() => go(at + 1)} disabled={at === UPDATES.length - 1} aria-label="Older update">
-          <Icon name="chev" color={C.blue} size={18} />
-        </button>
-      </nav>
+          {/* Secret Santa, part 1: a ticket tucked into the very first update */}
+          {u.id === TICKET_UPDATE && <Ticket />}
+        </article>
+
+      </div>
 
       <footer className="nt-foot">
         <button className="nt-link" onClick={onAbout}>
-          about this site
+          {t('news.about')}
         </button>
         <button className="nt-btn" onClick={onClose} style={{ '--c': C.blue } as CSSProperties}>
-          Nice
+          {t('news.ok')}
         </button>
       </footer>
     </Card>
@@ -265,6 +284,7 @@ function News({
 
 /** Shows the right card once the intro has played, plus the button to bring "what's new" back. */
 export function Notes({ ready }: { ready: boolean }) {
+  const { t } = useT()
   const [open, setOpen] = useState<'notice' | 'news' | null>(null)
   /** how many updates at the top of the list this person hasn't seen yet */
   const [unseen, setUnseen] = useState(0)
@@ -295,7 +315,7 @@ export function Notes({ ready }: { ready: boolean }) {
         setSwap(false)
         setOpen('notice')
         sfx.rustle()
-      } else if (unseenNow() > 0) showNews()
+      } else if (unseenNow() > 0 && !settings.get().quietNews) showNews()
     }, 600)
     return () => window.clearTimeout(t)
   }, [ready])
@@ -313,7 +333,7 @@ export function Notes({ ready }: { ready: boolean }) {
   return (
     <>
       {ready && (
-        <button className="news-toggle" onClick={() => showNews()} aria-label="What's new" title="What’s new">
+        <button className="news-toggle" onClick={() => showNews()} aria-label={t('news.title')} title={t('news.title')}>
           <Icon name="bunting" color={C.blue} size={22} />
         </button>
       )}

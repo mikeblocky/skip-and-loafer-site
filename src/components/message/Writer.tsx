@@ -5,10 +5,11 @@ import { C } from '../../data'
 import { Icon } from '../../icons'
 import { sfx } from '../../sfx'
 import { cleanSigner, cleanText, LETTER_MAX, LETTER_MIN, NAME_MAX, problem, safeColor, STATIONERY } from '../../letterRules'
-import { ANON, clientId, post, remember, store } from './mail'
+import { clientId, post, remember, store } from './mail'
 import { dateOf, PAPER, paper, reduced, vars, type Geo } from './geometry'
 import { Envelope, Folding, parts, Sheet, turn } from './Paper'
 import { centre, confetti } from './confetti'
+import { serverText, useT } from '../../i18n'
 
 type WritePhase = 'compose' | 'sending' | 'sent'
 
@@ -22,6 +23,7 @@ export function Writer({ g, onSent, onOpen, stats }: { g: Geo; onSent: () => voi
   const [sentAt, setSentAt] = useState(0)
   const root = useRef<HTMLDivElement>(null)
   const tl = useRef<gsap.core.Timeline | null>(null)
+  const { t: tr } = useT()
 
   useEffect(() => store.write('sl-msg-draft', text), [text])
   useEffect(() => store.write('sl-msg-from', from), [from])
@@ -32,9 +34,10 @@ export function Writer({ g, onSent, onOpen, stats }: { g: Geo; onSent: () => voi
   const signer = cleanSigner(from)
   const len = Array.from(body).length
   const [fits, setFits] = useState(true)
-  const why = problem(body, signer) ?? (fits ? null : 'that’s all that fits on one page')
+  const why = problem(body, signer) ?? (fits ? null : 'full')
   // don't nag before there's something to judge
-  const shown = err ?? (len >= LETTER_MIN || len > LETTER_MAX ? why : null)
+  const said = err ?? (len >= LETTER_MIN || len > LETTER_MAX ? why : null)
+  const shown = said && (said === 'full' ? tr('msg.full') : serverText(said, tr))
 
   // the envelope waits out of sight, flap open, until the letter is folded
   useLayoutEffect(() => {
@@ -174,7 +177,7 @@ export function Writer({ g, onSent, onOpen, stats }: { g: Geo; onSent: () => voi
   return (
     <div className="wr" style={vars(g, color)}>
       <div className="post" ref={root} key={round}>
-        <Envelope label="for someone, somewhere" icon={paper(color).icon} />
+        <Envelope label={tr('msg.envTo')} icon={paper(color).icon} />
         <div className="lt-holder">
           {phase === 'compose' ? (
             <div className="lt lt-flat">
@@ -183,21 +186,21 @@ export function Writer({ g, onSent, onOpen, stats }: { g: Geo; onSent: () => voi
                   className="lt-text"
                   value={text}
                   maxLength={LETTER_MAX + 40}
-                  placeholder="Say something to whoever opens this…"
+                  placeholder={tr('msg.placeholder')}
                   onChange={(e) => {
                     setText(e.target.value)
                     setErr(null)
                   }}
-                  aria-label="Your letter"
+                  aria-label={tr('msg.yourLetter')}
                 />
                 <div className="lt-sign">
                   —{' '}
                   <input
                     value={from}
                     maxLength={NAME_MAX}
-                    placeholder={ANON}
+                    placeholder={tr('msg.anon')}
                     onChange={(e) => setFrom(e.target.value)}
-                    aria-label="Sign as (optional nickname)"
+                    aria-label={tr('msg.signAs')}
                   />
                 </div>
               </Sheet>
@@ -209,14 +212,14 @@ export function Writer({ g, onSent, onOpen, stats }: { g: Geo; onSent: () => voi
       </div>
 
       <div className="wr-tools">
-        <div className="wr-papers" role="radiogroup" aria-label="Paper">
+        <div className="wr-papers" role="radiogroup" aria-label={tr('msg.paper')}>
           {STATIONERY.map((c) => (
             <button
               key={c}
               role="radio"
               aria-checked={c === color}
-              aria-label={`${PAPER[c].name} paper`}
-              title={PAPER[c].name}
+              aria-label={tr('msg.paperOf', { name: tr(PAPER[c].name) })}
+              title={tr(PAPER[c].name)}
               className={`wr-paper${c === color ? ' is-on' : ''}`}
               style={{ '--sw': c } as CSSProperties}
               onClick={() => setColor(c)}
@@ -231,7 +234,7 @@ export function Writer({ g, onSent, onOpen, stats }: { g: Geo; onSent: () => voi
         </div>
         <div className="wr-meta">
           <p className={`wr-hint${shown ? ' is-bad' : ''}`} role="status">
-            {shown ?? 'signing it is optional'}
+            {shown ?? tr('msg.signHint')}
           </p>
           <span className={`wr-count${len > LETTER_MAX ? ' is-over' : ''}`}>
             {len}/{LETTER_MAX}
@@ -240,11 +243,11 @@ export function Writer({ g, onSent, onOpen, stats }: { g: Geo; onSent: () => voi
 
         <button className="msg-btn wr-send" onClick={send} disabled={!!why || phase !== 'compose'}>
           <Icon name="plane" color="#fff" size={22} />
-          Seal &amp; send
+          {tr('msg.send')}
         </button>
         {stats.sent > 0 && (
           <p className="wr-stats">
-            {stats.sent} sent · opened {stats.opens} {stats.opens === 1 ? 'time' : 'times'}
+            {tr(stats.opens === 0 ? 'msg.stats0' : stats.opens === 1 ? 'msg.stats1' : 'msg.statsN', { n: stats.sent, k: stats.opens })}
           </p>
         )}
       </div>
@@ -254,6 +257,7 @@ export function Writer({ g, onSent, onOpen, stats }: { g: Geo; onSent: () => voi
 
 function Sent({ at, onAgain, onOpen }: { at: number; onAgain: () => void; onOpen: () => void }) {
   const ref = useRef<HTMLDivElement>(null)
+  const { t: tr } = useT()
   useLayoutEffect(() => {
     const q = gsap.utils.selector(ref)
     const t = gsap.timeline()
@@ -282,16 +286,16 @@ function Sent({ at, onAgain, onOpen }: { at: number; onAgain: () => void; onOpen
           ))}
         </svg>
       </div>
-      <h3>On its way!</h3>
-      <p>Your letter is in the mailbox now. Someone, somewhere, will open it at random.</p>
+      <h3>{tr('msg.sentTitle')}</h3>
+      <p>{tr('msg.sentText')}</p>
       <div className="sent-btns">
         <button className="msg-btn" onClick={onAgain}>
           <Icon name="pencil" color="#fff" size={22} />
-          Write another
+          {tr('msg.another')}
         </button>
         <button className="msg-btn is-ghost" onClick={onOpen}>
           <Icon name="envelope" color={C.red} size={22} />
-          Open a letter
+          {tr('msg.openOne')}
         </button>
       </div>
     </div>

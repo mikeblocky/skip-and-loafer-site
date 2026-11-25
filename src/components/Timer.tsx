@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { C, releaseWindow } from '../data'
 import { Icon } from '../icons'
+import { useT } from '../i18n'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
 /** Minimal live countdown to the next chapter, pinned top-right on desktop. */
 export function Timer({ onOpen, hidden }: { onOpen: () => void; hidden: boolean }) {
+  const { t } = useT()
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
     let id = 0
@@ -29,12 +31,12 @@ export function Timer({ onOpen, hidden }: { onOpen: () => void; hidden: boolean 
       onClick={onOpen}
       aria-hidden={hidden}
       tabIndex={hidden ? -1 : 0}
-      aria-label={`Next chapter in ${d} days ${h} hours ${m} minutes`}
+      aria-label={t('timer.label', { d, h, m })}
     >
       <Icon name="clock" color={C.pink} size={18} />
       <span className="tm-text">
         <b>{d}</b>
-        <i>d</i> {pad(h)}
+        <i>{t('timer.day')}</i> {pad(h)}
         <i>:</i>
         {pad(m)}
         <i>:</i>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { gsap } from '../gsap'
 import { C } from '../data'
 import { Icon, type IconName } from '../icons'
+import { useT, type Key } from '../i18n'
 
 export type NavId = 'countdown' | 'volumes' | 'birthdays' | 'anime' | 'message' | 'replay'
 
@@ -28,6 +29,7 @@ function Mark({
   onSelect: (id: NavId) => void
 }) {
   const ref = useRef<HTMLButtonElement>(null)
+  const { t } = useT()
   const [hover, setHover] = useState(false)
   const first = useRef(true)
 
@@ -67,15 +69,16 @@ function Mark({
     >
       <span className="mark-ribbon">
         <Icon name={item.icon} color={item.ink ? C.ink : '#fff'} size={22} />
-        <span className="mark-label">{item.label}</span>
+        <span className="mark-label">{t(`nav.${item.id}` as Key)}</span>
       </span>
     </button>
   )
 }
 
 export function Bookmarks({ view, onSelect }: { view: NavId; onSelect: (id: NavId) => void }) {
+  const { t } = useT()
   return (
-    <nav className="bookmarks" aria-label="Sections">
+    <nav className="bookmarks" aria-label={t('nav.sections')}>
       {ITEMS.map((it) => (
         <Mark key={it.id} item={it} active={view === it.id} onSelect={onSelect} />
       ))}

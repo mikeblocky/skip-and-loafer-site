@@ -34,11 +34,43 @@ function devApi(env: Record<string, string>): Plugin {
   }
 }
 
-export default defineConfig(({ mode }) => {
+/**
+ * What build this is, shown at the bottom of Settings: the package version, the commit and when
+ * it was built. On Vercel the commit comes from its own variable; locally it asks git, and if
+ * there's no git it simply says "dev". (Node modules are loaded by name so the config still
+ * type-checks without Node's types installed.)
+ */
+async function buildInfo() {
+  const proc = (globalThis as unknown as { process: { env: Record<string, string | undefined> } }).process
+  const load = (name: string) => import(/* @vite-ignore */ name)
+  let version = '0.0.0'
+  try {
+    const fs = await load('node:fs')
+    version = JSON.parse(fs.readFileSync('package.json', 'utf8')).version ?? version
+  } catch {
+    /* keep the fallback */
+  }
+  let sha = proc.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? ''
+  if (!sha) {
+    try {
+      const cp = await load('node:child_process')
+      sha = String(cp.execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })).trim()
+    } catch {
+      sha = 'dev'
+    }
+  }
+  return { version, sha, date: new Date().toISOString() }
+}
+
+export default defineConfig(async ({ mode, command }) => {
   // '' = load every variable from .env files, not just VITE_ ones; they stay server-side here
   const env = loadEnv(mode, '.', '')
+  const build = await buildInfo()
   return {
     plugins: [react(), devApi(env)],
     server: { port: 5173 },
+    define: {
+      __BUILD__: JSON.stringify({ ...build, dev: command === 'serve' }),
+    },
   }
 })

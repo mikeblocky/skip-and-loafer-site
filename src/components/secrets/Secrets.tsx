@@ -8,6 +8,7 @@ import { Gacha } from './Gacha'
 import { SkipGame } from './SkipGame'
 import { Poll } from './Poll'
 import { Quiz } from './Quiz'
+import { rich, useT } from '../../i18n'
 
 const COLORS: Record<SecretId, string> = { gacha: C.pink, skip: C.orange, poll: C.red, quiz: C.blue }
 // title words take turns through these, starting at the secret's own colour
@@ -19,6 +20,8 @@ const TITLE_INKS: string[] = [C.pink, C.orange, C.blue, C.green, C.violet, C.red
  */
 function Overlay({ info, onClose, children }: { info: SecretInfo; onClose: () => void; children: ReactNode }) {
   const close = useRef<HTMLButtonElement>(null)
+  const { t } = useT()
+  const title = t(`game.title.${info.id}`)
   useEffect(() => {
     const before = document.activeElement as HTMLElement | null
     close.current?.focus({ preventScroll: true })
@@ -30,14 +33,14 @@ function Overlay({ info, onClose, children }: { info: SecretInfo; onClose: () =>
     }
   }, [onClose])
   return (
-    <div className="sx" role="dialog" aria-modal="true" aria-label={info.title} style={{ '--c': COLORS[info.id] } as CSSProperties}>
+    <div className="sx" role="dialog" aria-modal="true" aria-label={title} style={{ '--c': COLORS[info.id] } as CSSProperties}>
       <div className="sx-backdrop" onClick={onClose} />
-      <button className="round-btn sx-close" ref={close} onClick={onClose} aria-label="Close">
+      <button className="round-btn sx-close" ref={close} onClick={onClose} aria-label={t('common.close')}>
         <Icon name="close" color={C.ink} size={22} />
       </button>
       <div className={`sx-panel${info.id === 'skip' ? ' is-wide' : ''}`}>
-        <FlexText as="h2" className="sx-title" words={info.title.split(' ').map((t, i) => ({
-            t,
+        <FlexText as="h2" className="sx-title" words={title.split(' ').map((w, i) => ({
+            t: w,
             w: 760,
             c: TITLE_INKS[(TITLE_INKS.indexOf(COLORS[info.id]) + i) % TITLE_INKS.length],
           }))} />
@@ -50,6 +53,7 @@ function Overlay({ info, onClose, children }: { info: SecretInfo; onClose: () =>
 export function Secrets() {
   const [open, setOpen] = useState<SecretId | null>(null)
   const [toast, setToast] = useState<SecretInfo | null>(null)
+  const { t } = useT()
 
   useEffect(
     () =>
@@ -88,9 +92,7 @@ export function Secrets() {
       {toast && (
         <div className="sx-toast" role="status" style={{ '--c': COLORS[toast.id] } as CSSProperties}>
           <Icon name="sparkle" color="#fff" size={18} />
-          <span>
-            secret found: <b>{toast.title}</b>
-          </span>
+          <span>{rich(t('game.foundSecret', { name: t(`game.title.${toast.id}`) }))}</span>
         </div>
       )}
     </>

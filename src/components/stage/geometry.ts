@@ -40,7 +40,12 @@ export function measureSafeRects(selector = '.view [data-safe]'): Rect[] {
     const h = b.height / sc
     const cx = b.left + b.width / 2
     const cy = b.top + b.height / 2 - ty
-    return { left: cx - w / 2, right: cx + w / 2, top: cy - h / 2, bottom: cy + h / 2 }
+    return {
+      left: cx - w / 2,
+      right: cx + w / 2,
+      top: cy - h / 2,
+      bottom: cy + h / 2,
+    }
   })
 }
 
@@ -48,7 +53,13 @@ export function measureSafeRects(selector = '.view [data-safe]'): Rect[] {
 export function measureSafe(): Rect {
   const { vw, vh } = metrics()
   const rects = measureSafeRects()
-  if (!rects.length) return { left: vw * 0.3, right: vw * 0.7, top: vh * 0.25, bottom: vh * 0.7 }
+  if (!rects.length)
+    return {
+      left: vw * 0.3,
+      right: vw * 0.7,
+      top: vh * 0.25,
+      bottom: vh * 0.7,
+    }
   return rects.reduce((r, b) => ({
     left: Math.min(r.left, b.left),
     right: Math.max(r.right, b.right),
@@ -60,7 +71,12 @@ export function measureSafe(): Rect {
 export const overlaps = (a: Rect, b: Rect) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
 
 /** The frame of free space around a phone screen's content, where icons may live. */
-export const PHONE = { gutter: 40, topBand: [118, 150] as const, bottomBand: 46, soundCorner: 74 }
+export const PHONE = {
+  gutter: 40,
+  topBand: [118, 150] as const,
+  bottomBand: 46,
+  soundCorner: 74,
+}
 
 /**
  * A random spot on that frame, or in the open area below the page's content (`free`), picked
@@ -76,9 +92,16 @@ export const phoneSpot = (vw: number, vh: number, d: number, free: Rect | null) 
   const pad = d / 2 + 4
   if (pick < sideLen) return { x: rand(pad, G), y: rand(topBand[0], vh - pad) }
   if (pick < 2 * sideLen) return { x: rand(vw - G, vw - pad), y: rand(topBand[0], vh - soundCorner) }
-  if (pick < 2 * sideLen + bandLen) return { x: rand(G, vw - G), y: rand(topBand[0] + d / 2, Math.max(topBand[0] + d / 2, topBand[1] - d / 2)) }
+  if (pick < 2 * sideLen + bandLen)
+    return {
+      x: rand(G, vw - G),
+      y: rand(topBand[0] + d / 2, Math.max(topBand[0] + d / 2, topBand[1] - d / 2)),
+    }
   if (pick < 2 * sideLen + 2 * bandLen || !free) return { x: rand(G, vw - soundCorner), y: rand(vh - B, vh - pad) }
-  return { x: rand(free.left + pad, free.right - pad), y: rand(free.top + pad, free.bottom - pad) }
+  return {
+    x: rand(free.left + pad, free.right - pad),
+    y: rand(free.top + pad, free.bottom - pad),
+  }
 }
 
 /** Is this centre point on the phone frame (not in the content column)? */
@@ -89,4 +112,21 @@ export const onPhoneFrame = (x: number, y: number, vw: number, vh: number) =>
 export const contentBottom = () => {
   const rects = measureSafeRects('.view > *')
   return rects.length ? Math.max(...rects.map((r) => r.bottom)) : window.innerHeight
+}
+
+const area = (r: Rect, vw: number, vh: number) =>
+  Math.max(0, Math.min(r.right, vw) - Math.max(r.left, 0)) * Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0))
+
+/**
+ * How roomy the page is, as the height a character can take: the screen's area minus what's
+ * taken (the content and the bars), shared out between the characters on stage, then turned
+ * into a height for a figure about half as wide as it is tall. `fit` tunes it per layout,
+ * `lo`/`hi` keep it sane on extreme screens. A big empty screen gets big characters; a busy
+ * page or a crowded cast gets smaller ones.
+ */
+export function roomyHeight(taken: Rect[], cast: number, fit: number, lo: number, hi: number) {
+  const { vw, vh } = metrics()
+  const free = Math.max(vw * vh * 0.15, vw * vh - taken.reduce((a, r) => a + area(r, vw, vh), 0))
+  const each = free / Math.max(4, cast)
+  return clamp(lo, hi, Math.sqrt(each / 0.47) * fit)
 }

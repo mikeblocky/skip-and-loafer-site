@@ -1,11 +1,12 @@
 import { BIRTHDAYS, C, VOLUMES } from '../../data'
 import { CHAPTERS } from '../../volumes'
 import { pick, shuffle } from './GameKit'
+import { currentLocale, dayMonth, monthName, t, type Key } from '../../i18n'
 
 /**
  * Questions for the quiz. Most are built from what the site already knows (the birthday dial,
  * the volumes and their chapter titles), so they're always right; a few are hand-written basics
- * about the series. Each has a tier, from 0 (warm-up) to 3 (only real fans), and the quiz moves
+ * about the series (`qb.f.*` in the dictionaries). Each has a tier, from 0 (warm-up) to 3 (only real fans), and the quiz moves
  * up the tiers as it goes.
  */
 export interface Q {
@@ -20,8 +21,11 @@ export interface Q {
   color: string
 }
 
-export const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-const date = (m: number, d: number) => `${MONTHS[m - 1]} ${d}`
+/** month names and dates in the reader's language, read when each question is made */
+const months = () => Array.from({ length: 12 }, (_, i) => monthName(i + 1, currentLocale()))
+const date = (m: number, d: number) => dayMonth(m, d, currentLocale())
+const vol = (n: number) => t('qb.volN', { n })
+const chapter = (n: number) => t('qb.chapterN', { n })
 
 /** the right answer plus n - 1 others from the pool, shuffled */
 const withOthers = (answer: string, pool: string[], n: number) =>
@@ -32,7 +36,7 @@ const chapters = CHAPTERS.filter((c) => Number.isInteger(c.n))
 const volOf = (n: number) => VOLUMES.find((v) => v.chapters.includes(n))?.n ?? 0
 const outVolumes = VOLUMES.filter((v) => v.src).map((v) => v.n)
 /** volume numbers close to v, so the wrong answers aren't a giveaway */
-const near = (v: number, spread: number) => outVolumes.filter((x) => Math.abs(x - v) <= spread).map((x) => `vol. ${x}`)
+const near = (v: number, spread: number) => outVolumes.filter((x) => Math.abs(x - v) <= spread).map(vol)
 
 type Make = (n: number) => Q
 
@@ -42,10 +46,11 @@ const MAKERS: { tier: number; make: Make; weight?: number }[] = [
     tier: 0,
     make: (n) => {
       const b = pick(BIRTHDAYS)
+      const MONTHS = months()
       return {
         id: `m-${b.name}`,
         tier: 0,
-        text: 'which month is {hi}’s birthday?',
+        text: t('qb.month'),
         hi: b.name,
         answer: MONTHS[b.m - 1],
         options: withOthers(MONTHS[b.m - 1], MONTHS.filter((_, i) => Math.abs(i + 1 - b.m) <= 3), n),
@@ -60,7 +65,7 @@ const MAKERS: { tier: number; make: Make; weight?: number }[] = [
       return {
         id: `w-${b.name}`,
         tier: 1,
-        text: 'whose birthday is {hi}?',
+        text: t('qb.whose'),
         hi: date(b.m, b.d),
         answer: b.name,
         options: withOthers(b.name, BIRTHDAYS.map((x) => x.name), n),
@@ -77,8 +82,8 @@ const MAKERS: { tier: number; make: Make; weight?: number }[] = [
       return {
         id: `f-${group.map((g) => g.name).sort().join()}`,
         tier: 2,
-        text: 'whose birthday comes {hi} in the year?',
-        hi: 'first',
+        text: t('qb.first'),
+        hi: t('qb.firstHi'),
         answer: first.name,
         options: shuffle(group.map((g) => g.name)),
         color: C.orange,
@@ -93,10 +98,10 @@ const MAKERS: { tier: number; make: Make; weight?: number }[] = [
       return {
         id: `v-${ch.n}`,
         tier: 2,
-        text: '“{hi}” is in which volume?',
+        text: t('qb.vol'),
         hi: ch.title,
-        answer: `vol. ${v}`,
-        options: withOthers(`vol. ${v}`, near(v, 3), n),
+        answer: vol(v),
+        options: withOthers(vol(v), near(v, 3), n),
         color: C.violet,
       }
     },
@@ -113,7 +118,7 @@ const MAKERS: { tier: number; make: Make; weight?: number }[] = [
       return {
         id: `d-${b.name}`,
         tier: 3,
-        text: 'when is {hi}’s birthday?',
+        text: t('qb.date'),
         hi: b.name,
         answer: date(b.m, b.d),
         options: withOthers(date(b.m, b.d), pool, n),
@@ -128,36 +133,46 @@ const MAKERS: { tier: number; make: Make; weight?: number }[] = [
     make: (n) => {
       n = Math.min(n, 4)
       const ch = pick(chapters)
-      const pool = chapters.filter((c) => Math.abs(c.n - ch.n) <= 6).map((c) => `chapter ${c.n}`)
+      const pool = chapters.filter((c) => Math.abs(c.n - ch.n) <= 6).map((c) => chapter(c.n))
       return {
         id: `c-${ch.n}`,
         tier: 3,
-        text: 'which chapter is called “{hi}”?',
+        text: t('qb.chapter'),
         hi: ch.title,
-        answer: `chapter ${ch.n}`,
-        options: withOthers(`chapter ${ch.n}`, pool, n),
+        answer: chapter(ch.n),
+        options: withOthers(chapter(ch.n), pool, n),
         color: C.blue,
       }
     },
   },
 ]
 
-/** hand-written basics: [tier, question, highlighted bit, answer, wrong answers…] */
-const FACTS: [number, string, string, string, ...string[]][] = [
-  [0, 'who draws and writes {hi}?', 'Skip and Loafer', 'Misaki Takamatsu', 'Rumiko Takahashi', 'Ai Yazawa', 'Hiro Mashima', 'Naoko Takeuchi'],
-  [0, 'Mitsumi moves to Tokyo from which {hi}?', 'prefecture', 'Ishikawa', 'Hokkaido', 'Okinawa', 'Nagano', 'Aomori', 'Kochi'],
-  [0, 'what was {hi} as a kid?', 'Shima', 'a child actor', 'a pro shogi player', 'a swimmer for Japan', 'in a boy band', 'a piano prodigy'],
-  [0, 'who does Mitsumi live with in {hi}?', 'Tokyo', 'her aunt Nao', 'her grandma', 'a host family', 'the school dorm', 'her big sister'],
-  [1, 'which studio made the {hi}?', 'anime', 'P.A. Works', 'Kyoto Animation', 'MAPPA', 'Wit Studio', 'Shaft'],
-  [1, 'which magazine runs {hi}?', 'Skip and Loafer', 'Monthly Afternoon', 'Weekly Shōnen Jump', 'Bessatsu Margaret', 'Monthly Shōnen Gangan', 'Ribon'],
-  [1, 'what’s Mitsumi’s {hi}?', 'family name', 'Iwakura', 'Kurume', 'Egashira', 'Murashige', 'Takamine'],
-  [1, 'what’s Shima’s {hi}?', 'first name', 'Sousuke', 'Takeshi', 'Haruki', 'Ren', 'Kazuya'],
-  [2, 'what’s Makoto’s {hi}?', 'family name', 'Kurume', 'Iwakura', 'Egashira', 'Murashige', 'Kanechika'],
-  [2, 'what’s Mika’s {hi}?', 'family name', 'Egashira', 'Murashige', 'Kurume', 'Iwakura', 'Takamine'],
-  [2, 'what’s Yuzuki’s {hi}?', 'family name', 'Murashige', 'Egashira', 'Kurume', 'Iwakura', 'Kazakami'],
-  [2, 'what does {hi} want to do when she grows up?', 'Mitsumi', 'work for the government and help her hometown', 'open a café back home', 'act in movies', 'design clothes in Shibuya', 'run a big company'],
-  [2, 'the anime’s {hi} covers up to which volume?', 'first season', String(Math.max(...VOLUMES.filter((v) => v.anime === 'Season 1').map((v) => v.n))), '2', '3', '5', '6'],
+/**
+ * hand-written basics: [tier, key]. Each key holds "question|highlighted bit|answer|wrong answers…",
+ * so every language can use its own names for places, studios and magazines.
+ */
+const FACTS: [number, Key][] = [
+  [0, 'qb.f.author'],
+  [0, 'qb.f.from'],
+  [0, 'qb.f.shimaKid'],
+  [0, 'qb.f.livesWith'],
+  [1, 'qb.f.studio'],
+  [1, 'qb.f.magazine'],
+  [1, 'qb.f.mitsumiFamily'],
+  [1, 'qb.f.shimaFirst'],
+  [2, 'qb.f.makotoFamily'],
+  [2, 'qb.f.mikaFamily'],
+  [2, 'qb.f.yuzukiFamily'],
+  [2, 'qb.f.dream'],
+  [2, 'qb.f.season'],
 ]
+/** the last season-1 volume: worked out, so the fact stays right */
+const S1_END = Math.max(...VOLUMES.filter((v) => v.anime === 'Season 1').map((v) => v.n))
+const fact = (key: Key): [string, string, string, ...string[]] => {
+  const [text, hi, ...rest] = t(key).split('|')
+  // the season fact's answers are numbers, the same in every language
+  return key === 'qb.f.season' ? [text, hi, String(S1_END), '2', '3', '5', '6'] : [text, hi, rest[0], ...rest.slice(1)]
+}
 
 /** a question for tier t or below, with n options (fact questions use up to n of theirs) */
 /** pick an index by weight */
@@ -178,8 +193,9 @@ export function makeQuestion(tiers: number[], n: number, recent: Set<string>): Q
     const makers = MAKERS.filter((m) => m.tier === tier)
     let q: Q
     if (facts.length && Math.random() < 0.35) {
-      const [, text, hi, answer, ...wrong] = pick(facts)
-      q = { id: `x-${text}`, tier, text, hi, answer, options: shuffle([answer, ...shuffle(wrong).slice(0, n - 1)]), color: C.pink }
+      const [, key] = pick(facts)
+      const [text, hi, answer, ...wrong] = fact(key)
+      q = { id: `x-${key}`, tier, text, hi, answer, options: shuffle([answer, ...shuffle(wrong).slice(0, n - 1)]), color: C.pink }
     } else {
       if (!makers.length) continue
       q = makers[weighted(makers.map((m) => m.weight ?? 1))].make(n)

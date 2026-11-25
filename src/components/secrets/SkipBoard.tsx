@@ -3,6 +3,7 @@ import { C } from '../../data'
 import { Icon } from '../../icons'
 import { sfx } from '../../sfx'
 import { fmt } from './skipRules'
+import { serverText, useT } from '../../i18n'
 
 /** the name you saved scores under last, shared by every game's board */
 export const NAME_KEY = 'sl-skip-name'
@@ -46,6 +47,7 @@ export function savedName() {
 /** The fold-out list of top scores, with your own name picked out. */
 export function Leaderboard({ board, name }: { board: Board; name: string }) {
   const [boardOpen, setBoardOpen] = useState(false)
+  const { t } = useT()
   const id = `${board.game}-leaderboard`
   return (
     <>
@@ -56,12 +58,12 @@ export function Leaderboard({ board, name }: { board: Board; name: string }) {
         aria-controls={id}
         onClick={() => setBoardOpen((open) => !open)}
       >
-        Leaderboard
+        {t('game.board')}
       </button>
-      <section id={id} className="sg-board" aria-label="Leaderboard" hidden={!boardOpen}>
-        {board.state === 'loading' && <p className="sx-note">loading…</p>}
-        {board.state === 'offline' && <p className="sx-note">the leaderboard is offline right now. your best still saves on this device.</p>}
-        {board.state === 'ok' && board.entries.length === 0 && <p className="sx-note">no scores yet. be the first!</p>}
+      <section id={id} className="sg-board" aria-label={t('game.board')} hidden={!boardOpen}>
+        {board.state === 'loading' && <p className="sx-note">{t('game.loading')}</p>}
+        {board.state === 'offline' && <p className="sx-note">{t('game.offline')}</p>}
+        {board.state === 'ok' && board.entries.length === 0 && <p className="sx-note">{t('game.noScores')}</p>}
         {board.state === 'ok' && board.entries.length > 0 && (
           <ol>
             {board.entries.map((e, i) => (
@@ -91,6 +93,7 @@ export function SaveScore({ board, score, won, name, setName, onBest }: {
   setName: (n: string) => void
   onBest?: (n: number) => void
 }) {
+  const { t } = useT()
   const [save, setSave] = useState<{ state: 'idle' | 'saving' | 'saved' | 'error'; rank?: number | null; msg?: string }>({ state: 'idle' })
   if (score <= 0 || board.state === 'offline') return null
 
@@ -130,24 +133,24 @@ export function SaveScore({ board, score, won, name, setName, onBest }: {
       }}
     >
       {save.state === 'saved' ? (
-        <span className="sg-saved">saved{save.rank ? ` · you're #${save.rank}` : ''}</span>
+        <span className="sg-saved">{save.rank ? t('game.savedRank', { n: save.rank }) : t('game.saved')}</span>
       ) : (
         <>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={16}
-            placeholder="your name"
-            aria-label="Your name for the leaderboard"
+            placeholder={t('game.yourName')}
+            aria-label={t('game.nameLabel')}
             autoComplete="nickname"
             enterKeyHint="done"
           />
           <button className="sx-btn is-strong" disabled={!name.trim() || save.state === 'saving'}>
-            {save.state === 'saving' ? 'saving…' : 'save score'}
+            {t(save.state === 'saving' ? 'game.saving' : 'game.save')}
           </button>
         </>
       )}
-      {save.state === 'error' && <span className="sg-err">{save.msg}</span>}
+      {save.state === 'error' && <span className="sg-err">{serverText(save.msg ?? '', t)}</span>}
     </form>
   )
 }

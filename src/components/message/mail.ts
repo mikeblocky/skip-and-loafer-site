@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
 const API = '/api/messages'
-export const ANON = 'a fellow loafer'
 
 export const store = {
   read<T>(k: string, fallback: T): T {
@@ -41,7 +40,10 @@ export interface Letter {
 }
 
 export async function api<T>(init?: RequestInit, query = ''): Promise<T> {
-  const r = await fetch(API + query, init)
+  // offline or blocked: say so in the same words the server would
+  const r = await fetch(API + query, init).catch(() => {
+    throw new Error('couldn’t reach the mailbox, try again later')
+  })
   const data = await r.json().catch(() => ({}))
   if (!r.ok) throw new Error((data as { error?: string }).error || 'couldn’t reach the mailbox, try again later')
   return data as T

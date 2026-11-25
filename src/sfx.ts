@@ -5,9 +5,17 @@
  * slight random variation on every hit so repeats never sound machine-identical.
  */
 
+import { settings } from './settings'
+
 const KEY = 'sl-sound'
 let ctx: AudioContext | null = null
 let master: GainNode | null = null
+/** effects and music each get their own volume (from settings) before the shared master */
+let sfxBus: GainNode | null = null
+let musicBus: GainNode | null = null
+/** which bus new voices go to: the music engines flip it while they schedule notes */
+let route: 'sfx' | 'music' = 'sfx'
+const MASTER = 0.62
 let noiseBuf: AudioBuffer | null = null
 let warmF: BiquadFilterNode | null = null
 let verbF: BiquadFilterNode | null = null
@@ -77,7 +85,14 @@ function ensure() {
   comp.connect(ctx.destination)
 
   master = ctx.createGain()
-  master.gain.value = 0.62
+  sfxBus = ctx.createGain()
+  musicBus = ctx.createGain()
+  sfxBus.connect(master)
+  musicBus.connect(master)
+  const st = settings.get()
+  master.gain.value = MASTER * st.master
+  sfxBus.gain.value = st.sfx
+  musicBus.gain.value = st.music
 
   // Body: a gentle lift low down so plucks and thumps sound full rather than thin.
   const body = ctx.createBiquadFilter()
@@ -109,6 +124,17 @@ function ensure() {
   return ctx
 }
 
+/** Volumes from settings onto the buses (a short glide so slider drags don't crackle). */
+function levels() {
+  if (!ctx || !master || !sfxBus || !musicBus) return
+  const st = settings.get()
+  const t = ctx.currentTime
+  master.gain.setTargetAtTime(MASTER * st.master, t, 0.02)
+  sfxBus.gain.setTargetAtTime(st.sfx, t, 0.02)
+  musicBus.gain.setTargetAtTime(st.music, t, 0.02)
+}
+settings.subscribe(levels)
+
 const live = () => on && ctx !== null && ctx.state === 'running' && !document.hidden
 
 /** Drop repeats of the same sound that arrive closer together than `ms`. */
@@ -123,12 +149,13 @@ function gate(key: string, ms: number) {
 const vary = (amt: number) => 1 + (Math.random() * 2 - 1) * amt
 
 function out(pan = 0) {
-  if (!ctx || !master) return null
-  if (!pan || !ctx.createStereoPanner) return master
+  const bus = route === 'music' ? musicBus : sfxBus
+  if (!ctx || !bus) return null
+  if (!pan || !ctx.createStereoPanner) return bus
   const p = ctx.createStereoPanner()
   // Keep panning subtle; hard-panned clicks feel artificial.
   p.pan.value = Math.max(-1, Math.min(1, pan)) * 0.5
-  p.connect(master)
+  p.connect(bus)
   return p
 }
 
@@ -287,13 +314,25 @@ function clap({ g = 0.03, delay = 0, pan = 0 }: { g?: number; delay?: number; pa
 }
 
 /** The raw voices, for the music engine (src/music.ts) to schedule ahead on the audio clock. */
+/** Run a voice on the music bus, so it follows the music volume rather than the effects one. */
+const onMusic =
+  <A extends unknown[]>(fn: (...a: A) => void) =>
+  (...a: A) => {
+    route = 'music'
+    try {
+      fn(...a)
+    } finally {
+      route = 'sfx'
+    }
+  }
+
 export const voices = {
   live: () => live(),
   now: () => ctx?.currentTime ?? 0,
-  tone,
-  noise,
-  pluck,
-  whistle,
+  tone: onMusic(tone),
+  noise: onMusic(noise),
+  pluck: onMusic(pluck),
+  whistle: onMusic(whistle),
 }
 
 const panOf = (x: number) => (x / window.innerWidth) * 2 - 1

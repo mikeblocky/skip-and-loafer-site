@@ -3,6 +3,7 @@ import { C } from '../../data'
 import { sfx } from '../../sfx'
 import { arcade } from '../../arcadeMusic'
 import { Chip, Clock, GameBoardFold, GameEnd, GameHud, GameStart, Hearts, useGameBoard, useGameMusic } from './GameKit'
+import { useT } from '../../i18n'
 import { QUIZ } from './gameCurves'
 import { makeQuestion, type Q } from './quizBank'
 
@@ -35,6 +36,7 @@ function Text({ q }: { q: Q }) {
 
 export function Quiz() {
   const kit = useGameBoard('quiz', 'quizBest')
+  const { t } = useT()
   useGameMusic()
   const [phase, setPhase] = useState<'ready' | 'ask' | 'show' | 'over'>('ready')
   const [q, setQ] = useState<Q | null>(null)
@@ -171,7 +173,7 @@ export function Quiz() {
     <div className={`gm gm-quiz${playing ? ' is-playing' : ''}`}>
       <GameHud score={score} best={kit.best}>
         <Hearts n={lives} of={LIVES} />
-        {streak > 1 && <Chip color={C.amber}>{streak} in a row</Chip>}
+        {streak > 1 && <Chip color={C.amber}>{t('game.streak', { n: streak })}</Chip>}
       </GameHud>
       <Clock left={playing ? time : 0} of={limit} warn={3} />
 
@@ -179,8 +181,8 @@ export function Quiz() {
         {playing && q && (
           <div className="qz-card" key={n}>
             <span className="qz-n">
-              question {n + 1}
-              {q.tier >= 3 ? ' · tricky one' : ''}
+              {t('qz.n', { n: n + 1 })}
+              {q.tier >= 3 ? t('qz.tricky') : ''}
             </span>
             <p className="quiz-q">
               <Text q={q} />
@@ -190,22 +192,18 @@ export function Quiz() {
         )}
         {phase === 'ready' && (
           <GameStart
-            title="how well do you know them?"
-            lines={[
-              'answer before the bar runs out. faster answers score more',
-              'it starts easy and gets a lot harder. three wrong and you’re out',
-              'a run of right answers gives you a heart back',
-            ]}
+            title={t('qz.title')}
+            lines={[t('qz.how1'), t('qz.how2'), t('qz.how3')]}
             onStart={start}
           />
         )}
         {phase === 'over' && (
           <GameEnd
-            title={right >= WIN_AT ? 'a true fan!' : 'out of hearts!'}
+            title={t(right >= WIN_AT ? 'qz.win' : 'qz.lost')}
             score={score}
             isBest={isBest}
             won={right >= WIN_AT}
-            line={`${right} right out of ${n + 1}`}
+            line={t('qz.result', { r: right, n: n + 1 })}
             kit={kit}
             onAgain={start}
           />
