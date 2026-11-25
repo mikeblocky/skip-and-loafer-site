@@ -1,10 +1,12 @@
 import type { Dict } from './en'
 import { pagesKo } from './pages/ko'
 import { gamesKo } from './games/ko'
+import { santaKo } from './santa/ko'
 
 export const ko: Dict = {
   ...pagesKo,
   ...gamesKo,
+  ...santaKo,
   'common.close': '닫기',
   'app.loading': '불러오는 중',
   'app.settings': '설정',

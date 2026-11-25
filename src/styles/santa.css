@@ -1,0 +1,877 @@
+/* ───────── Secret Santa (the limited-time tab) ───────── */
+
+/* the bookmark: falling snow on pine green */
+.mark--santa .mark-ribbon::before {
+  background:
+    radial-gradient(circle, rgb(255 255 255 / 0.75) 2.2px, transparent 2.8px) 0 0 / 22px 22px,
+    radial-gradient(circle, rgb(255 255 255 / 0.4) 1.6px, transparent 2.2px) 11px 11px / 22px 22px;
+}
+.mark--santa:hover .mark-ribbon::before,
+.mark--santa.is-active .mark-ribbon::before {
+  background-position:
+    0 22px,
+    11px 33px;
+}
+/* seven bookmarks while the season is on: a little narrower so they still fit */
+@media (min-width: 761px) and (max-width: 1180px) {
+  .bookmarks:has(> :nth-child(7)) {
+    gap: 8px;
+  }
+  .bookmarks:has(> :nth-child(7)) .mark {
+    width: 86px;
+  }
+}
+@media (max-width: 760px) {
+  .bookmarks {
+    grid-template-columns: repeat(var(--n, 6), minmax(0, 1fr));
+  }
+  .bookmarks:has(> :nth-child(7)) {
+    width: min(calc(100% - 12px), 430px);
+  }
+  .mark--santa .mark-label {
+    line-height: 1;
+    text-align: center;
+  }
+}
+
+.view-santa {
+  justify-content: flex-start;
+  --teal: #0EA09E;
+}
+.ss-title {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 0.22em;
+  margin: 0;
+  font-size: clamp(52px, 7vw, 110px);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+.ss-sub {
+  position: relative;
+  margin: 16px 0 0;
+  max-width: 640px;
+  font-size: 17px;
+  color: var(--muted);
+  text-align: center;
+  text-wrap: balance;
+}
+.ss-sub b {
+  color: var(--teal);
+}
+.msg-btn.ss-btn {
+  justify-content: center;
+  background: var(--teal);
+}
+.ss-link {
+  flex: none;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--teal);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ss-link:disabled {
+  color: var(--muted);
+  text-decoration: none;
+}
+.ss-label {
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--muted);
+}
+.ss-label b {
+  color: var(--ink);
+}
+.ss-count {
+  position: relative;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  text-align: center;
+  font-feature-settings: 'tnum';
+}
+.ss-card {
+  position: relative;
+  padding: 20px 22px;
+  background: #fff;
+  border: 1px solid var(--hair);
+  border-radius: 18px;
+  box-shadow: var(--shadow-1);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.ss-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 17px;
+}
+
+/* ── the big box: a present drawn in boxes; --s is its size, --w the paper, --r the ribbon ── */
+.pr {
+  position: relative;
+  width: var(--s);
+  height: var(--s);
+  flex: none;
+}
+.pr-body,
+.pr-lid {
+  position: absolute;
+  background:
+    radial-gradient(circle, rgb(255 255 255 / 0.32) calc(var(--s) * 0.022), transparent calc(var(--s) * 0.028)) 0 0 / calc(var(--s) * 0.16) calc(var(--s) * 0.16),
+    var(--w);
+}
+.pr-body {
+  left: 9%;
+  right: 9%;
+  bottom: 0;
+  height: 60%;
+  border-radius: 0 0 calc(var(--s) * 0.06) calc(var(--s) * 0.06);
+  box-shadow:
+    inset 0 calc(var(--s) * -0.05) 0 rgb(0 0 0 / 0.12),
+    var(--shadow-2);
+}
+.pr-lid {
+  z-index: 2;
+  left: 4%;
+  right: 4%;
+  top: 30%;
+  height: 17%;
+  border-radius: calc(var(--s) * 0.04);
+  background-color: color-mix(in oklab, var(--w), #000 6%);
+  box-shadow: 0 calc(var(--s) * 0.025) 0 rgb(0 0 0 / 0.14);
+}
+.pr-rib {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 42%;
+  width: 16%;
+  background: var(--r);
+  transform-origin: 50% 0%;
+}
+.pr-body .pr-rib {
+  transform-origin: 50% 100%;
+}
+.pr-bow {
+  position: absolute;
+  bottom: 86%;
+  left: calc(50% - var(--s) * 0.22);
+  width: calc(var(--s) * 0.44);
+  height: calc(var(--s) * 0.2);
+  transform-origin: 50% 100%;
+}
+.pr-bow i {
+  position: absolute;
+  bottom: 0;
+  width: 50%;
+  height: 100%;
+  border: calc(var(--s) * 0.045) solid var(--r);
+  border-radius: 60% 60% 12% 60%;
+}
+.pr-bow i:first-child {
+  left: 2%;
+  rotate: -18deg;
+  transform-origin: 100% 100%;
+}
+.pr-bow i:nth-child(2) {
+  right: 2%;
+  rotate: 18deg;
+  transform-origin: 0% 100%;
+  border-radius: 60% 60% 60% 12%;
+}
+.pr-bow b {
+  position: absolute;
+  bottom: -14%;
+  left: calc(50% - var(--s) * 0.05);
+  width: calc(var(--s) * 0.1);
+  height: calc(var(--s) * 0.1);
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--r), #000 10%);
+}
+.pr-item {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 50%;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+/* ── a letter: two faces in 3D, turned over by rotating .sv-in ── */
+.sv-card {
+  position: relative;
+  perspective: 1600px;
+}
+.sv-in {
+  position: relative;
+  transform-style: preserve-3d;
+}
+.sv-face {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.sv-face-front {
+  position: relative;
+}
+.sv-face-back {
+  position: absolute;
+  inset: 0;
+}
+.sv-in.is-writer .sv-face-back,
+.sv-in.is-reader .sv-face-front {
+  transform: rotateY(180deg);
+}
+
+/* the outside: an envelope in its paper colour, with the stamp and who it's for */
+.sv-back {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  container-type: size;
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 20% 20%, rgb(255 255 255 / 0.22), transparent 60%),
+    var(--w);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.06),
+    var(--shadow-2);
+  color: var(--ink);
+}
+.sv-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56%;
+  background: color-mix(in oklab, var(--w), #000 9%);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.sv-flap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgb(255 255 255 / 0.12), transparent);
+}
+.sv-stamp {
+  position: absolute;
+  z-index: 1;
+  top: 9%;
+  right: 6%;
+  width: 22%;
+  aspect-ratio: 0.86;
+  display: grid;
+  place-items: center;
+  background: color-mix(in oklab, var(--w), #000 14%);
+  outline: max(2px, 1.1cqw) dashed #fff;
+  outline-offset: max(-4px, -2cqw);
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+  rotate: 5deg;
+}
+.sv-addr {
+  position: absolute;
+  z-index: 1;
+  left: 8%;
+  bottom: 11%;
+  max-width: 84%;
+  padding: 0.35em 0.75em;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+  font-size: clamp(10px, 8cqw, 22px);
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.sv-addr small {
+  font-size: 0.8em;
+  font-weight: 700;
+  color: var(--muted);
+}
+.sv-addr.is-named {
+  box-shadow:
+    0 0 0 2px var(--red),
+    0 1px 2px rgb(0 0 0 / 0.12);
+  color: var(--red);
+}
+.sv-read-mark,
+.sv-has-pic {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+}
+.sv-read-mark {
+  right: 6px;
+  bottom: 6px;
+  background: var(--teal);
+}
+.sv-has-pic {
+  left: 6px;
+  top: 6px;
+  background: rgb(29 27 44 / 0.55);
+}
+
+/* the inside: a sheet of paper with a band of its colour */
+.sv-front {
+  position: relative;
+  padding: 20px 22px 16px;
+  border-radius: 12px;
+  border-top: 10px solid var(--w);
+  background: #fffdf7;
+  box-shadow: var(--shadow-3);
+  /* ruled lines that belong to the text itself: one per 30px row, just under the letters */
+  --rule: linear-gradient(transparent 0 24px, color-mix(in oklab, var(--w), #fff 78%) 24px 25.5px, transparent 25.5px) 0 0 / 100% 30px repeat;
+}
+.sv-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.sv-head .sv-stamp {
+  position: relative;
+  top: auto;
+  right: auto;
+  flex: none;
+  width: 54px;
+  outline-width: 3px;
+  outline-offset: -5px;
+}
+.sv-to-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  padding-top: 6px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.sv-to-line > span:first-child {
+  flex: none;
+  font-size: 14px;
+  color: var(--muted);
+}
+.sv-to-line b {
+  overflow-wrap: anywhere;
+}
+.sv-to-line input {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 0;
+  border: 0;
+  border-bottom: 2px dashed color-mix(in oklab, var(--w), #fff 40%);
+  background: transparent;
+  font: inherit;
+  color: var(--ink);
+  outline: none;
+}
+.sv-to-line input:focus {
+  border-bottom-color: var(--w);
+}
+.sv-to-hint {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--red);
+}
+.sv-edit textarea {
+  display: block;
+  width: 100%;
+  min-height: 150px;
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  /* local: the lines scroll with the writing */
+  background: var(--rule);
+  background-attachment: local;
+  font: inherit;
+  font-size: 17px;
+  line-height: 30px;
+  color: var(--ink);
+  resize: none;
+  outline: none;
+}
+.sv-add-pic {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px;
+  border: 2px dashed color-mix(in oklab, var(--w), #fff 35%);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background var(--t-hover) var(--soft);
+}
+.sv-add-pic:hover,
+.sv-add-pic:focus-within {
+  background: color-mix(in oklab, var(--w), #fff 90%);
+}
+.sv-add-pic:focus-within {
+  outline: 3px solid var(--w);
+  outline-offset: 2px;
+}
+.sv-add-pic.is-busy {
+  cursor: progress;
+  opacity: 0.7;
+}
+.sv-add-pic input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+.sv-pic-edit {
+  position: relative;
+  margin-top: 8px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--w), #fff 88%);
+}
+.sv-pic-edit img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 240px;
+  object-fit: contain;
+}
+.sv-pic-x {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--shadow-1);
+}
+.sv-sign {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 15px;
+  color: var(--muted);
+}
+.sv-sign input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  border-bottom: 1px dashed var(--hair);
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  color: var(--ink);
+  outline: none;
+}
+.sv-pic {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-height: 52vh;
+  margin: 14px 0 2px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--w), #fff 88%);
+}
+.sv-pic img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.sv-text {
+  margin: 14px 0 0;
+  background: var(--rule);
+  font-size: 18px;
+  line-height: 30px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.sv-from {
+  margin: 10px 0 0;
+  font-weight: 750;
+  color: var(--muted);
+  text-align: right;
+}
+.sv-got {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 2px dashed color-mix(in oklab, var(--w), #fff 55%);
+  font-weight: 800;
+  color: var(--ink);
+}
+
+/* ── writing: the bench, the instructions and the big box ── */
+.ss-collect {
+  display: grid;
+  grid-template-columns: 250px minmax(340px, 470px) 250px;
+  gap: clamp(24px, 3.5vw, 48px);
+  align-items: start;
+  margin-top: 32px;
+}
+.ss-how ol {
+  margin: 0;
+  padding-left: 20px;
+}
+.ss-how li + li {
+  margin-top: 8px;
+}
+.ss-bench {
+  --et: var(--teal);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--hair);
+  border-radius: 22px;
+  box-shadow: var(--shadow-2);
+}
+.ss-letter {
+  position: relative;
+  z-index: 2;
+}
+.ss-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ss-insides {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 6px;
+}
+.ss-inside {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--teal), #fff 88%);
+  transition:
+    background var(--t-hover) var(--soft),
+    scale var(--t-hover) var(--spring);
+}
+.ss-inside:hover:not(:disabled) {
+  scale: 1.08;
+}
+.ss-inside.is-on {
+  background: var(--teal);
+}
+.ss-wraps {
+  margin-bottom: 4px;
+}
+.ss-meta {
+  margin-top: 0;
+}
+.ss-dropped {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px 10px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+}
+.ss-dropped p {
+  margin: 0;
+  text-wrap: balance;
+}
+.ss-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.ss-bigbox-wrap {
+  position: relative;
+  padding-top: 70px;
+}
+.ss-mine {
+  width: 100%;
+  padding: 16px 18px;
+}
+.ss-mine h3 {
+  font-size: 15px;
+}
+.ss-mine ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ss-mine li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.ss-mine li + li {
+  margin-top: 8px;
+}
+.ss-mine-ico {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+.ss-mine-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── the box bursts ── */
+.ss-ready {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin-top: 20px;
+}
+.ss-bigbox-btn {
+  display: block;
+  border-radius: 24px;
+}
+.ss-bigbox-btn:disabled {
+  cursor: default;
+}
+.ss-bigbox-btn:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 8px;
+}
+.ss-bigbox.is-tremble .pr-lid {
+  animation: ss-rattle 2.6s ease-in-out infinite;
+}
+.ss-bigbox-btn:hover .ss-bigbox.is-tremble .pr-lid {
+  animation-duration: 0.9s;
+}
+@keyframes ss-rattle {
+  0%,
+  70%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  74% {
+    translate: -3px -8px;
+    rotate: -4deg;
+  }
+  78% {
+    translate: 3px -4px;
+    rotate: 3deg;
+  }
+  82% {
+    translate: -2px -6px;
+    rotate: -2deg;
+  }
+  86% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+}
+
+/* letters everywhere: scattered across the whole width of the page */
+.ss-open {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  width: 100%;
+  margin-top: 26px;
+}
+.ss-find {
+  width: min(520px, 100%);
+}
+.ss-find p {
+  margin: 0;
+  color: var(--muted);
+}
+.ss-find-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.ss-find-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: #fffdf7;
+  font: inherit;
+  font-weight: 700;
+  outline: none;
+}
+.ss-find-row input:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--teal), #fff 75%);
+}
+.ss-find-row .msg-btn {
+  padding: 12px 20px;
+  font-size: 16px;
+}
+.msg-btn.ss-btn:disabled {
+  background: #e6e1ec;
+}
+.ss-find-said {
+  margin: 10px 0 0 !important;
+  font-weight: 800;
+  color: var(--ink) !important;
+}
+.ss-field {
+  position: relative;
+  width: min(1240px, calc(100vw - 32px));
+}
+.ss-env {
+  position: absolute;
+  rotate: var(--r);
+  border-radius: 10px;
+  transition:
+    translate var(--t-hover) var(--spring),
+    rotate var(--t-hover) var(--spring),
+    scale var(--t-hover) var(--spring);
+}
+.ss-env:hover,
+.ss-env:focus-visible {
+  z-index: 5;
+  translate: 0 -10px;
+  rotate: 0deg;
+  scale: 1.08;
+}
+.ss-env:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 4px;
+}
+.ss-env.is-read .sv-back {
+  filter: saturate(0.7) brightness(1.05);
+}
+.ss-env.is-for-you {
+  z-index: 3;
+}
+.ss-env.is-for-you .sv-back {
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 0 6px var(--red),
+    var(--shadow-3);
+}
+/* the one being read is up close; !important beats the inline styles its fly-in left behind */
+.ss-env.is-away {
+  visibility: hidden !important;
+}
+.ss-more {
+  color: var(--ink);
+}
+
+/* one letter, up close */
+.ss-uw {
+  position: fixed;
+  inset: 0;
+  z-index: 5500;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.ss-uw-stage {
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  padding: 64px 16px 32px;
+}
+.ss-uw-hold {
+  position: relative;
+  width: min(440px, 100%);
+}
+.ss-uw-hold .sv-card {
+  will-change: transform;
+}
+.ss-uw-close {
+  position: absolute;
+  top: -52px;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--shadow-2);
+}
+.ss-report {
+  margin-top: 12px;
+}
+
+@media (max-width: 1180px) {
+  .ss-collect {
+    grid-template-columns: minmax(320px, 470px) 250px;
+  }
+  .ss-how {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+}
+@media (max-width: 760px) {
+  .ss-sub {
+    font-size: 15px;
+  }
+  .ss-collect {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    max-width: 470px;
+    gap: 20px;
+    margin-top: 20px;
+  }
+  .ss-side {
+    order: -1;
+  }
+  .ss-bigbox-wrap {
+    padding-top: 50px;
+  }
+  .ss-bench {
+    padding: 14px;
+  }
+  .ss-insides {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .sv-front {
+    padding: 16px 16px 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ss-bigbox.is-tremble .pr-lid {
+    animation: none;
+  }
+  .ss-env {
+    transition: none;
+  }
+}

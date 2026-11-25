@@ -5,10 +5,12 @@
  */
 import { pagesEn } from './pages/en'
 import { gamesEn } from './games/en'
+import { santaEn } from './santa/en'
 
 export const en = {
   ...pagesEn,
   ...gamesEn,
+  ...santaEn,
   'common.close': 'Close',
   'app.loading': 'Loading',
   'app.settings': 'Settings',

@@ -1,10 +1,12 @@
 import type { Dict } from './en'
 import { pagesEs } from './pages/es'
 import { gamesEs } from './games/es'
+import { santaEs } from './santa/es'
 
 export const es: Dict = {
   ...pagesEs,
   ...gamesEs,
+  ...santaEs,
   'common.close': 'Cerrar',
   'app.loading': 'Cargando',
   'app.settings': 'Ajustes',

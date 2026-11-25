@@ -52,6 +52,11 @@ import {
   Stamp,
   Star,
   Sun,
+  TreePine,
+  ImagePlus,
+  MailOpen,
+  Search,
+  PackageOpen,
   Ticket,
   Umbrella,
   Volume1,
@@ -151,6 +156,11 @@ const SHAPES = {
   stamp: Stamp,
   phone: Phone,
   list: ScrollText,
+  tree: TreePine,
+  unwrapped: PackageOpen,
+  picture: ImagePlus,
+  opened: MailOpen,
+  search: Search,
 } satisfies Record<string, LucideIcon>
 
 export type IconName = keyof typeof SHAPES

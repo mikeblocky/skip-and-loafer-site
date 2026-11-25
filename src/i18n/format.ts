@@ -36,6 +36,13 @@ const SERVER: Record<string, Key> = {
   'type a name': 'err.name',
   'that score looks off': 'err.score',
   'slow down a little': 'err.slow',
+  'that’s plenty of gifts from you': 'santa.err.limit',
+  'the box is closed for now': 'santa.err.closed',
+  'no peeking until it bursts': 'santa.err.peek',
+  'that file isn’t a picture we can use': 'santa.err.notPic',
+  'that picture is too big': 'santa.err.picBig',
+  'that picture didn’t make it, try adding it again': 'santa.err.picLost',
+  'pictures aren’t switched on yet': 'santa.err.picsOff',
 }
 
 export function serverText(msg: string, t: (k: Key, vars?: Record<string, string | number>) => string) {

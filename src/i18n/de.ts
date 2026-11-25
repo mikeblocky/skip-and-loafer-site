@@ -1,10 +1,12 @@
 import type { Dict } from './en'
 import { pagesDe } from './pages/de'
 import { gamesDe } from './games/de'
+import { santaDe } from './santa/de'
 
 export const de: Dict = {
   ...pagesDe,
   ...gamesDe,
+  ...santaDe,
   'common.close': 'Schließen',
   'app.loading': 'Wird geladen',
   'app.settings': 'Einstellungen',

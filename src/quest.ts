@@ -20,7 +20,8 @@
 
 import type { Mode } from './components/Stage'
 
-export type Page = Mode
+/** the quest's pages: the five that are there all year (not the seasonal Secret Santa tab) */
+export type Page = Exclude<Mode, 'santa'>
 export const PAGES: Page[] = ['countdown', 'volumes', 'birthdays', 'anime', 'message']
 
 /** which volume hides the ticket gate inside its cover (index into VOLUMES): where it all began */

@@ -5,6 +5,7 @@ import { Icon, type IconName } from '../../icons'
 import { sfx } from '../../sfx'
 import { reducedMotion, useSettings } from '../../settings'
 import { questMusic, type MotifName } from '../../questMusic'
+import type { Mode } from '../Stage'
 import { DIGS, LETTERS, PAGES, RIDDLES, TORII_VOLUME, WISHES, past, onQuestHint, buryGifts, liveTicket, normCode, onOpenGate, quest, type Gift, type Page } from '../../quest'
 import { Dialogue } from './Dialogue'
 import { ARRIVE, BLESS, BOX, BOX_AFTER, CALL, CLOCK, CONFESS, HAT_TOO, LETTER, MENDED, PIECES, RIDDLE_CHAPTER, SEAL, SET, SET_AFTER, THAW, UENO, WALK, WHEEL, type Scene } from './story'
@@ -653,12 +654,12 @@ function shiver() {
  * through, until the key is found.
  */
 export function Quest({
-  view,
+  view: at,
   ready,
   onSink,
   onRise,
 }: {
-  view: Page
+  view: Mode
   ready: boolean
   /** close the volume, put the page away and play the intro backwards; resolves once it's all gone */
   onSink: () => Promise<void>
@@ -666,6 +667,8 @@ export function Quest({
   onRise: () => void
 }) {
   const q = useQuest()
+  // nothing of the quest is hidden on the seasonal Secret Santa tab
+  const view: Page | null = at === 'santa' ? null : at
   const [phase, setPhase] = useState<Phase>('idle')
   const [scene, setScene] = useState<{ s: Scene; n: number } | null>(null)
   const queue = useRef<{ scenes: Scene[]; then: () => void }>({ scenes: [], then: () => {} })
@@ -907,7 +910,7 @@ export function Quest({
   }
 
   const playing = ['scraps', 'mend', 'riddles', 'dig'].includes(q.part1) && ready && (phase === 'idle' || phase === 'list' || phase === 'mend')
-  const scrapHere = q.part1 === 'scraps' && phase === 'idle' && ready && !q.scraps.includes(view)
+  const scrapHere = !!view && q.part1 === 'scraps' && phase === 'idle' && ready && !q.scraps.includes(view)
   const drifts = q.part1 === 'dig' && phase === 'idle' && ready ? q.gifts.map((g, i) => ({ g, i })).filter(({ g }) => g.page === view && !g.found) : []
 
   return (
@@ -937,7 +940,7 @@ export function Quest({
       )}
       {phase === 'key' && <Blessing onClose={() => go('idle')} />}
 
-      {scrapHere && <Scrap key={view} onCatch={() => caught(view)} />}
+      {scrapHere && view && <Scrap key={view} onCatch={() => caught(view)} />}
       {drifts.map(({ g, i }) => (
         <Mound key={`${view}-${i}`} gift={g} index={i} onFound={dug} />
       ))}

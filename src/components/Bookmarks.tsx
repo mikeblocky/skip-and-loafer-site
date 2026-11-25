@@ -3,8 +3,9 @@ import { gsap } from '../gsap'
 import { C } from '../data'
 import { Icon, type IconName } from '../icons'
 import { useT, type Key } from '../i18n'
+import { useSeason } from './santa/season'
 
-export type NavId = 'countdown' | 'volumes' | 'birthdays' | 'anime' | 'message' | 'replay'
+export type NavId = 'countdown' | 'volumes' | 'birthdays' | 'anime' | 'message' | 'santa' | 'replay'
 
 const ITEMS: { id: NavId; label: string; color: string; icon: IconName; ink?: boolean; tilt: number }[] = [
   { id: 'countdown', label: 'Countdown', color: C.pink, icon: 'clock', tilt: -4 },
@@ -12,6 +13,8 @@ const ITEMS: { id: NavId; label: string; color: string; icon: IconName; ink?: bo
   { id: 'birthdays', label: 'Birthdays', color: C.green, icon: 'bow', tilt: 2 },
   { id: 'anime', label: 'Anime', color: C.orange, icon: 'film', tilt: -3 },
   { id: 'message', label: 'Message', color: C.red, icon: 'envelope', tilt: 3 },
+  // only there while the Secret Santa season is on (see src/santa.ts)
+  { id: 'santa', label: 'Secret Santa', color: C.teal, icon: 'tree', tilt: -3 },
   { id: 'replay', label: 'Replay', color: C.violet, icon: 'replay', tilt: -2 },
 ]
 
@@ -77,9 +80,11 @@ function Mark({
 
 export function Bookmarks({ view, onSelect }: { view: NavId; onSelect: (id: NavId) => void }) {
   const { t } = useT()
+  const season = useSeason()
+  const items = ITEMS.filter((it) => it.id !== 'santa' || season)
   return (
-    <nav className="bookmarks" aria-label={t('nav.sections')}>
-      {ITEMS.map((it) => (
+    <nav className="bookmarks" aria-label={t('nav.sections')} style={{ '--n': items.length } as CSSProperties}>
+      {items.map((it) => (
         <Mark key={it.id} item={it} active={view === it.id} onSelect={onSelect} />
       ))}
     </nav>

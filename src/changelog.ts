@@ -39,11 +39,28 @@ export interface Part {
 
 export const UPDATES: Update[] = [
   {
+    id: 'santa-box',
+    at: '2026-11-26T21:00:00+07:00',
+    icon: 'tree',
+    color: C.teal,
+    title: 'A Secret Santa box',
+    intro:
+      'There’s a new tab for the holidays. Write a letter, drop it in the big box, and on the 24th it opens up and everyone gets to read everyone’s letters. Until then it stays sealed, so it’ll be a surprise for all of us.',
+    items: [
+      'You can tuck a little something in with your letter, like hot coffee, an onigiri or the first snow.',
+      'Pictures and GIFs work too. They’re made smaller on your device before sending, so they load quickly, and your photo’s location info isn’t included.',
+      'If you’re writing to someone in particular, add their name. Only someone who types that name will find it.',
+      'You can take a letter back out any time until the 23rd.',
+      'From the 24th to the 31st, open the box and tap any letter to flip it over and read it.',
+      'The tab goes away after New Year’s Eve and comes back next winter.',
+    ],
+  },
+  {
     id: 'secret-santa',
     at: '2026-11-25T21:00:00+07:00',
     icon: 'snow',
     color: C.sky,
-    title: 'Secret Santa',
+    title: 'Secret Santa (Part 1)',
     intro:
       'Somebody left a ticket lying around on the site. Nobody knows who it’s from yet, but it looks like a Secret Santa is starting, in parts, all through December.',
     items: [

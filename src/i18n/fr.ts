@@ -1,11 +1,13 @@
 import type { Dict } from './en'
 import { pagesFr } from './pages/fr'
 import { gamesFr } from './games/fr'
+import { santaFr } from './santa/fr'
 
 // French puts a thin no-break space before ! ? : ; — written here as
 export const fr: Dict = {
   ...pagesFr,
   ...gamesFr,
+  ...santaFr,
   'common.close': 'Fermer',
   'app.loading': 'Chargement',
   'app.settings': 'Réglages',

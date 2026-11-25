@@ -11,7 +11,11 @@ function devApi(env: Record<string, string>): Plugin {
     configureServer(server) {
       const proc = (globalThis as unknown as { process: { env: Record<string, string | undefined> } }).process
       if (env.REDIS_URL) proc.env.REDIS_URL = env.REDIS_URL
-      for (const name of ['leaderboard', 'messages']) {
+      // Secret Santa pictures (Vercel Blob); without it the dev server keeps them in memory
+      if (env.BLOB_READ_WRITE_TOKEN) proc.env.BLOB_READ_WRITE_TOKEN = env.BLOB_READ_WRITE_TOKEN
+      // tells api/santa.ts it's running locally: a separate gift box, and dates can be previewed
+      proc.env.SL_DEV_API = '1'
+      for (const name of ['leaderboard', 'messages', 'santa']) {
         server.middlewares.use(`/api/${name}`, async (req, res) => {
           // a broken or failing function answers with an error; it must never take the dev server down
           try {

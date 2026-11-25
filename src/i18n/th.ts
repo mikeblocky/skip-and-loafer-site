@@ -1,10 +1,12 @@
 import type { Dict } from './en'
 import { pagesTh } from './pages/th'
 import { gamesTh } from './games/th'
+import { santaTh } from './santa/th'
 
 export const th: Dict = {
   ...pagesTh,
   ...gamesTh,
+  ...santaTh,
   'common.close': 'ปิด',
   'app.loading': 'กำลังโหลด',
   'app.settings': 'การตั้งค่า',

@@ -1,10 +1,12 @@
 import type { Dict } from './en'
 import { pagesId } from './pages/id'
 import { gamesId } from './games/id'
+import { santaId } from './santa/id'
 
 export const id: Dict = {
   ...pagesId,
   ...gamesId,
+  ...santaId,
   'common.close': 'Tutup',
   'app.loading': 'Memuat',
   'app.settings': 'Pengaturan',

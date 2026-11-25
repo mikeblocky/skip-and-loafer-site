@@ -1,10 +1,12 @@
 import type { Dict } from './en'
 import { pagesPtBR } from './pages/pt-BR'
 import { gamesPtBR } from './games/pt-BR'
+import { santaPtBR } from './santa/pt-BR'
 
 export const ptBR: Dict = {
   ...pagesPtBR,
   ...gamesPtBR,
+  ...santaPtBR,
   'common.close': 'Fechar',
   'app.loading': 'Carregando',
   'app.settings': 'Configurações',

@@ -11,7 +11,7 @@ import { ringAroundHeaders, type Item } from './stage/ring'
 import { quest, questStarted } from '../quest'
 import { SantaHat } from './quest/SantaHat'
 
-export type Mode = 'countdown' | 'volumes' | 'birthdays' | 'anime' | 'message'
+export type Mode = 'countdown' | 'volumes' | 'birthdays' | 'anime' | 'message' | 'santa'
 
 /** Which scattered sticker is the gacha capsule. Tapping it three times in a row opens the gacha. */
 const CAPSULE = 3

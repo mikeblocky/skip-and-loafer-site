@@ -1,10 +1,12 @@
 import type { Dict } from './en'
 import { pagesZhHant } from './pages/zh-Hant'
 import { gamesZhHant } from './games/zh-Hant'
+import { santaZhHant } from './santa/zh-Hant'
 
 export const zhHant: Dict = {
   ...pagesZhHant,
   ...gamesZhHant,
+  ...santaZhHant,
   'common.close': '關閉',
   'app.loading': '載入中',
   'app.settings': '設定',

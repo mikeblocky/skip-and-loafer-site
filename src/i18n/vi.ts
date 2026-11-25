@@ -1,10 +1,12 @@
 import type { Dict } from './en'
 import { pagesVi } from './pages/vi'
 import { gamesVi } from './games/vi'
+import { santaVi } from './santa/vi'
 
 export const vi: Dict = {
   ...pagesVi,
   ...gamesVi,
+  ...santaVi,
   'common.close': 'Đóng',
   'app.loading': 'Đang tải',
   'app.settings': 'Cài đặt',

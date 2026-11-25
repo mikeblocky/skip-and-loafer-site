@@ -1,10 +1,12 @@
 import type { Dict } from './en'
 import { pagesJa } from './pages/ja'
 import { gamesJa } from './games/ja'
+import { santaJa } from './santa/ja'
 
 export const ja: Dict = {
   ...pagesJa,
   ...gamesJa,
+  ...santaJa,
   'common.close': '閉じる',
   'app.loading': '読み込み中',
   'app.settings': '設定',
