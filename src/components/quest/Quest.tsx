@@ -4,7 +4,7 @@ import { C } from '../../data'
 import { Icon, type IconName } from '../../icons'
 import { sfx } from '../../sfx'
 import { reducedMotion, useSettings } from '../../settings'
-import { questMusic } from '../../questMusic'
+import { questMusic, type MotifName } from '../../questMusic'
 import { DIGS, LETTERS, PAGES, RIDDLES, TORII_VOLUME, WISHES, past, onQuestHint, buryGifts, liveTicket, normCode, onOpenGate, quest, type Gift, type Page } from '../../quest'
 import { Dialogue } from './Dialogue'
 import { ARRIVE, BLESS, BOX, BOX_AFTER, CALL, CLOCK, CONFESS, HAT_TOO, LETTER, MENDED, PIECES, RIDDLE_CHAPTER, SEAL, SET, SET_AFTER, THAW, UENO, WALK, WHEEL, type Scene } from './story'
@@ -765,6 +765,23 @@ export function Quest({
     questMusic.setLevel(target)
   }, [on, ready, phase, target])
   useEffect(() => () => questMusic.stop(), [])
+  // each scene brings in the leitmotif that fits it: Shima's, Mitsumi's, ???'s, the park's lights
+  useEffect(() => {
+    if (!s) return
+    const m: MotifName | undefined =
+      s === CALL || s === SET_AFTER
+        ? 'shima'
+        : s === ARRIVE || s === PIECES || s === WHEEL || s === HAT_TOO
+          ? 'mitsumi'
+          : s === LETTER || s === MENDED || s === BOX || s === SEAL || s === SET
+            ? 'mystery'
+            : s === UENO
+              ? 'lights'
+              : s === THAW || s === BLESS || s === WALK || s === CLOCK
+                ? 'main'
+                : undefined
+    if (m) questMusic.cue(m)
+  }, [s])
 
   const pass = () => {
     sfx.stamp()
