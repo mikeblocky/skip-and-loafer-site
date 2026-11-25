@@ -8,9 +8,10 @@
  * every other pass. The pace never changes; what grows is the band, layer by layer:
  *   0  sleigh bells, a pizzicato bass on the beat, a warm pad, the tune on celesta
  *   1  a glockenspiel answering the tune, a soft kick, a shaker
- *   2  upbeat: brushes and a handclap on two and four, a bouncing octave bass, offbeat strums
- *   3  more upbeat: a light kick on every beat, tambourine on the offbeats, a marimba running
- *      up and down the chords, and bell runs at the end of each phrase
+ *   2  a relaxed groove: brushes and a soft clap on two and four, a bass bouncing root to
+ *      octave on the beats, offbeat strums
+ *   3  brighter, not busier: a tambourine with the claps, a marimba answering once a bar, and
+ *      bell runs at the end of each phrase (nothing ever runs faster than the eighths)
  *
  * It rests while something else has the music: one of the hidden games, or an OP/ED video.
  */
@@ -93,9 +94,9 @@ const tambourine = (d: number, v = 1) => {
 }
 const bass = (m: number, d: number, len: number, v = 1) => V.tone({ f: hz(m - 12), dur: len, type: 'triangle', g: 0.055 * v, a: 0.006, delay: d })
 /** a handclap: a few tiny bursts smeared together */
-const clap = (d: number) => {
-  for (let i = 0; i < 3; i++) V.noise({ dur: 0.012, f: 1500, q: 1.2, g: 0.014, a: 0.001, delay: d + i * 0.009 })
-  V.noise({ dur: 0.09, f: 1300, q: 1, g: 0.02, a: 0.002, delay: d + 0.027 })
+const clap = (d: number, v = 1) => {
+  for (let i = 0; i < 3; i++) V.noise({ dur: 0.012, f: 1500, q: 1.2, g: 0.014 * v, a: 0.001, delay: d + i * 0.009 })
+  V.noise({ dur: 0.09, f: 1300, q: 1, g: 0.02 * v, a: 0.002, delay: d + 0.027 })
 }
 /** marimba: a short, woody, bright note */
 const marimba = (m: number, d: number, g = 1) => {
@@ -162,24 +163,22 @@ function play(t: number) {
     if (step % 2 === 0) shaker(d, step % 4 === 2 ? 0.9 : 0.45)
   }
 
-  // ── 2: it gets a groove. Brushes and a handclap on two and four, a bouncing octave bass
-  //       (root, octave, root, octave on the eighths), and the offbeat strum
+  // ── 2: a relaxed groove. Brushes and a soft clap on two and four, a bass that bounces
+  //       between the root and its octave on the beats (never faster), and the offbeat strum
   if (level >= 2) {
     if (step === 4 || step === 12) {
       brush(d)
-      clap(d)
+      clap(d, 0.6)
     }
-    if (step % 2 === 0) bass(c.root + (step % 4 === 2 ? 24 : 12), d, s16 * 1.6, step % 4 === 0 ? 1 : 0.7)
+    if (step % 4 === 0) bass(c.root + (step % 8 === 4 ? 24 : 12), d, s16 * 3.2)
     if (step === 2 || step === 6 || step === 10 || step === 14) strum(c.tones, d)
   }
 
-  // ── 3: properly upbeat. A light kick on every beat, the tambourine on the offbeats, a marimba
-  //       running up and down the chord in sixteenths, and a bell run to close each phrase
+  // ── 3: brighter, not faster. A tambourine with the claps, a marimba answering the tune once
+  //       a bar, and a bell run to close each phrase
   if (level >= 3) {
-    if (step % 4 === 0) kick(d)
-    if (step % 4 === 2) tambourine(d, 0.8)
-    const arp = [...c.tones, c.tones[1] + 12, c.tones[0] + 12, c.tones[2]]
-    marimba(arp[step % arp.length] + 12, d, step % 4 === 0 ? 1 : 0.65)
+    if (step === 4 || step === 12) tambourine(d, 0.7)
+    if (step === 14) marimba(c.tones[2] + 12, d, 0.8)
     if ((bar === 3 || bar === 7) && step >= 8 && step % 2 === 0) glock([79, 81, 83, 86][(step - 8) / 2], d, 0.7)
   }
 }

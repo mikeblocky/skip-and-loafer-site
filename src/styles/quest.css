@@ -1396,3 +1396,92 @@
   flex: none;
   margin-top: 2px;
 }
+
+/* ── on a phone: the route sits in the bottom corner with the presents above it, the chatter
+   goes up under the tabs, and nothing the quest asks you to tap can end up behind them ── */
+@media (max-width: 760px) {
+  .qh {
+    left: 12px;
+    bottom: 14px;
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+    /* clear of the what's new and settings buttons in the other corner */
+    max-width: calc(100vw - 130px);
+  }
+  .qh-card,
+  .qh-card:not(.is-open),
+  .qh-card.is-open {
+    width: min(230px, calc(100vw - 130px));
+  }
+  .qh-card.is-open {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  .qh-head {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  .qr {
+    margin: 0 10px 4px;
+  }
+  .qr-dot {
+    width: 22px;
+    height: 22px;
+  }
+  .qr li + li::before {
+    top: 10px;
+  }
+  .qh-card .qh-now {
+    margin: 0 12px 8px;
+    font-size: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .qh-card.is-open .qh-now {
+    display: block;
+  }
+  .qh-sack {
+    gap: 6px;
+  }
+  .qp {
+    padding: 7px 7px 5px;
+  }
+  .qp-hint {
+    white-space: normal;
+    width: max-content;
+    max-width: 200px;
+  }
+  /* the chatter: up under the bookmarks, out of the route's way */
+  .qk {
+    top: 64px;
+    bottom: auto;
+  }
+  /* the flying scraps: a bigger target for a thumb */
+  .qsc {
+    width: 72px;
+    height: 54px;
+  }
+  /* the list starts below its close button */
+  .ql {
+    padding-top: 72px;
+    align-items: start;
+  }
+}
+@media (max-width: 760px) {
+  /* taller on a phone, so they fill the scene; they overlap a little, so the speaker steps in front */
+  .qd-char {
+    height: min(64vh, 560px);
+  }
+  .qd-char.is-left {
+    left: -6vw;
+  }
+  .qd-char.is-right {
+    right: -6vw;
+  }
+  .qd-char.is-talking {
+    z-index: 1;
+  }
+}

@@ -131,6 +131,14 @@ function Gate({ onClose, onPass }: { onClose: () => void; onPass: () => void }) 
   )
 }
 
+/** a phone-sized screen, where the route and the presents take up the bottom of the page */
+const narrow = () => window.innerWidth < 760
+/**
+ * Where a drift sits, top to bottom. Drifts are buried between 34% and 84% of the way down; on a
+ * phone that's squeezed into 18%–50%, above the route in the corner, so none end up hidden.
+ */
+const driftY = (y: number) => (narrow() ? 0.18 + ((y - 0.34) / 0.5) * 0.32 : y)
+
 // ── task 1: catch the torn pieces of the list ────────────────────────────
 
 /**
@@ -154,7 +162,8 @@ function Scrap({ onCatch }: { onCatch: () => void }) {
       const vw = window.innerWidth
       const vh = window.innerHeight
       const ltr = Math.random() < 0.5
-      const y = vh * (0.25 + Math.random() * 0.45)
+      // on a phone the route sits along the bottom: keep to the upper half so it never flies behind it
+      const y = vh * (narrow() ? 0.2 + Math.random() * 0.3 : 0.25 + Math.random() * 0.45)
       if (reducedMotion()) {
         // no blowing about: it just lies there near an edge until someone picks it up
         gsap.set(el, { x: ltr ? vw * 0.08 : vw * 0.86, y, rotation: -8, autoAlpha: 1 })
@@ -408,7 +417,7 @@ function Mound({ gift, index, onFound }: { gift: Gift; index: number; onFound: (
     if (left <= 0) onFound(index)
   }
   return (
-    <button ref={ref} className="qm" style={{ left: `${gift.x * 100}vw`, top: `${gift.y * 100}vh` }} onClick={dig} aria-label="A drift of snow" lang="en">
+    <button ref={ref} className="qm" style={{ left: `${gift.x * 100}vw`, top: `${driftY(gift.y) * 100}vh` }} onClick={dig} aria-label="A drift of snow" lang="en">
       <Icon name="cloud" color="#B9CCE0" size={46} style={{ fill: '#fff', fillOpacity: 1 }} />
     </button>
   )
