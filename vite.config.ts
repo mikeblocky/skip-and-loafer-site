@@ -11,8 +11,8 @@ function devApi(env: Record<string, string>): Plugin {
     configureServer(server) {
       const proc = (globalThis as unknown as { process: { env: Record<string, string | undefined> } }).process
       if (env.REDIS_URL) proc.env.REDIS_URL = env.REDIS_URL
-      // Secret Santa pictures (Vercel Blob); without it the dev server keeps them in memory
-      if (env.BLOB_READ_WRITE_TOKEN) proc.env.BLOB_READ_WRITE_TOKEN = env.BLOB_READ_WRITE_TOKEN
+      // Secret Santa pictures (Vercel Blob, from `vercel env pull`); without them the dev server keeps them in memory
+      for (const k of ['BLOB_READ_WRITE_TOKEN', 'BLOB_STORE_ID', 'VERCEL_OIDC_TOKEN']) if (env[k]) proc.env[k] = env[k]
       // tells api/santa.ts it's running locally: a separate gift box, and dates can be previewed
       proc.env.SL_DEV_API = '1'
       for (const name of ['leaderboard', 'messages', 'santa']) {

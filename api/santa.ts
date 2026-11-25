@@ -8,6 +8,7 @@
  *   GET  /api/santa?mine=<id,id>             → { have: [id…] }   which of yours are still in the box
  *   GET  /api/santa?page=<n>&me=<client>     → { gifts, total, more }   the shared pile, once it has burst
  *   GET  /api/santa?for=<name>&me=<client>   → { gifts }   letters written to that name, once it has burst
+ *   GET  /api/santa?img=<path>               → the picture itself, from a private Blob store, once it has burst
  *   POST /api/santa?upload  (raw picture bytes, header x-santa-me)  → { pic }   a picture for a letter
  *   POST /api/santa {action:'send', text, from, to, wrap, inside, pic?: {id, w, h}, me}   → { id, total }
  *   POST /api/santa {action:'back', id, me}                          → { ok, total }   take yours out again
@@ -19,11 +20,11 @@
  * next season's first letter goes in.
  *
  * On the dev server (SL_DEV_API is set by vite.config.ts) letters live under a separate prefix,
- * pictures stay in memory unless BLOB_READ_WRITE_TOKEN is set, and the `x-santa-force:
+ * pictures stay in memory unless a Blob store is reachable, and the `x-santa-force:
  * collect|open` header lets the page preview either half of the season on any date.
  */
 import { createClient } from 'redis'
-import { del, list, put } from '@vercel/blob'
+import { del, get, list, put } from '@vercel/blob'
 import { cleanSigner, cleanText, safeColor } from '../src/letterRules.js'
 import { cleanTo, forgetAt, GIFTS_PER_PERSON, nameKey, PIC_MAX_BYTES, safeInside, serverSeason, sniffImage, tagProblem } from '../src/santa.js'
 
@@ -47,6 +48,8 @@ interface Res {
 
 interface Pic {
   url: string
+  /** where it is in the Blob store, for deleting it */
+  path?: string
   w: number
   h: number
 }
@@ -63,7 +66,13 @@ interface Gift {
 }
 
 const DEV = !!process.env.SL_DEV_API
-const BLOB = !!process.env.BLOB_READ_WRITE_TOKEN
+/**
+ * Vercel Blob is on when the project has a store connected: either the older read-write token,
+ * or a store id, in which case the package signs in with Vercel's own OIDC identity (it gets
+ * that on Vercel; on a dev server only after `vercel env pull`).
+ */
+const BLOB =
+  !!process.env.BLOB_READ_WRITE_TOKEN || (!!process.env.BLOB_STORE_ID && (!DEV || !!process.env.VERCEL_OIDC_TOKEN))
 const NS = DEV ? 'santa-dev' : 'santa'
 const KEY = {
   data: (y: number) => `${NS}:${y}:data`, // hash: id → letter JSON
@@ -178,22 +187,61 @@ function seasonFor(req: Req) {
 const devPics = new Map<string, { type: string; bytes: Uint8Array }>()
 const EXT: Record<string, string> = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif' }
 
-async function storePic(y: number, bytes: Uint8Array, type: string): Promise<string> {
+const YEAR = 60 * 60 * 24 * 365
+const PIC_PATH = /^santa\/\d{4}\/[\w.-]+$/
+/**
+ * A store is public or private, and a picture has to be written the same way. Private is tried
+ * first when the store came with an id (that's how Vercel sets up new stores); whichever works
+ * is remembered while the function stays warm.
+ */
+let access: 'public' | 'private' = process.env.BLOB_STORE_ID ? 'private' : 'public'
+
+async function storePic(y: number, bytes: Uint8Array, type: string): Promise<{ url: string; path?: string }> {
   const name = `santa/${y}/${newId()}.${EXT[type]}`
   if (BLOB) {
-    const b = await put(name, Buffer.from(bytes), { access: 'public', contentType: type, addRandomSuffix: true, cacheControlMaxAge: 60 * 60 * 24 * 365 })
-    return b.url
+    const write = (a: typeof access) => put(name, Buffer.from(bytes), { access: a, contentType: type, addRandomSuffix: true, cacheControlMaxAge: YEAR })
+    let b
+    try {
+      b = await write(access)
+    } catch {
+      access = access === 'private' ? 'public' : 'private'
+      b = await write(access)
+    }
+    // a private picture has no public link: it's handed out by this function, and only after the burst
+    return access === 'private' ? { url: `/api/santa?img=${encodeURIComponent(b.pathname)}`, path: b.pathname } : { url: b.url, path: b.pathname }
   }
   const id = newId()
   devPics.set(id, { type, bytes })
-  return `/api/santa?pic=${id}`
+  return { url: `/api/santa?pic=${id}` }
 }
 
 const safePicUrl = (u: unknown) =>
-  typeof u === 'string' && (/^https:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\/santa\/\d{4}\/[\w.-]+$/i.test(u) || (DEV && /^\/api\/santa\?pic=[a-z0-9]+$/i.test(u))) ? u : null
+  typeof u === 'string' &&
+  (/^https:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\/santa\/\d{4}\/[\w.-]+$/i.test(u) ||
+    /^\/api\/santa\?img=santa%2F\d{4}%2F[\w.-]+$/i.test(u) ||
+    (DEV && /^\/api\/santa\?pic=[a-z0-9]+$/i.test(u)))
+    ? u
+    : null
 
 async function dropPic(p?: Pic | null) {
-  if (BLOB && p?.url.startsWith('https://')) await del(p.url).catch(() => {})
+  if (!BLOB || !p) return
+  const target = p.path && PIC_PATH.test(p.path) ? p.path : p.url.startsWith('https://') ? p.url : null
+  if (target) await del(target).catch(() => {})
+}
+
+/** a private picture, streamed out with a year of caching so Vercel's CDN serves it after the first look */
+async function sendPic(res: Res, path: string) {
+  const found = await get(path, { access: 'private' }).catch(() => null)
+  if (!found || found.statusCode !== 200) return send(res, 404, { error: 'not found' })
+  const bytes = new Uint8Array(await new Response(found.stream).arrayBuffer())
+  const type = sniffImage(bytes)
+  if (!type) return send(res, 404, { error: 'not found' })
+  res.statusCode = 200
+  res.setHeader('Content-Type', type)
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.setHeader('Content-Security-Policy', "default-src 'none'")
+  res.setHeader('Cache-Control', `public, max-age=${YEAR}, s-maxage=${YEAR}, immutable`)
+  return res.end(bytes)
 }
 
 /** last season's pictures, deleted the first time anything is written this season */
@@ -204,7 +252,7 @@ async function forgetLastSeason(r: Client, y: number) {
     let cursor: string | undefined
     do {
       const page = await list({ prefix: `santa/${y - 1}/`, cursor, limit: 1000 })
-      if (page.blobs.length) await del(page.blobs.map((b) => b.url))
+      if (page.blobs.length) await del(page.blobs.map((b) => b.pathname))
       cursor = page.hasMore ? page.cursor : undefined
     } while (cursor)
   } catch {
@@ -286,6 +334,13 @@ export default async function handler(req: Req, res: Res) {
     const total = () => r.zCard(KEY.order(y))
 
     if (req.method === 'GET') {
+      if (q.has('img')) {
+        // no peeking: pictures only come out once the box has burst
+        if (!season.canOpen) return send(res, 403, { error: 'no peeking until it bursts' })
+        const path = q.get('img') ?? ''
+        if (!BLOB || !PIC_PATH.test(path) || !path.startsWith(`santa/${y}/`)) return send(res, 404, { error: 'not found' })
+        return sendPic(res, path)
+      }
       if (q.has('count')) return send(res, 200, { total: await total(), canSend: season.canSend, canOpen: season.canOpen, year: y, pics: BLOB || DEV })
       if (q.has('mine')) {
         const mine = ids(q.get('mine'), GIFTS_PER_PERSON * 2)
@@ -325,9 +380,9 @@ export default async function handler(req: Req, res: Res) {
       const type = sniffImage(bytes)
       if (!type) return send(res, 400, { error: 'that file isn’t a picture we can use' })
       await forgetLastSeason(r, y)
-      const url = await storePic(y, bytes, type)
+      const stored = await storePic(y, bytes, type)
       const id = newId()
-      await r.set(KEY.pic(y, id), JSON.stringify({ url, by: me }), { EX: PIC_WAIT })
+      await r.set(KEY.pic(y, id), JSON.stringify({ ...stored, by: me }), { EX: PIC_WAIT })
       return send(res, 200, { pic: id })
     }
 
@@ -371,11 +426,11 @@ export default async function handler(req: Req, res: Res) {
     const ask = body.pic as { id?: unknown; w?: unknown; h?: unknown } | null | undefined
     if (ask && typeof ask.id === 'string' && ID.test(ask.id)) {
       const raw = await r.get(KEY.pic(y, ask.id))
-      const held = raw ? (JSON.parse(raw) as { url: string; by: string }) : null
+      const held = raw ? (JSON.parse(raw) as { url: string; path?: string; by: string }) : null
       const w = dim(ask.w)
       const h = dim(ask.h)
       if (!held || held.by !== me || !w || !h) return send(res, 400, { error: 'that picture didn’t make it, try adding it again' })
-      pic = { url: held.url, w, h }
+      pic = { url: held.url, path: held.path, w, h }
       await r.del(KEY.pic(y, ask.id))
     }
 
