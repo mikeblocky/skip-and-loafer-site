@@ -1,7 +1,12 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { flushSync } from 'react-dom'
+import { gsap } from '../gsap'
 import { Icon } from '../icons'
 import { sfx } from '../sfx'
 import type { Cue } from '../lyrics'
+import { reducedMotion, settings, useSettings, type Settings } from '../settings'
+import { LANGS, langName, useT } from '../i18n'
+import { lyricLangs, lyricsIn, type Song } from '../i18n/lyrics'
 
 const fmt = (t: number) => {
   if (!isFinite(t)) return '0:00'
@@ -12,6 +17,17 @@ const fmt = (t: number) => {
 
 // only one clip plays at a time
 const PLAY_EVENT = 'sl-video-play'
+const SPEEDS = [0.75, 1, 1.25]
+
+/** an on/off row in the player's menu */
+function Switch({ label, on, onChange, disabled }: { label: string; on: boolean; onChange: () => void; disabled?: boolean }) {
+  return (
+    <button type="button" className="pl-switch" role="switch" aria-checked={on} disabled={disabled} onClick={onChange}>
+      <span>{label}</span>
+      <i aria-hidden="true" />
+    </button>
+  )
+}
 
 export interface PlayerProps {
   src: string
@@ -22,8 +38,10 @@ export interface PlayerProps {
   artist: string
   artistJp: string
   color: string
-  /** timed lyrics, shown Japanese over English */
+  /** timed lyrics, shown Japanese over a translation */
   subs?: Cue[]
+  /** which song the lyrics are, to find their translations (src/i18n/lyrics.ts) */
+  song?: Song
   /**
    * A hidden extra: while this word is being sung, the karaoke ball turns gold and the line
    * can be tapped, which calls onGolden.
@@ -32,33 +50,37 @@ export interface PlayerProps {
   onGolden?: () => void
 }
 
-const SUBS_KEY = 'sl-subs'
-const FURI_KEY = 'sl-furigana'
-
-/** An on/off preference remembered on this device (on unless turned off). */
-function usePref(key: string) {
-  const [on, setOn] = useState(() => {
-    try {
-      return localStorage.getItem(key) !== 'off'
-    } catch {
-      return true
-    }
-  })
+/**
+ * Lyrics and furigana are on/off settings shared with the Settings panel: flipping them here
+ * is the same as flipping them there, and it's remembered on this device.
+ */
+function usePref(key: 'lyrics' | 'furigana') {
+  const on = useSettings()[key]
   const toggle = () => {
-    const next = !on
-    setOn(next)
-    sfx.click(next ? 1.1 : 0.9)
-    try {
-      localStorage.setItem(key, next ? 'on' : 'off')
-    } catch {
-      /* private mode */
-    }
+    sfx.click(!on ? 1.1 : 0.9)
+    settings.set({ [key]: !on } as Partial<Settings>)
   }
   return [on, toggle] as const
 }
 
-/** A plain <video> with our own controls: play, scrub, time, subtitles, mute, fullscreen. */
-export function Player({ src, poster, kind, title, titleJp, artist, artistJp, color, subs, goldenWord, onGolden }: PlayerProps) {
+/**
+ * A plain <video> with our own controls: play/pause, stop, time, scrub, volume, a settings menu
+ * (lyrics, furigana, the translation line's language, speed) and fullscreen.
+ */
+export function Player({
+  src,
+  poster,
+  kind,
+  title,
+  titleJp,
+  artist,
+  artistJp,
+  color,
+  subs: rawSubs,
+  song,
+  goldenWord,
+  onGolden,
+}: PlayerProps) {
   const frame = useRef<HTMLDivElement>(null)
   const video = useRef<HTMLVideoElement>(null)
   const track = useRef<HTMLDivElement>(null)
@@ -73,8 +95,80 @@ export function Player({ src, poster, kind, title, titleJp, artist, artistJp, co
   // how many characters of the current line have been sung (drives the karaoke highlight)
   const [sung, setSung] = useState(0)
   const lastCue = useRef(-1)
-  const [subsOn, toggleSubs] = usePref(SUBS_KEY)
-  const [furiOn, toggleFuri] = usePref(FURI_KEY)
+  const { t: tr, lang, locale } = useT()
+  const [subsOn, toggleSubs] = usePref('lyrics')
+  const [furiOn, toggleFuri] = usePref('furigana')
+  // the karaoke volume (times the master volume) and the translation line, from settings
+  const { master, karaoke, lyricsLang } = useSettings()
+  useEffect(() => {
+    if (video.current) video.current.volume = Math.max(0, Math.min(1, master * karaoke))
+  }, [master, karaoke])
+  // kept steady between renders: the karaoke effect below watches the cues
+  const subs = useMemo(() => (rawSubs && song ? lyricsIn(rawSubs, song, lyricsLang, lang) : rawSubs), [rawSubs, song, lyricsLang, lang])
+  const [rate, setRate] = useState(1)
+  useEffect(() => {
+    if (video.current) video.current.playbackRate = rate
+  }, [rate])
+  const [full, setFull] = useState(false)
+  useEffect(() => {
+    const on = () => setFull(!!frame.current && document.fullscreenElement === frame.current)
+    document.addEventListener('fullscreenchange', on)
+    return () => document.removeEventListener('fullscreenchange', on)
+  }, [])
+
+  // the settings menu: closes on a tap elsewhere or Escape
+  const [menu, setMenu] = useState(false)
+  // the menu's two pages: the main list, and the translation languages
+  const [page, setPage] = useState<'main' | 'tl'>('main')
+  useEffect(() => setPage('main'), [menu])
+  const menuEl = useRef<HTMLDivElement>(null)
+  const gear = useRef<HTMLButtonElement>(null)
+  /** the menu shrinks back toward the gear before it goes */
+  const closeMenu = () => {
+    const el = menuEl.current
+    if (!el || reducedMotion()) return setMenu(false)
+    gsap.to(el, { autoAlpha: 0, scale: 0.94, y: 8, duration: 0.18, ease: 'power2.in', overwrite: true, onComplete: () => setMenu(false) })
+  }
+  /** turns to another page of the menu: it slides in from the side you're heading, and the height eases */
+  const goPage = (to: 'main' | 'tl', dir: 1 | -1) => {
+    const el = menuEl.current
+    if (!el) return setPage(to)
+    const from = el.offsetHeight
+    flushSync(() => setPage(to))
+    if (reducedMotion()) return
+    gsap.fromTo(el, { height: from }, { height: el.scrollHeight, duration: 0.32, ease: 'power2.inOut', clearProps: 'height' })
+    gsap.fromTo(
+      el.firstElementChild,
+      { x: 26 * dir, autoAlpha: 0 },
+      { x: 0, autoAlpha: 1, duration: 0.32, ease: 'power2.out', clearProps: 'all' },
+    )
+  }
+  useEffect(() => {
+    if (!menu) return
+    const away = (e: PointerEvent) => {
+      const el = e.target as Node
+      if (!menuEl.current?.contains(el) && !gear.current?.contains(el)) closeMenu()
+    }
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      closeMenu()
+      gear.current?.focus()
+    }
+    window.addEventListener('pointerdown', away)
+    window.addEventListener('keydown', esc)
+    return () => {
+      window.removeEventListener('pointerdown', away)
+      window.removeEventListener('keydown', esc)
+    }
+  }, [menu])
+  const tlOptions = [
+    { v: 'auto', label: tr('pl.tlAuto', { name: langName(lang) }) },
+    ...lyricLangs(LANGS.map((l) => l.code)).map((c) => ({
+      v: c as string,
+      label: langName(c),
+    })),
+    { v: 'off', label: tr('pl.tlOff') },
+  ]
   const hasFuri = !!subs?.some((c) => c.ruby?.length)
   // controls show while you're touching the video and slip away after a moment of stillness
   const [awake, setAwake] = useState(false)
@@ -188,6 +282,40 @@ export function Player({ src, poster, kind, title, titleJp, artist, artistJp, co
     sfx.tick(1.1)
   }
 
+  /** back to the start, poster and big play button included */
+  const stop = () => {
+    const v = video.current
+    if (!v) return
+    v.pause()
+    v.currentTime = 0
+    v.load()
+    setT(0)
+    setCue(-1)
+    setSung(0)
+    lastCue.current = -1
+    setStarted(false)
+    setMenu(false)
+    sfx.click(0.9)
+  }
+
+  const level = muted ? 0 : karaoke
+  const setVolume = (x: number) => {
+    const v = video.current
+    if (v && x > 0 && v.muted) {
+      v.muted = false
+      setMuted(false)
+    }
+    settings.set({ karaoke: x })
+  }
+  const toggleMute = () => {
+    const v = video.current
+    if (!v) return
+    // muting at zero volume brings a usable volume back instead
+    if (!v.muted && karaoke === 0) return setVolume(0.6)
+    v.muted = !v.muted
+    setMuted(v.muted)
+  }
+
   const fullscreen = () => {
     const el = frame.current
     if (!el) return
@@ -200,7 +328,7 @@ export function Player({ src, poster, kind, title, titleJp, artist, artistJp, co
   return (
     <figure className={`player${playing ? ' is-playing' : ''}`} style={{ '--c': color } as CSSProperties}>
       <div
-        className={`pl-frame${awake ? ' is-awake' : ''}`}
+        className={`pl-frame${awake || menu ? ' is-awake' : ''}`}
         ref={frame}
         onPointerMove={(e) => e.pointerType === 'mouse' && wake(e)}
         onPointerDown={(e) => wake(e)}
@@ -264,7 +392,7 @@ export function Player({ src, poster, kind, title, titleJp, artist, artistJp, co
                       // kanji words sit in a <ruby> with their reading on top; each character
                       // inside still lights up on its own, so the sweep doesn't change
                       const out = []
-                      for (let j = 0; j < chars.length; ) {
+                      for (let j = 0; j < chars.length;) {
                         const r = furiOn ? c.ruby?.find(([at]) => at === j) : undefined
                         if (!r) {
                           out.push(char(j++))
@@ -290,21 +418,96 @@ export function Player({ src, poster, kind, title, titleJp, artist, artistJp, co
                       return out
                     })()}
                   </span>
-                  <span className="pl-en">{c.en}</span>
+                  {c.en && <span className="pl-en">{c.en}</span>}
                 </p>
               )
             })}
           </div>
         )}
         {!started && (
-          <button className="pl-big" onClick={toggle} aria-label={`Play ${kind.toLowerCase()}`}>
+          <button
+            className="pl-big"
+            onClick={toggle}
+            aria-label={tr('pl.playKind', {
+              kind: lang === 'en' ? kind.toLowerCase() : kind,
+            })}
+          >
             <Icon name="play" color="#fff" size={40} />
           </button>
         )}
+        {menu && (
+          <div className="pl-menu" ref={menuEl} role="dialog" aria-label={tr('pl.settings')}>
+            {page === 'tl' ? (
+              <div className="pl-page pl-menu-group" role="radiogroup" aria-label={tr('pl.translation')}>
+                <button type="button" className="pl-opt pl-back" onClick={() => goPage('main', -1)} autoFocus>
+                  <Icon name="chev" color="currentColor" size={16} />
+                  <span>{tr('pl.translation')}</span>
+                </button>
+                {tlOptions.map((o) => (
+                  <button
+                    key={o.v}
+                    type="button"
+                    role="radio"
+                    aria-checked={lyricsLang === o.v}
+                    className={`pl-opt${lyricsLang === o.v ? ' is-on' : ''}`}
+                    onClick={() => {
+                      sfx.click(1.05)
+                      settings.set({ lyricsLang: o.v })
+                      goPage('main', -1)
+                    }}
+                  >
+                    <span>{o.label}</span>
+                    {lyricsLang === o.v && <Icon name="check" color="currentColor" size={16} />}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="pl-page">
+                {subs && (
+                  <>
+                    <Switch label={tr('kar.lyrics')} on={subsOn} onChange={toggleSubs} />
+                    {hasFuri && <Switch label={tr('kar.furigana')} on={furiOn} onChange={toggleFuri} disabled={!subsOn} />}
+                    <button type="button" className="pl-opt pl-more" disabled={!subsOn} onClick={() => goPage('tl', 1)}>
+                      <span>{tr('pl.translation')}</span>
+                      {/* just the language here; the page itself spells out "site language (…)" */}
+                      <small>{lyricsLang === 'auto' ? langName(lang) : (tlOptions.find((o) => o.v === lyricsLang)?.label ?? '')}</small>
+                      <Icon name="chev" color="currentColor" size={16} />
+                    </button>
+                  </>
+                )}
+                <div className="pl-menu-group" role="radiogroup" aria-label={tr('pl.speed')}>
+                  <span className="pl-menu-title">{tr('pl.speed')}</span>
+                  <div className="pl-speeds">
+                    {SPEEDS.map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        role="radio"
+                        aria-checked={rate === r}
+                        className={`pl-speed${rate === r ? ' is-on' : ''}`}
+                        onClick={() => {
+                          sfx.click(1.05)
+                          setRate(r)
+                        }}
+                      >
+                        {r === 1 ? tr('pl.normal') : `${r.toLocaleString(locale)}×`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         <div className="pl-bar">
-          <button className="pl-btn" onClick={toggle} aria-label={playing ? 'Pause' : 'Play'}>
+          <button className="pl-btn" onClick={toggle} aria-label={tr(playing ? 'pl.pause' : 'pl.play')}>
             <Icon name={playing ? 'pause' : 'play'} color="#fff" size={20} />
           </button>
+          {started && (
+            <button className="pl-btn" onClick={stop} aria-label={tr('pl.stop')} title={tr('pl.stop')}>
+              <Icon name="stop" color="#fff" size={17} />
+            </button>
+          )}
           <span className="pl-time">
             {fmt(t)} <i>/</i> {fmt(dur)}
           </span>
@@ -312,10 +515,11 @@ export function Player({ src, poster, kind, title, titleJp, artist, artistJp, co
             className="pl-track"
             ref={track}
             role="slider"
-            aria-label="Seek"
+            aria-label={tr('pl.seek')}
             aria-valuemin={0}
             aria-valuemax={Math.round(dur)}
             aria-valuenow={Math.round(t)}
+            aria-valuetext={`${fmt(t)} / ${fmt(dur)}`}
             tabIndex={0}
             onPointerDown={onTrackDown}
             onPointerMove={(e) => scrubbing.current && seekTo(e.clientX)}
@@ -332,43 +536,39 @@ export function Player({ src, poster, kind, title, titleJp, artist, artistJp, co
             <span className="pl-fill" style={{ width: `${pct}%` }} />
             <span className="pl-knob" style={{ left: `${pct}%` }} />
           </div>
-          {subs && (
-            <button
-              className={`pl-btn pl-cc${subsOn ? ' is-on' : ''}`}
-              onClick={toggleSubs}
-              aria-pressed={subsOn}
-              aria-label={subsOn ? 'Hide lyrics' : 'Show lyrics'}
-              title={subsOn ? 'Hide lyrics' : 'Show lyrics'}
-            >
-              CC
+          <div className="pl-vol">
+            <button className="pl-btn" onClick={toggleMute} aria-label={tr(muted || karaoke === 0 ? 'pl.unmute' : 'pl.mute')}>
+              <Icon name={level === 0 ? 'mute' : level < 0.5 ? 'soundLow' : 'sound'} color="#fff" size={20} />
             </button>
-          )}
-          {hasFuri && subsOn && (
-            <button
-              className={`pl-btn pl-cc pl-furi${furiOn ? ' is-on' : ''}`}
-              onClick={toggleFuri}
-              aria-pressed={furiOn}
-              aria-label={furiOn ? 'Hide furigana' : 'Show furigana'}
-              title={furiOn ? 'Hide furigana (kanji readings)' : 'Show furigana (kanji readings)'}
-              lang="ja"
-            >
-              ふ
-            </button>
-          )}
+            <input
+              type="range"
+              className="pl-vol-range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={level}
+              onChange={(e) => setVolume(Number(e.target.value))}
+              aria-label={tr('pl.volume')}
+              aria-valuetext={`${Math.round(level * 100)}%`}
+              style={{ '--v': `${level * 100}%` } as CSSProperties}
+            />
+          </div>
           <button
-            className="pl-btn"
+            ref={gear}
+            className={`pl-btn pl-gear${menu ? ' is-on' : ''}`}
             onClick={() => {
-              const v = video.current
-              if (!v) return
-              v.muted = !v.muted
-              setMuted(v.muted)
+              sfx.click(menu ? 0.9 : 1.1)
+              if (menu) closeMenu()
+              else setMenu(true)
             }}
-            aria-label={muted ? 'Unmute' : 'Mute'}
+            aria-label={tr('pl.settings')}
+            aria-expanded={menu}
+            aria-haspopup="dialog"
           >
-            <Icon name={muted ? 'mute' : 'sound'} color="#fff" size={20} />
+            <Icon name="gear" color="#fff" size={19} />
           </button>
-          <button className="pl-btn" onClick={fullscreen} aria-label="Fullscreen">
-            <Icon name="expand" color="#fff" size={18} />
+          <button className="pl-btn" onClick={fullscreen} aria-label={tr(full ? 'pl.exitFull' : 'pl.full')}>
+            <Icon name={full ? 'shrink' : 'expand'} color="#fff" size={18} />
           </button>
         </div>
       </div>

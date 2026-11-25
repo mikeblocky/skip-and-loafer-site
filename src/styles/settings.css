@@ -1,0 +1,1395 @@
+/*
+ * Settings: the gear in the bottom-right corner, the panel it opens, and what each setting does to the
+ * page. src/settings.ts mirrors the visual settings onto <html> as data attributes.
+ */
+
+/* ---------- applied settings ---------- */
+
+/* bigger text: zoom reflows (unlike a transform), so pages stay inside the screen */
+:root[data-text='large'] :is(.content, .nt-body, .nt-entry) {
+  zoom: 1.12;
+}
+:root[data-text='larger'] :is(.content, .nt-body, .nt-entry) {
+  zoom: 1.25;
+}
+:root[data-text='large'] .st-card {
+  --st-fs: 17px;
+}
+:root[data-text='larger'] .st-card {
+  --st-fs: 19px;
+}
+
+/* other faces everywhere but the logo: Inter for plain, Atkinson Hyperlegible Next (made by the
+   Braille Institute so letters like I l 1 and O 0 never get mixed up) for easy-read. Japanese
+   falls back to the site's rounded Japanese font. Both have a weight axis, so the mixed-weight
+   headings keep their shape. Loaded on demand from src/settings.ts. */
+:root[data-font='plain'] body :where(:not(.wordmark, .wordmark *)) {
+  font-family: 'Inter Variable', var(--jp), system-ui, sans-serif !important;
+}
+:root[data-font='readable'] body :where(:not(.wordmark, .wordmark *)) {
+  font-family: 'Atkinson Hyperlegible Next Variable', var(--jp), Verdana, sans-serif !important;
+  letter-spacing: 0.01em !important;
+  word-spacing: 0.08em !important;
+}
+/* the logo keeps its own face (it would otherwise inherit the plain one from #root) */
+:root:is([data-font='plain'], [data-font='readable']) .wordmark {
+  font-family: 'Allo', ui-rounded, system-ui, sans-serif !important;
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
+}
+:root[data-font='readable'] :is(p, li, .nt-body) {
+  line-height: 1.6 !important;
+}
+
+/* letter and line spacing, for running text and labels (headings that are fitted to their
+   width keep theirs, or they'd spill out of their boxes) */
+:root[data-spacing='wide'] :is(p, li, blockquote, dd, label, legend, small, textarea, .nt-body, .pl-subs, .st-lbl) {
+  letter-spacing: 0.05em !important;
+  word-spacing: 0.14em !important;
+}
+:root[data-spacing='wider'] :is(p, li, blockquote, dd, label, legend, small, textarea, .nt-body, .pl-subs, .st-lbl) {
+  letter-spacing: 0.1em !important;
+  word-spacing: 0.26em !important;
+}
+:root[data-leading='relaxed'] :is(p, li, blockquote, dd, textarea, .nt-body) {
+  line-height: 1.75 !important;
+}
+:root[data-leading='loose'] :is(p, li, blockquote, dd, textarea, .nt-body) {
+  line-height: 2.05 !important;
+}
+
+/* links you can spot without colour */
+:root[data-links='underline'] a[href] {
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 0.2em;
+}
+
+/* calm page: the floating cast and doodles step out, so there's only the page itself */
+.stage {
+  transition:
+    opacity 0.5s ease,
+    visibility 0.5s;
+}
+:root[data-calm='on'] .stage {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* characters, doodles and rings someone chose to leave off the page (Settings › Page) */
+.stage .char,
+.stage .floaty,
+.stage .ring {
+  transition:
+    opacity 0.4s ease,
+    visibility 0.4s;
+}
+.stage .is-off,
+:root[data-rings='off'] .stage .ring {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* reading ruler: everything but a band across the screen is dimmed (see components/Ruler.tsx) */
+.ruler {
+  position: fixed;
+  inset: 0;
+  z-index: 8250;
+  pointer-events: none;
+}
+.ruler-shade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: rgb(29 27 44 / 0.42);
+}
+.ruler-top {
+  top: 0;
+  border-bottom: 2px solid var(--yellow);
+}
+.ruler-bottom {
+  bottom: 0;
+  border-top: 2px solid var(--yellow);
+}
+
+/* high contrast: the soft greys go darker and the hairlines firmer */
+:root[data-contrast='more'] {
+  --muted: #4d473b;
+  --hair: #9a917f;
+  --line: #c9dbf7;
+}
+:root[data-contrast='more'] :where(a, button, input, [tabindex]):focus-visible {
+  outline: 3px solid var(--ink) !important;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px #fff;
+}
+
+/* the system's own cursors instead of the drawn ones */
+:root[data-cursor='system'] {
+  --cur: auto;
+  --cur-pointer: pointer;
+  --cur-grab: grab;
+  --cur-grabbing: grabbing;
+}
+
+/* ---------- the gear (in the corner where the sound button used to be) ---------- */
+
+.settings-toggle {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 5000;
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--hair);
+  box-shadow: var(--shadow-1);
+  transform: scale(0);
+  transition:
+    border-color var(--t-hover),
+    box-shadow var(--t-hover) var(--soft);
+}
+.settings-toggle:hover {
+  border-color: color-mix(in oklab, var(--ink), #fff 70%);
+  box-shadow: var(--shadow-2);
+}
+.settings-toggle svg {
+  transition: rotate 0.6s var(--spring);
+}
+.settings-toggle:hover svg {
+  rotate: 60deg;
+}
+
+/* ---------- the panel ---------- */
+
+.st {
+  position: fixed;
+  inset: 0;
+  z-index: 8300;
+  display: flex;
+  padding: 24px 16px;
+  overflow: hidden;
+}
+.st-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(255 253 247 / 0.78);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  animation: fade-in 0.3s ease both;
+}
+.st-card {
+  --st-fs: 15px;
+  position: relative;
+  width: min(460px, 100%);
+  max-height: calc(100dvh - 48px);
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--hair);
+  box-shadow: var(--shadow-3);
+  color: var(--ink);
+  font-size: var(--st-fs);
+  line-height: 1.45;
+  animation: nt-in 0.5s var(--spring) both;
+}
+.st-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 16px 22px;
+  background: var(--violet);
+  color: #fff;
+}
+.st-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.st-head-btns {
+  display: flex;
+  gap: 8px;
+}
+.st-x {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.18);
+  transition: background var(--t-hover);
+}
+.st-x:hover {
+  background: rgb(255 255 255 / 0.3);
+}
+.st-x:focus-visible {
+  outline-color: #fff;
+}
+/* the same mute switch as the round one in the corner */
+.st-sound[aria-pressed='false'] {
+  background: rgb(29 27 44 / 0.25);
+}
+.st-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px 22px 10px;
+}
+.st-sec {
+  /* reaches 10px past the text on each side, so a jump highlight has room to be a rounded card */
+  position: relative;
+  margin: 0 -10px;
+  padding: 14px 10px 6px;
+  border-radius: 14px;
+}
+/* the dashed divider, drawn separately so it stays straight under the rounded corners */
+.st-sec::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 0;
+  border-bottom: 1px dashed var(--hair);
+  pointer-events: none;
+}
+.st-sec:last-of-type::after {
+  display: none;
+}
+.st-sec h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 1.05em;
+  font-weight: 800;
+  color: color-mix(in oklab, var(--c), var(--ink) 30%);
+}
+.st-ico {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--c), #fff 85%);
+}
+
+.st-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 6px 0;
+}
+.st-row label {
+  font-weight: 650;
+}
+
+/* sliders: label, a coloured fill up to the value, a thumb that grows while you hold it */
+.st-slider label {
+  flex: 0 0 8.2em;
+}
+.st-slider input {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 28px;
+  margin: 0;
+  background: transparent;
+  cursor: var(--cur-pointer);
+}
+.st-slider input::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--c) 0 var(--p), #e6e1d7 var(--p) 100%);
+}
+.st-slider input::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #e6e1d7;
+}
+.st-slider input::-moz-range-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--c);
+}
+.st-slider input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--c);
+  box-shadow: var(--shadow-1);
+  transition:
+    transform 0.28s var(--spring),
+    box-shadow 0.28s var(--soft);
+}
+.st-slider input::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--c);
+  box-shadow: var(--shadow-1);
+  transition:
+    transform 0.28s var(--spring),
+    box-shadow 0.28s var(--soft);
+}
+.st-slider input:hover::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+.st-slider input:hover::-moz-range-thumb {
+  transform: scale(1.15);
+}
+.st-slider input:active::-webkit-slider-thumb {
+  transform: scale(1.3);
+  box-shadow: 0 0 0 7px color-mix(in oklab, var(--c), transparent 80%);
+}
+.st-slider input:active::-moz-range-thumb {
+  transform: scale(1.3);
+  box-shadow: 0 0 0 7px color-mix(in oklab, var(--c), transparent 80%);
+}
+.st-slider input:focus-visible {
+  outline: none;
+}
+.st-slider input:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--ink);
+}
+.st-slider input:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--ink);
+}
+.st-slider input:disabled {
+  cursor: not-allowed;
+}
+.st-slider output {
+  flex: 0 0 3.2em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.st-slider.is-off {
+  opacity: 0.45;
+}
+
+/* toggles: a real checkbox drawn as a pill; the knob springs across and squashes while pressed */
+.st-toggle label {
+  flex: 1 1 auto;
+}
+.st-toggle input {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 0 0 auto;
+  position: relative;
+  width: 48px;
+  height: 28px;
+  margin: 0;
+  border-radius: 999px;
+  background: #d9d4c9;
+  cursor: var(--cur-pointer);
+  transition: background 0.3s var(--soft);
+}
+.st-toggle input::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: var(--shadow-1);
+  transition:
+    translate 0.42s var(--spring),
+    width 0.2s var(--soft);
+}
+.st-toggle input:checked {
+  background: var(--c);
+}
+.st-toggle input:checked::after {
+  translate: 20px 0;
+}
+/* pressing stretches the knob towards where it's going */
+.st-toggle input:active::after {
+  width: 28px;
+}
+.st-toggle input:checked:active::after {
+  translate: 14px 0;
+}
+.st-toggle input:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* dropdowns: label on the left; a button with the choice, and a list that pops open from it */
+.st-choice .st-lbl {
+  flex: 1 1 auto;
+  font-weight: 650;
+}
+.st-dd {
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 62%;
+}
+.st-dd-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 10px 0 14px;
+  border-radius: 10px;
+  background: #f3f0ea;
+  border: 1px solid transparent;
+  font-weight: 650;
+  color: color-mix(in oklab, var(--c), var(--ink) 30%);
+  transition:
+    background var(--t-hover),
+    border-color var(--t-hover),
+    box-shadow var(--t-hover) var(--soft);
+}
+.st-dd-btn:hover {
+  background: color-mix(in oklab, var(--c), #fff 88%);
+}
+.st-dd.is-open .st-dd-btn {
+  background: #fff;
+  border-color: color-mix(in oklab, var(--c), #fff 50%);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--c), transparent 82%);
+}
+.st-dd-val {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.st-dd-chev,
+.st-dd-check {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.st-dd-chev {
+  margin-left: auto;
+  transition: rotate 0.35s var(--spring);
+}
+.st-dd.is-open .st-dd-chev {
+  rotate: 180deg;
+}
+
+.st-dd-list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 5;
+  min-width: 100%;
+  width: max-content;
+  max-width: min(330px, 78vw);
+  max-height: 300px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--hair);
+  box-shadow: var(--shadow-3);
+  transform-origin: top right;
+  /* closed: small, faded, out of the way (and out of the accessibility tree) */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px) scale(0.94);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s var(--soft),
+    visibility 0s linear 0.16s;
+}
+.st-dd.is-up .st-dd-list {
+  top: auto;
+  bottom: calc(100% + 6px);
+  transform-origin: bottom right;
+  transform: translateY(6px) scale(0.94);
+}
+.st-dd.is-open .st-dd-list {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 0.18s ease,
+    transform 0.34s var(--spring),
+    visibility 0s;
+}
+.st-dd-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.st-dd-grp + .st-dd-grp,
+.st-dd-opt + .st-dd-grp {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--hair);
+}
+.st-dd-grp-name {
+  display: block;
+  padding: 6px 10px 3px;
+  font-size: 0.76em;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.st-dd-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: var(--cur-pointer);
+  transition: background 0.15s ease;
+}
+/* each option slides in a beat after the one above it */
+.st-dd.is-open .st-dd-opt {
+  animation: st-dd-in 0.32s var(--soft) var(--d) both;
+}
+@keyframes st-dd-in {
+  from {
+    opacity: 0;
+    translate: 0 -6px;
+  }
+}
+.st-dd-opt.is-active {
+  background: color-mix(in oklab, var(--c), #fff 86%);
+}
+.st-dd-opt.is-sel {
+  color: color-mix(in oklab, var(--c), var(--ink) 30%);
+  font-weight: 750;
+}
+.st-dd-check {
+  margin-left: auto;
+  opacity: 0;
+  scale: 0.4;
+  transition:
+    opacity 0.2s,
+    scale 0.3s var(--spring);
+}
+.st-dd-opt.is-sel .st-dd-check {
+  opacity: 1;
+  scale: 1;
+}
+:root[data-motion='reduce'] .st-dd-list {
+  transform: none !important;
+}
+
+.st-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 22px 16px;
+  border-top: 1px solid var(--hair);
+}
+.st-reset,
+.st-done {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+.st-reset {
+  color: var(--muted);
+}
+.st-reset:hover {
+  color: var(--ink);
+}
+.st-done {
+  background: var(--violet);
+  color: #fff;
+  box-shadow: 0 3px 0 color-mix(in oklab, var(--violet), #000 25%);
+}
+.st-done:active {
+  translate: 0 2px;
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--violet), #000 25%);
+}
+
+@media (max-width: 760px) {
+  .settings-toggle {
+    right: 14px;
+    bottom: 14px;
+    width: 44px;
+    height: 44px;
+  }
+  /* a sheet from the bottom on phones */
+  .st {
+    padding: 12px 0 0;
+  }
+  .st-card {
+    width: 100%;
+    max-height: calc(100dvh - 12px);
+    margin: auto 0 0;
+    border-radius: 16px 16px 0 0;
+  }
+  .st-head {
+    padding: 12px 12px 12px 16px;
+  }
+  .st-body {
+    padding: 4px 16px 8px;
+  }
+  .st-foot {
+    padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+  }
+  .st-slider label {
+    flex-basis: 6.6em;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .st-card,
+  .st-backdrop {
+    animation: none;
+  }
+}
+
+/* ---------- getting around: a side list on wide screens, a "Jump to" dropdown on phones ---------- */
+
+.st-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+}
+/* positioned, so each section's offsetTop is measured from the top of the list */
+.st-body {
+  position: relative;
+}
+
+/* wide: a wider card with the sections down the left, at a steady height */
+.st-card {
+  width: min(760px, 100%);
+  height: min(660px, calc(100dvh - 48px));
+}
+.st-side {
+  position: relative;
+  flex: 0 0 196px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 10px;
+  border-right: 1px solid var(--hair);
+  background: #fbf9f4;
+  overflow-y: auto;
+}
+.st-side button {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  flex: 0 0 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-align: left;
+  color: var(--muted);
+  transition:
+    color var(--t-hover),
+    translate 0.3s var(--spring);
+}
+.st-side button:hover {
+  color: var(--ink);
+  translate: 3px 0;
+}
+.st-side button.is-on {
+  color: color-mix(in oklab, var(--c), var(--ink) 30%);
+}
+/* one pill behind the buttons that slides to the current section (40px rows, 4px apart) */
+.st-side-pill {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 14px;
+  height: 40px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid color-mix(in oklab, var(--c), #fff 65%);
+  box-shadow: var(--shadow-1);
+  translate: 0 calc(var(--i) * 44px);
+  transition:
+    translate 0.45s var(--spring),
+    border-color 0.3s;
+}
+.st-side-pill::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 9px;
+  bottom: 9px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--c);
+  transition: background 0.3s;
+}
+.st-jump {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .st-main {
+    flex-direction: column;
+  }
+  .st-card {
+    height: auto;
+  }
+  .st-side {
+    display: none;
+  }
+  /* phones: a dropdown bar above the list */
+  .st-jump {
+    display: block;
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 2;
+    padding: 2px 16px;
+    /* tinted with the section you're in, fading from one colour to the next as you scroll */
+    border-bottom: 1px solid color-mix(in oklab, var(--c), #fff 55%);
+    background: color-mix(in oklab, var(--c), #fff 86%);
+    transition:
+      background-color 0.45s ease,
+      border-color 0.45s ease;
+  }
+  .st-jump .st-lbl {
+    color: color-mix(in oklab, var(--c), var(--ink) 45%);
+    transition: color 0.45s ease;
+  }
+  .st-jump .st-row {
+    min-height: 50px;
+  }
+  .st-jump .st-dd {
+    max-width: 60%;
+  }
+  .st-jump .st-dd-btn {
+    background: #fff;
+    border-color: color-mix(in oklab, var(--c), #fff 60%);
+    transition:
+      color 0.45s ease,
+      border-color 0.45s ease,
+      box-shadow var(--t-hover) var(--soft);
+  }
+}
+
+.st-sec {
+  scroll-margin-top: 8px;
+}
+/* jumped to: the section lights up as a soft rounded card in its colour, then fades back */
+.st-sec.is-flash {
+  animation: st-flash 1.6s var(--soft) 0.2s;
+}
+.st-sec.is-flash::after {
+  animation: st-flash-line 1.6s var(--soft) 0.2s;
+}
+@keyframes st-flash {
+  0% {
+    background-color: transparent;
+    box-shadow: inset 0 0 0 0 transparent;
+  }
+  18%,
+  60% {
+    background-color: color-mix(in oklab, var(--c), #fff 90%);
+    box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--c), #fff 55%);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: inset 0 0 0 2px transparent;
+  }
+}
+/* the divider steps aside while the card is lit, so the outline reads as one clean shape */
+@keyframes st-flash-line {
+  18%,
+  60% {
+    opacity: 0;
+  }
+}
+
+/* the build, quietly, at the very bottom of the list */
+.st-build {
+  margin: 18px 0 6px;
+  text-align: center;
+  font-size: 0.8em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.st-build-sha {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+}
+
+/* ---------- demos: small moving pictures of what a section does ---------- */
+
+.demo {
+  position: relative;
+  height: 96px;
+  margin: 2px 0 8px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--c), #fff 92%);
+  border: 1px solid color-mix(in oklab, var(--c), #fff 75%);
+}
+
+/* motion: a ball bouncing across, and two spinning doodles */
+.dm-ground {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 16px;
+  height: 2px;
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--c), #fff 60%);
+}
+.dm-ball {
+  position: absolute;
+  left: 10%;
+  bottom: 18px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  animation:
+    dm-across 3.2s ease-in-out infinite alternate,
+    dm-bounce 0.8s cubic-bezier(0.3, 0, 0.7, 1) infinite;
+}
+@keyframes dm-across {
+  to {
+    left: calc(90% - 22px);
+  }
+}
+@keyframes dm-bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1.15, 0.85);
+  }
+  12% {
+    transform: translateY(-6px) scale(0.95, 1.05);
+  }
+  50% {
+    transform: translateY(-48px) scale(1);
+  }
+}
+.dm-spin {
+  position: absolute;
+  top: 14px;
+  right: 22px;
+  animation: dm-spin 2.4s linear infinite;
+}
+.dm-spin-2 {
+  top: 18px;
+  right: auto;
+  left: 24px;
+  animation-duration: 3.4s;
+  animation-direction: reverse;
+}
+@keyframes dm-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* seeing: colour pairs that pulse in turn, a grey caption, a link, and the cursor gliding by */
+.demo-seeing {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 14px;
+}
+.ds-pairs {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 6px;
+}
+.ds-pair {
+  display: flex;
+  animation: ds-pulse 2s ease-in-out infinite;
+}
+.ds-pair i {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px 0 0 6px;
+}
+.ds-pair i + i {
+  border-radius: 0 6px 6px 0;
+}
+@keyframes ds-pulse {
+  0%,
+  70%,
+  100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.12);
+  }
+}
+.ds-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  font-size: 0.88em;
+}
+.ds-muted {
+  color: var(--muted);
+}
+.ds-link {
+  font-weight: 700;
+  color: var(--blue);
+}
+.ds-link.is-under {
+  text-decoration: underline 2px;
+  text-underline-offset: 0.2em;
+}
+.ds-cursor {
+  position: absolute;
+  right: 14px;
+  bottom: 2px;
+  width: 32px;
+  height: 32px;
+  filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff);
+  transition:
+    width 0.35s var(--spring),
+    height 0.35s var(--spring);
+  animation: ds-glide 4s ease-in-out infinite;
+  pointer-events: none;
+}
+.ds-cursor.is-big {
+  width: 48px;
+  height: 48px;
+}
+.ds-cursor svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+@keyframes ds-glide {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: -28px -8px;
+  }
+}
+
+/* reading: a short passage in the chosen font and spacing, with the ruler sliding down it */
+.demo-reading {
+  height: auto;
+  min-height: 96px;
+  padding: 10px 14px;
+}
+.dr-text {
+  margin: 0;
+  font-size: 0.95em;
+  line-height: 1.5;
+}
+.dr-ruler {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* a clear band about one line tall, everything else shaded */
+  background: linear-gradient(
+    to bottom,
+    rgb(29 27 44 / 0.35) 0 var(--y),
+    var(--yellow) var(--y) calc(var(--y) + 2px),
+    transparent calc(var(--y) + 2px) calc(var(--y) + 1.9em),
+    var(--yellow) calc(var(--y) + 1.9em) calc(var(--y) + 1.9em + 2px),
+    rgb(29 27 44 / 0.35) calc(var(--y) + 1.9em + 2px)
+  );
+  animation: dr-down 5s ease-in-out infinite alternate;
+}
+@property --y {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 6px;
+}
+@keyframes dr-down {
+  0%,
+  15% {
+    --y: 6px;
+  }
+  85%,
+  100% {
+    --y: 3.6em;
+  }
+}
+
+/* focus: doodles bob round a countdown card; a "what's new" card pops up now and then */
+.df-doodle {
+  position: absolute;
+  animation: df-bob 2.2s ease-in-out infinite alternate;
+  transition:
+    opacity 0.5s ease,
+    scale 0.5s var(--soft);
+}
+@keyframes df-bob {
+  to {
+    transform: translateY(-8px) rotate(14deg);
+  }
+}
+.demo-focus.is-calm .df-doodle {
+  opacity: 0;
+  scale: 0.4;
+}
+.df-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: var(--shadow-1);
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+.df-card b {
+  color: var(--pink);
+  font-size: 1.3em;
+}
+.df-pop {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  background: var(--blue);
+  color: #fff;
+  font-size: 0.78em;
+  font-weight: 700;
+  box-shadow: var(--shadow-2);
+  animation: df-pop 3.6s var(--spring) infinite;
+}
+@keyframes df-pop {
+  0%,
+  20% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.8);
+  }
+  32%,
+  82% {
+    opacity: 1;
+    transform: none;
+  }
+  94%,
+  100% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.9);
+  }
+}
+/* quiet: just the button, with a dot saying there's something new */
+.df-bell {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--shadow-1);
+}
+.df-bell i {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+}
+
+/* ---------- On the page: pick the characters and doodles ---------- */
+
+.pk-group {
+  padding: 6px 0 10px;
+}
+.pk-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.pk-title {
+  flex: 1 1 auto;
+  font-weight: 650;
+}
+.pk-count {
+  margin-left: 8px;
+  font-size: 0.82em;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.pk-all {
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 0.84em;
+  font-weight: 700;
+  color: color-mix(in oklab, var(--c), var(--ink) 30%);
+  background: color-mix(in oklab, var(--c), #fff 86%);
+  transition:
+    background var(--t-hover),
+    opacity var(--t-hover);
+}
+.pk-all:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--c), #fff 74%);
+}
+.pk-all:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.pk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 8px;
+}
+.pk-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px 6px;
+  border-radius: 12px;
+  background: #f3f0ea;
+  border: 2px solid transparent;
+  color: var(--muted);
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease,
+    transform 0.35s var(--spring);
+}
+.pk-tile:hover {
+  transform: translateY(-2px);
+}
+.pk-tile:active {
+  transform: scale(0.94);
+  transition-duration: 0.1s;
+}
+.pk-tile.is-on {
+  background: color-mix(in oklab, var(--tc), #fff 86%);
+  border-color: color-mix(in oklab, var(--tc), #fff 45%);
+  color: color-mix(in oklab, var(--tc), var(--ink) 45%);
+}
+/* faces: the top of each character's picture, in a circle */
+.pk-face {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background-color: #fff;
+  background-repeat: no-repeat;
+  background-size: 230% auto;
+  background-position: 50% 3%;
+  box-shadow: inset 0 0 0 2px #fff;
+}
+.pk-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+}
+/* hidden: greyed out and shrunk back a little; shown: springs up to full size */
+.pk-face,
+.pk-icon {
+  filter: grayscale(1) opacity(0.45);
+  scale: 0.84;
+  transition:
+    filter 0.3s ease,
+    scale 0.45s var(--spring);
+}
+.pk-tile.is-on .pk-face,
+.pk-tile.is-on .pk-icon {
+  filter: none;
+  scale: 1;
+}
+.pk-name {
+  max-width: 100%;
+  /* long names (Paper plane, Speech bubble, Trèfle à quatre…) wrap onto a second line */
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  line-height: 1.15;
+  font-size: 0.8em;
+  font-weight: 700;
+}
+/* a tick in the corner of the ones that are shown */
+.pk-mark {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 18px;
+  height: 18px;
+  padding: 3px;
+  border-radius: 50%;
+  background: var(--tc);
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  scale: 0.3;
+  transition:
+    opacity 0.2s,
+    scale 0.4s var(--spring);
+}
+.pk-tile.is-on .pk-mark {
+  opacity: 1;
+  scale: 1;
+}
+
+/* ---------- Games: a shortcut into each hidden game ---------- */
+
+.gm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  padding: 6px 0 10px;
+}
+.gm-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  text-align: left;
+  background: color-mix(in oklab, var(--tc), #fff 88%);
+  border: 2px solid color-mix(in oklab, var(--tc), #fff 60%);
+  transition:
+    transform 0.35s var(--spring),
+    box-shadow 0.3s var(--soft),
+    background 0.25s;
+}
+.gm-tile:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+  background: color-mix(in oklab, var(--tc), #fff 80%);
+}
+.gm-tile:active:not(:disabled) {
+  transform: scale(0.96);
+  transition-duration: 0.1s;
+}
+.gm-tile:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.gm-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--tc);
+  box-shadow: 0 3px 0 color-mix(in oklab, var(--tc), #000 22%);
+  transition: rotate 0.45s var(--spring);
+}
+.gm-tile:hover:not(:disabled) .gm-icon {
+  rotate: -8deg;
+}
+.gm-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.gm-text b {
+  font-weight: 800;
+  color: color-mix(in oklab, var(--tc), var(--ink) 40%);
+}
+.gm-text small {
+  font-size: 0.82em;
+  font-weight: 600;
+  color: var(--muted);
+}
+/* the play badge slides in a touch on hover */
+.gm-play {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--tc);
+  opacity: 0.85;
+  transition:
+    translate 0.35s var(--spring),
+    opacity 0.2s;
+}
+.gm-tile:hover:not(:disabled) .gm-play {
+  translate: 3px 0;
+  opacity: 1;
+}
+.gm-wait {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  font-size: 0.86em;
+  color: var(--muted);
+}
+
+/* ---------- languages ---------- */
+
+/* Japanese and Chinese don't put spaces between words, so the headline's words sit together */
+:root:is(:lang(ja), :lang(zh)) .cd-title {
+  column-gap: 0.04em;
+}
+/* longer section names in some languages: one line, trimmed, full name on hover via the list */
+.st-side button span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* "updates are in English for now", above an update when the site is in another language */
+.nt-en {
+  margin: 0 0 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #f3f0ea;
+  font-size: 0.86em;
+  color: var(--muted);
+}
+/* Korean wraps between words, never inside one; Japanese and Chinese keep their line-start rules
+   (no line begins with 、。」 and the like) */
+:root:lang(ko) body {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+:root:is(:lang(ja), :lang(zh)) body {
+  line-break: strict;
+}

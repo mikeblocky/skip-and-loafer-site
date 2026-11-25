@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { gsap, Draggable, GRAB, velocityTracker } from '../gsap'
 import { sfx } from '../sfx'
+import { reducedMotion } from '../settings'
 
 const rand = gsap.utils.random
 const clamp = gsap.utils.clamp
@@ -61,7 +62,7 @@ export function Photos({ srcs, bodyRef }: { srcs: string[]; bodyRef: React.RefOb
 
     els.current.forEach((el, i) => {
       const fl = floats.current[i]
-      drifts.push(
+      if (!reducedMotion()) drifts.push(
         gsap.to(fl, {
           x: rand(-14, 14),
           y: rand(-12, 12),

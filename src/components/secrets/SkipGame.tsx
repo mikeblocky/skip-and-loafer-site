@@ -13,6 +13,7 @@ import {
 import { newGame, runSkipLoop } from './skipLoop'
 import { API, Leaderboard, NAME_KEY, useLeaderboard } from './SkipBoard'
 import { SkipHud } from './SkipHud'
+import { serverText, slot, useT } from '../../i18n'
 
 /**
  * Skip to School. Tap (or Space) to hop, again mid-air to skip. Road clutter has to be hopped,
@@ -61,6 +62,7 @@ export function SkipGame() {
   const [pace, setPace] = useState('')
 
   const board = useLeaderboard()
+  const { t: tr, lang } = useT()
   const [name, setName] = useState(() => {
     try {
       return localStorage.getItem(NAME_KEY) ?? ''
@@ -427,7 +429,7 @@ export function SkipGame() {
         {shout && phase === 'run' && <div className="sg-shout">{shout}</div>}
         {chatLine && phase === 'run' && (
           <div key={chatLine.n} className="sg-chat" style={{ '--c': chatLine.color } as CSSProperties} aria-live="polite">
-            <b>{chatLine.name.toLowerCase()}</b>
+            <b>{lang === 'en' ? chatLine.name.toLowerCase() : chatLine.name}</b>
             {chatLine.text}
           </div>
         )}
@@ -436,12 +438,12 @@ export function SkipGame() {
           <div className="sg-overlay">
             {phase === 'over' ? (
               <>
-                <b>{won ? 'everyone made it!' : 'late for class!'}</b>
+                <b>{tr(won ? 'sg.won' : 'sg.late')}</b>
                 <span>
-                  <em className="sg-pts">{fmt(score)}</em> points
+                  {slot(tr('game.points'), 'n', <em className="sg-pts">{fmt(score)}</em>)}
                   {team.length > 0 && (
                     <>
-                      {' · ran with '}
+                      {tr('sg.ranWith')}
                       {team.map((f, k) => (
                         <Fragment key={f.id}>
                           {k > 0 && ', '}
@@ -453,7 +455,7 @@ export function SkipGame() {
                   {score >= best && score > 0 && (
                     <>
                       {' · '}
-                      <em className="sg-new">new best!</em>
+                      <em className="sg-new">{tr('game.newBest')}</em>
                     </>
                   )}
                 </span>
@@ -467,34 +469,34 @@ export function SkipGame() {
                     }}
                   >
                     {save.state === 'saved' ? (
-                      <span className="sg-saved">saved{save.rank ? ` · you're #${save.rank}` : ''}</span>
+                      <span className="sg-saved">{save.rank ? tr('game.savedRank', { n: save.rank }) : tr('game.saved')}</span>
                     ) : (
                       <>
                         <input
                           value={name}
                           onChange={(e) => setName(e.target.value)}
                           maxLength={16}
-                          placeholder="your name"
-                          aria-label="Your name for the leaderboard"
+                          placeholder={tr('game.yourName')}
+                          aria-label={tr('game.nameLabel')}
                           autoComplete="nickname"
                           enterKeyHint="done"
                         />
                         <button className="sx-btn is-strong" disabled={!name.trim() || save.state === 'saving'}>
-                          {save.state === 'saving' ? 'saving…' : 'save score'}
+                          {tr(save.state === 'saving' ? 'game.saving' : 'game.save')}
                         </button>
                       </>
                     )}
-                    {save.state === 'error' && <span className="sg-err">{save.msg}</span>}
+                    {save.state === 'error' && <span className="sg-err">{serverText(save.msg ?? '', tr)}</span>}
                   </form>
                 )}
-                <span className="sg-how">tap the road or press space to try again</span>
+                <span className="sg-how">{tr('sg.retry')}</span>
               </>
             ) : (
               <>
-                <b>skip to school!</b>
-                <span className="sg-how">tap or press space to play · again mid-air to skip</span>
-                <span className="sg-how">hop the clutter, mind the paper planes, grab stars, hearts and power-ups</span>
-                <span className="sg-how">pick up all your friends on the way to win</span>
+                <b>{tr('sg.title')}</b>
+                <span className="sg-how">{tr('sg.how1')}</span>
+                <span className="sg-how">{tr('sg.how2')}</span>
+                <span className="sg-how">{tr('sg.how3')}</span>
               </>
             )}
           </div>
@@ -510,7 +512,7 @@ export function SkipGame() {
               key={side}
               type="button"
               className={`sg-pad is-${side}`}
-              aria-label="Hop (again mid-air to skip)"
+              aria-label={tr('sg.hopLabel')}
               onPointerDown={(e) => {
                 e.preventDefault()
                 hop()
@@ -518,10 +520,10 @@ export function SkipGame() {
               onContextMenu={(e) => e.preventDefault()}
             >
               <Icon name="chev" color="currentColor" size={34} />
-              <span>hop</span>
+              <span>{tr('sg.hop')}</span>
             </button>
           ))}
-          <span className="sg-pad-hint">tap either side · again mid-air to skip</span>
+          <span className="sg-pad-hint">{tr('sg.padHint')}</span>
         </div>
       )}
 

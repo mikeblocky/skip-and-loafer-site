@@ -6,6 +6,7 @@ import { secrets } from '../../secrets'
 import { fmt } from './skipRules'
 import { Chip, Clock, GameBoardFold, GameEnd, GameHud, GameStart, shuffle, useGameBoard, useGameMusic } from './GameKit'
 import { GACHA } from './gameCurves'
+import { useT, type Key } from '../../i18n'
 
 const RARITY = [
   { name: 'N', weight: 60, color: '#A9A3C9', pts: 100 },
@@ -14,22 +15,7 @@ const RARITY = [
   { name: 'SSR', weight: 2, color: C.amber, pts: 500 },
 ] as const
 
-/** Our own little titles for each card (not quotes from the series). */
-const TITLES: Record<string, string> = {
-  mitsumi: 'countryside valedictorian',
-  makoto: 'bookworm with a big heart',
-  mika: 'honest to a fault',
-  ujie: 'student council ace',
-  shima: 'effortlessly charming',
-  yuzuki: 'straight-talking beauty',
-  yasaka: 'easygoing friend',
-  fumi: 'best friend from back home',
-  nao: 'stylish aunt in the big city',
-  yamada: 'sunny and full of energy',
-  mukai: 'calm and quiet',
-  takamine: 'serious and steady',
-  kanechika: 'kind and unhurried',
-}
+/** Our own little titles for each card (not quotes from the series) are `ga.card.<id>` in the dictionaries. */
 
 type Char = (typeof CHARACTERS)[number]
 interface Cap {
@@ -102,6 +88,7 @@ function Face({ c }: { c: Cap }) {
 
 export function Gacha() {
   const kit = useGameBoard('gacha', 'gachaBest')
+  const { t: tr } = useT()
   useGameMusic()
   const [phase, setPhase] = useState<'ready' | 'peek' | 'play' | 'clear' | 'over'>('ready')
   const [round, setRound] = useState(1)
@@ -218,7 +205,7 @@ export function Gacha() {
         addTime(GACHA.pairBack(d))
         if (a.r === 3) {
           if (!arcade.sting('good')) sfx.jingle(0.6)
-          say(`SSR ${a.char.name}!`)
+          say(tr('ga.ssr', { name: a.char.name }))
         } else sfx.chime(1 + a.r * 0.1 + Math.min(streak, 6) * 0.04, 0.7)
         // every pair joins your collection
         secrets.update((st) => {
@@ -231,7 +218,7 @@ export function Gacha() {
           addTime(GACHA.clearBack(d))
           setPhase('clear')
           arcade.sting('big')
-          say(round === WIN_ROUND ? 'round 8! the whole set!' : `tray ${round} done! +${fmt(bonus)}`)
+          say(round === WIN_ROUND ? tr('ga.allSet', { n: round }) : tr('ga.trayDone', { n: round, pts: fmt(bonus) }))
           later(1300, () => deal(round + 1))
         }
       } else {
@@ -255,7 +242,7 @@ export function Gacha() {
               })
               setSwapped([p, q])
               sfx.clack(1.2)
-              say('the machine rattled… two swapped!')
+              say(tr('ga.swap'))
               later(700, () => setSwapped([]))
             })
           }
@@ -272,7 +259,7 @@ export function Gacha() {
   return (
     <div className={`gm gm-gacha${playing ? ' is-playing' : ''}`}>
       <GameHud score={score} best={kit.best}>
-        <Chip color={C.pink}>tray {round}</Chip>
+        <Chip color={C.pink}>{tr('ga.tray', { n: round })}</Chip>
         {streak > 1 && <Chip color={C.amber}>×{mult.toFixed(2).replace(/\.?0+$/, '')}</Chip>}
       </GameHud>
       <Clock left={playing ? time : phase === 'over' ? 0 : START_TIME} of={MAX_TIME} />
@@ -294,7 +281,7 @@ export function Gacha() {
                   open(i)
                 }}
                 onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), open(i))}
-                aria-label={c.state === 'down' ? 'closed capsule' : `${c.char.name} ${RARITY[c.r].name}`}
+                aria-label={c.state === 'down' ? tr('ga.closed') : `${c.char.name} ${RARITY[c.r].name}`}
               >
                 <span className="gp-inner">
                   <span className="gp-back" aria-hidden="true">
@@ -314,22 +301,18 @@ export function Gacha() {
 
         {phase === 'ready' && (
           <GameStart
-            title="capsule pairs"
-            lines={[
-              'peek at the cards, then open two capsules at a time to find pairs',
-              'a pair is the same friend at the same rarity. watch the frame colour',
-              'pairs and full trays give you time back. misses cost a little',
-            ]}
+            title={tr('ga.title')}
+            lines={[tr('ga.how1'), tr('ga.how2'), tr('ga.how3')]}
             onStart={start}
           />
         )}
         {phase === 'over' && (
           <GameEnd
-            title="out of time!"
+            title={tr('ga.over')}
             score={score}
             isBest={isBest}
             won={round > WIN_ROUND}
-            line={`you got to tray ${round}${round > WIN_ROUND ? ', the whole set!' : ''}`}
+            line={tr(round > WIN_ROUND ? 'ga.reachedAll' : 'ga.reached', { n: round })}
             kit={kit}
             onAgain={start}
           />
@@ -338,19 +321,19 @@ export function Gacha() {
 
       {!playing && (
         <>
-          <div className="gc-dex" aria-label="Your collection">
+          <div className="gc-dex" aria-label={tr('ga.dex')}>
             {CHARACTERS.map((c) => {
               const got = s.dex[c.id]
               return (
-                <div key={c.id} className={`gc-dex-item${got ? ' is-got' : ''}`} style={{ '--c': c.color } as CSSProperties} title={got ? `${c.name} · ${TITLES[c.id]} · best ${RARITY[got.best].name} · ×${got.count}` : '???'}>
-                  <img src={c.src} alt={got ? c.name : 'not met yet'} draggable={false} />
+                <div key={c.id} className={`gc-dex-item${got ? ' is-got' : ''}`} style={{ '--c': c.color } as CSSProperties} title={got ? tr('ga.tip', { name: c.name, title: tr(`ga.card.${c.id}` as Key), r: RARITY[got.best].name, c: got.count }) : '???'}>
+                  <img src={c.src} alt={got ? c.name : tr('ga.notMet')} draggable={false} />
                   {got && <span className="gc-dex-r" style={{ background: RARITY[got.best].color }}>{RARITY[got.best].name}</span>}
                 </div>
               )
             })}
           </div>
           <p className="sx-note">
-            {Object.keys(s.dex).length}/{CHARACTERS.length} met · {s.pulls} cards collected · saved on this device
+            {tr('ga.note', { met: Object.keys(s.dex).length, all: CHARACTERS.length, pulls: s.pulls })}
           </p>
           <GameBoardFold kit={kit} />
         </>

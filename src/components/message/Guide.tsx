@@ -4,9 +4,12 @@ import { gsap } from '../../gsap'
 import { C } from '../../data'
 import { Icon } from '../../icons'
 import { BadBox, bust, GoodBox, MiniBox, MiniMail } from './GuideScenes'
+import { useT, type Key } from '../../i18n'
+
+type T = (k: Key, vars?: Record<string, string | number>) => string
 
 // the guide's slides, with how long each one stays up before the next (one full loop of its scene)
-const STEPS: ReactNode[] = [
+const steps = (t: T): ReactNode[] => [
   <div className="gd-step" style={{ '--fc': C.pink } as CSSProperties}>
     <div className="gd-scene" aria-hidden="true">
       <div className="gd-stage">
@@ -25,8 +28,8 @@ const STEPS: ReactNode[] = [
       </div>
     </div>
     <p>
-      <span className="gd-num">Step 1</span>
-      Write a short letter to another fan.
+      <span className="gd-num">{t('msg.step', { n: 1 })}</span>
+      {t('msg.step1')}
     </p>
 </div>,
   <div className="gd-step" style={{ '--fc': C.blue } as CSSProperties}>
@@ -50,8 +53,8 @@ const STEPS: ReactNode[] = [
       </div>
     </div>
     <p>
-      <span className="gd-num">Step 2</span>
-      It’s sealed and dropped in one shared mailbox, with no name on it unless you sign it.
+      <span className="gd-num">{t('msg.step', { n: 2 })}</span>
+      {t('msg.step2')}
     </p>
 </div>,
   <div className="gd-step" style={{ '--fc': C.green } as CSSProperties}>
@@ -68,8 +71,8 @@ const STEPS: ReactNode[] = [
       </div>
     </div>
     <p>
-      <span className="gd-num">Step 3</span>
-      Anyone who checks the mail might get yours, and you can open one too.
+      <span className="gd-num">{t('msg.step', { n: 3 })}</span>
+      {t('msg.step3')}
     </p>
 </div>,
 ]
@@ -82,8 +85,8 @@ const CAST = [
   { id: 'mitsumi', right: 24, w: 100, top: 20 },
 ]
 
-const SLIDES: { node: ReactNode; secs: number }[] = [
-  ...STEPS.map((node) => ({ node, secs: 5 })),
+const slides = (t: T): { node: ReactNode; secs: number }[] => [
+  ...steps(t).map((node) => ({ node, secs: 5 })),
   { node: <GoodBox />, secs: 6.8 },
   { node: <BadBox />, secs: 6.8 },
 ]
@@ -91,6 +94,8 @@ const SLIDES: { node: ReactNode; secs: number }[] = [
 export function Guide() {
   const [at, setAt] = useState(0)
   const area = useRef<HTMLDivElement>(null)
+  const { t } = useT()
+  const SLIDES = slides(t)
 
   /** Slides to step n (wrapping round), sliding in from the side you're heading and easing the height. */
   const go = (n: number, dir: number) => {
@@ -113,7 +118,7 @@ export function Guide() {
           />
         ))}
         <i className="gd-tape" />
-        <h3>How it works</h3>
+        <h3>{t('msg.how')}</h3>
       </div>
 
       <div className="gd-slides" ref={area} aria-live="polite">
@@ -123,7 +128,7 @@ export function Guide() {
       </div>
 
       <div className="gd-nav">
-        <button className="gd-arrow is-prev" onClick={() => go(at - 1, -1)} aria-label="Previous">
+        <button className="gd-arrow is-prev" onClick={() => go(at - 1, -1)} aria-label={t('msg.prev')}>
           <Icon name="chev" color={C.pink} size={18} />
         </button>
         <div className="gd-dots">
@@ -132,7 +137,7 @@ export function Guide() {
               key={i}
               className={`gd-dot${i === at ? ' is-on' : i < at ? ' is-done' : ''}`}
               onClick={() => i !== at && go(i, i > at ? 1 : -1)}
-              aria-label={`Show part ${i + 1} of ${SLIDES.length}`}
+              aria-label={t('msg.part', { n: i + 1, total: SLIDES.length })}
               aria-current={i === at ? 'step' : undefined}
             >
               {/* fills up while the slide plays, then moves on */}
@@ -140,12 +145,12 @@ export function Guide() {
             </button>
           ))}
         </div>
-        <button className="gd-arrow" onClick={() => go(at + 1, 1)} aria-label="Next">
+        <button className="gd-arrow" onClick={() => go(at + 1, 1)} aria-label={t('msg.next')}>
           <Icon name="chev" color={C.pink} size={18} />
         </button>
       </div>
 
-      <p className="msg-fine">Letters with links or contact details can’t be sent, and letters readers report are taken down.</p>
+      <p className="msg-fine">{t('msg.fine')}</p>
     </aside>
   )
 }

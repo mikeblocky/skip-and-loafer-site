@@ -5,6 +5,8 @@ import { Icon, SCATTER_ICONS } from '../icons'
 import { useCoverColors } from '../coverColors'
 import { sfx } from '../sfx'
 import { ChapterPanel } from './Chapters'
+import { useT } from '../i18n'
+import { GATE_VOLUME, TORII_VOLUME, openGate, questHint, quest } from '../quest'
 
 function SpineArt({ n, color }: { n: number; color: string }) {
   return (
@@ -58,6 +60,7 @@ export function Viewer({
   const stage = useRef<HTMLDivElement>(null)
   const book = useRef<HTMLDivElement>(null)
   const cover = useRef<HTMLDivElement>(null)
+  const { t } = useT()
   const ui = useRef<HTMLDivElement>(null)
   const colors = useCoverColors()
   const [open, setOpen] = useState(false)
@@ -141,7 +144,13 @@ export function Viewer({
         rot.current.y = startY + this.x * 0.5
         render()
       },
-      onClick() {
+      onClick(e: PointerEvent) {
+        // Secret Santa: the ticket gate inside the cover takes the click instead
+        // (checked by position: in 3D the spine face can sit over it and take the hit)
+        const slot = root.current?.querySelector('.qg-slot')?.getBoundingClientRect()
+        if (openRef.current && slot && e.clientX >= slot.left && e.clientX <= slot.right && e.clientY >= slot.top && e.clientY <= slot.bottom) {
+          return openGate()
+        }
         toggle()
       },
     })
@@ -167,6 +176,8 @@ export function Viewer({
       setOpen(next)
       sfx.rustle()
       if (next) sfx.pop(0.8)
+      // Secret Santa: a riddle sends people inside this cover
+      if (next) questHint({ kind: 'cover', index })
       gsap.to(cover.current, {
         rotationY: next ? 158 : 0,
         duration: next ? 1.1 : 0.8,
@@ -249,6 +260,8 @@ export function Viewer({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // a quest dialog on top has the keyboard
+      if (document.querySelector('.qs')) return
       if (e.key === 'Escape') close()
       if (e.key === 'ArrowLeft') go(-1)
       if (e.key === 'ArrowRight') go(1)
@@ -264,7 +277,7 @@ export function Viewer({
   })
 
   return (
-    <div className="viewer" ref={root} role="dialog" aria-label={`Volume ${vol.n}`}>
+    <div className="viewer" ref={root} role="dialog" aria-label={t('vol.label', { n: vol.n })}>
       <div className="viewer-bg" onClick={close} />
       <div className="viewer-stage" ref={stage} style={{ '--stage-h': `${H + 44}px` } as CSSProperties}>
         <div
@@ -297,7 +310,7 @@ export function Viewer({
           <div className="f-cover" ref={cover}>
             <div className="cover-front">
               {vol.src ? (
-                <img src={vol.src} alt={`Skip and Loafer volume ${vol.n} cover`} draggable={false} />
+                <img src={vol.src} alt={t('vol.cover', { n: vol.n })} draggable={false} />
               ) : (
                 <div className="cover-soon">
                   <Pattern seed={vol.n + 7} />
@@ -305,33 +318,60 @@ export function Viewer({
                   <span className="cs-jp" lang="ja">
                     スキップとローファー
                   </span>
-                  <span className="cs-tag">in progress</span>
+                  <span className="cs-tag">{t('vol.inProgress')}</span>
                 </div>
               )}
               <span className="cover-shine" />
             </div>
             <div className="cover-inside">
               <Pattern seed={vol.n + 3} />
+              {index === TORII_VOLUME && quest.get().part1 === 'riddles' && (
+                // ???'s seal: a snowflake stamped inside the cover
+                <span className="qg-seal" aria-hidden="true">
+                  <Icon name="snow" color={C.ink} size={34} />
+                  <b>???</b>
+                </span>
+              )}
+              {index === GATE_VOLUME && (
+                // a little ticket gate, stuck inside the cover where it all began
+                <button
+                  className="qg-slot"
+                  tabIndex={open ? 0 : -1}
+                  aria-hidden={!open}
+                  aria-label="Ticket gate"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    openGate()
+                  }}
+                  lang="en"
+                >
+                  <span className="qg-jp" lang="ja">
+                    改札
+                  </span>
+                  <i className="qg-mouth" />
+                  <span className="qg-en">insert ticket</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       <div className="viewer-ui" ref={ui}>
-        <button className="round-btn v-close" onClick={close} aria-label="Close">
+        <button className="round-btn v-close" onClick={close} aria-label={t('common.close')}>
           <Icon name="close" color={C.ink} size={22} />
         </button>
         <div className="v-bar">
-          <button className="round-btn" onClick={() => go(-1)} aria-label="Previous volume">
+          <button className="round-btn" onClick={() => go(-1)} aria-label={t('vol.prev')}>
             <Icon name="chev" color={C.ink} size={24} style={{ transform: 'scaleX(-1)' }} />
           </button>
           <div className="v-meta">
             <span className="v-count">
               <b style={{ color }}>{String(vol.n).padStart(2, '0')}</b> / {VOLUMES.length}
             </span>
-            <span className="v-hint">drag to turn · tap to {open ? 'close' : 'open'}</span>
+            <span className="v-hint">{t(open ? 'vol.hintClose' : 'vol.hintOpen')}</span>
           </div>
-          <button className="round-btn" onClick={() => go(1)} aria-label="Next volume">
+          <button className="round-btn" onClick={() => go(1)} aria-label={t('vol.next')}>
             <Icon name="chev" color={C.ink} size={24} />
           </button>
         </div>

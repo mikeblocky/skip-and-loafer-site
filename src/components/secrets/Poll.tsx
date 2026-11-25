@@ -5,23 +5,9 @@ import { arcade } from '../../arcadeMusic'
 import { secrets } from '../../secrets'
 import { Chip, Clock, GameBoardFold, GameEnd, GameHud, GameStart, lerp, pick, shuffle, useGameBoard, useGameMusic } from './GameKit'
 import { POLL } from './gameCurves'
+import { slot, useT, type Key } from '../../i18n'
 
-/** Our own little reactions (not quotes from the series). */
-const REACTIONS: Record<string, string> = {
-  mitsumi: 'Expect a detailed plan for the walk, and at least one wrong turn.',
-  makoto: 'A quiet walk, a good book recommendation, and a surprise laugh.',
-  mika: "She'll pretend she just happened to be going your way.",
-  ujie: 'Arriving five minutes early is arriving on time.',
-  shima: 'Somehow every street feels like a scene from a movie.',
-  yuzuki: "She'll tell you exactly what she thinks of your outfit. Kindly. Mostly.",
-  yasaka: 'No rush. There is always time to grab a snack.',
-  fumi: 'All the news from back home, and a lot of catching up to do.',
-  nao: "She'll drive the conversation and know the best café on the way.",
-  yamada: 'It turns into a race by the second corner. He wins. Probably.',
-  mukai: 'A quiet walk. Comfortable silence, and the odd good joke.',
-  takamine: "You'll be right on time, and you'll both have done the reading.",
-  kanechika: 'A slow, kind walk, with a story or two along the way.',
-}
+/** Our own little reactions (not quotes from the series) are `fr.react.<id>` in the dictionaries. */
 
 type Char = (typeof CHARACTERS)[number]
 interface Spot {
@@ -84,6 +70,7 @@ function makeCrowd(found: number): { target: Char; spots: Spot[]; need: number }
 
 export function Poll() {
   const kit = useGameBoard('poll', 'pollBest')
+  const { t } = useT()
   useGameMusic()
   const [buddy, setBuddy] = useState(secrets.get().vote)
   useEffect(() => secrets.subscribe(() => setBuddy(secrets.get().vote)), [])
@@ -190,7 +177,7 @@ export function Poll() {
       addTime(-POLL.missCost(d))
       setCrowd({ ...crowd, spots: crowd.spots.map((x) => (x.key === k ? { ...x, miss: true } : x)) })
       later(400, () => setCrowd((c) => c && { ...c, spots: c.spots.map((x) => (x.key === k ? { ...x, miss: false } : x)) }))
-      say(`that's ${spot.char.name}!`)
+      say(t('fr.wrong', { name: spot.char.name }))
       return
     }
     const spots = crowd.spots.map((x) => (x.key === k ? { ...x, found: true } : x))
@@ -212,12 +199,12 @@ export function Poll() {
     addTime(POLL.timeBack(d) * crowd.need)
     sfx.chime(1 + Math.min(streak, 8) * 0.05, 0.6)
     if (mine) {
-      say(`your buddy! ×2`)
+      say(t('fr.buddyHit'))
       arcade.sting('good')
     } else if (count % 10 === 0 && count !== WIN_AT) arcade.sting('big')
     if (count === WIN_AT) {
       if (!arcade.sting('big')) sfx.jingle(0.6)
-      say('sixty friends found!')
+      say(t('fr.allFound', { n: WIN_AT }))
     }
     setCrowd({ ...crowd, spots })
     later(220, () => next(count))
@@ -229,16 +216,16 @@ export function Poll() {
   return (
     <div className={`gm gm-poll${playing ? ' is-playing' : ''}`}>
       <GameHud score={score} best={kit.best}>
-        <Chip color={C.green}>{found} found</Chip>
-        {streak > 1 && <Chip color={C.amber}>{streak} in a row</Chip>}
+        <Chip color={C.green}>{t('fr.found', { n: found })}</Chip>
+        {streak > 1 && <Chip color={C.amber}>{t('game.streak', { n: streak })}</Chip>}
       </GameHud>
       <Clock left={playing ? time : phase === 'over' ? 0 : START_TIME} of={MAX_TIME} />
 
       {playing && crowd && (
         <p className="fr-ask" key={found} style={{ '--c': crowd.target.color } as CSSProperties} aria-live="polite">
-          find <b>{crowd.target.name}</b>
+          {slot(t('fr.find'), 'name', <b>{crowd.target.name}</b>)}
           {crowd.need > 1 && <> ×{crowd.need}</>}
-          {crowd.target.id === buddy && <span className="fr-buddy">your buddy</span>}
+          {crowd.target.id === buddy && <span className="fr-buddy">{t('fr.buddy')}</span>}
         </p>
       )}
 
@@ -251,7 +238,7 @@ export function Poll() {
                 type="button"
                 className={`fr-face${s.found ? ' is-found' : ''}${s.miss ? ' is-miss' : ''}${s.shadow ? ' is-shadow' : ''}`}
                 style={{ '--c': s.char.color } as CSSProperties}
-                aria-label={s.shadow ? 'someone in the crowd' : s.char.name}
+                aria-label={s.shadow ? t('fr.crowd') : s.char.name}
                 onPointerDown={(e) => {
                   e.preventDefault()
                   tap(s.key)
@@ -276,12 +263,12 @@ export function Poll() {
 
         {phase === 'ready' && (
           <GameStart
-            title="who’s walking with you?"
-            lines={['pick a buddy first. finding them scores double', 'then find each friend in the morning crowd before the clock runs out', 'it gets crowded, and tricky. wrong taps cost time']}
+            title={t('fr.title')}
+            lines={[t('fr.how1'), t('fr.how2'), t('fr.how3')]}
             onStart={start}
-            label={chosen ? `walk with ${chosen.name}` : 'start'}
+            label={chosen ? t('fr.walkWith', { name: chosen.name }) : undefined}
           >
-            <div className="poll-grid" role="radiogroup" aria-label="Who would you walk to school with?">
+            <div className="poll-grid" role="radiogroup" aria-label={t('fr.pickLabel')}>
               {CHARACTERS.map((c, i) => (
                 <button
                   key={c.id}
@@ -301,21 +288,21 @@ export function Poll() {
             <p className="poll-react" aria-live="polite" key={buddy ?? 'none'}>
               {chosen ? (
                 <>
-                  <b style={{ color: chosen.color }}>{chosen.name}!</b> {REACTIONS[chosen.id]}
+                  <b style={{ color: chosen.color }}>{chosen.name}!</b> {t(`fr.react.${chosen.id}` as Key)}
                 </>
               ) : (
-                'who would you walk to school with?'
+                t('fr.pick')
               )}
             </p>
           </GameStart>
         )}
         {phase === 'over' && (
           <GameEnd
-            title="the bell rang!"
+            title={t('fr.over')}
             score={score}
             isBest={isBest}
             won={found >= WIN_AT}
-            line={`you found ${found} ${found === 1 ? 'friend' : 'friends'}${chosen ? `, walking with ${chosen.name}` : ''}`}
+            line={t(found === 1 ? 'fr.result1' : 'fr.resultN', { n: found }) + (chosen ? t('fr.walking', { name: chosen.name }) : '')}
             kit={kit}
             onAgain={start}
           />

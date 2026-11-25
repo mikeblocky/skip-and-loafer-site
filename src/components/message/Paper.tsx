@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { gsap } from '../../gsap'
 import { Icon, type IconName } from '../../icons'
-import { ANON } from './mail'
+import { useT } from '../../i18n'
 
 // handwriting sizes, biggest first: [font size, line spacing] in px. Longer letters write smaller.
 const HAND = [
@@ -35,6 +35,7 @@ export function Sheet({
   children?: ReactNode
 }) {
   const ref = useRef<HTMLDivElement>(null)
+  const { t } = useT()
   // pick the biggest handwriting that still fits on one page (ruled lines follow it)
   useLayoutEffect(() => {
     const el = ref.current
@@ -62,7 +63,7 @@ export function Sheet({
         <Icon name={icon} color="#fff" size={22} />
       </span>
       <div className="lt-head">
-        Dear stranger,
+        {t('msg.dear')}
         {/* the space is for copying; it takes no room on the page */}
         {date && <span className="lt-date"><span className="lt-gap"> </span>{date}</span>}
       </div>
@@ -70,7 +71,7 @@ export function Sheet({
         <>
           <div className="lt-text">{text}</div>
           <div className="lt-sign">
-            — <span className={from ? '' : 'is-anon'}>{from || ANON}</span>
+            — <span className={from ? '' : 'is-anon'}>{from || t('msg.anon')}</span>
           </div>
         </>
       )}

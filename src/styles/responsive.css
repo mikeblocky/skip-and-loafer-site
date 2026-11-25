@@ -35,16 +35,15 @@
   }
 }
 
-/* reduced motion: nothing loops, nothing floats; state changes still fade so you can follow them */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-  }
-  :where(.round-btn, .buy, .ch-card, .ch-link, .vcard-face, .tv, .gate-go, .pl-big, .bd-dot) {
-    transition-property: opacity, background, border-color, box-shadow, color !important;
-  }
+/* reduced motion: nothing loops, nothing floats; state changes still fade so you can follow them.
+   Set on <html> from Settings, which follows the system's prefers-reduced-motion unless told otherwise. */
+:root[data-motion='reduce'] *,
+:root[data-motion='reduce'] *::before,
+:root[data-motion='reduce'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+}
+:root[data-motion='reduce'] :where(.round-btn, .buy, .ch-card, .ch-link, .vcard-face, .tv, .gate-go, .pl-big, .bd-dot) {
+  transition-property: opacity, background, border-color, box-shadow, color !important;
 }

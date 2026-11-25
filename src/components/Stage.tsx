@@ -1,12 +1,15 @@
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useSyncExternalStore } from 'react'
 import { gsap, Draggable, GRAB, velocityTracker } from '../gsap'
 import { C, CHARACTERS, RAINBOW } from '../data'
 import { Icon, SCATTER_ICONS, type IconName } from '../icons'
 import { sfx } from '../sfx'
 import { openSecret } from '../secrets'
+import { reducedMotion, settings, useSettings } from '../settings'
 import { clamp, metrics, rand, type Pose } from './stage/geometry'
 import { scatter } from './stage/scatter'
 import { ringAroundHeaders, type Item } from './stage/ring'
+import { quest, questStarted } from '../quest'
+import { SantaHat } from './quest/SantaHat'
 
 export type Mode = 'countdown' | 'volumes' | 'birthdays' | 'anime' | 'message'
 
@@ -18,6 +21,8 @@ export interface StageHandle {
   intro(): gsap.core.Timeline
   enable(): void
   setMode(mode: Mode): void
+  /** the intro played backwards: everything swirls down into the hole in the middle */
+  vanish(): gsap.core.Timeline
 }
 
 export const Stage = forwardRef<StageHandle, { aspects: Record<string, number> }>(function Stage(
@@ -40,6 +45,13 @@ export const Stage = forwardRef<StageHandle, { aspects: Record<string, number> }
   const knocks = useRef(0)
   const lastKnock = useRef(0)
   const setHome = (el: HTMLElement) => home.current.set(el, { x: gsap.getProperty(el, 'x') as number, y: gsap.getProperty(el, 'y') as number })
+
+  // anyone can leave characters or kinds of doodle off the page (Settings › Page)
+  const { hiddenChars, hiddenIcons } = useSettings()
+  // Secret Santa: once Shima has turned up, he keeps the Santa hat on
+  const santa = useSyncExternalStore(quest.subscribe, questStarted)
+  // ...and Mitsumi gets hers at the very end of part 1
+  const santaToo = useSyncExternalStore(quest.subscribe, () => quest.get().part1 === 'blessed')
 
   const icons = useMemo(() => {
     const small = window.innerWidth < 760
@@ -73,6 +85,8 @@ export const Stage = forwardRef<StageHandle, { aspects: Record<string, number> }
 
   const startIdle = () => {
     stopIdle()
+    // less motion: everything sits still once it's landed
+    if (reducedMotion()) return
     iconBob.current.forEach((el) => {
       idle.current.push(
         gsap.to(el, {
@@ -213,6 +227,67 @@ export const Stage = forwardRef<StageHandle, { aspects: Record<string, number> }
       return tl
     },
 
+    vanish() {
+      stopIdle()
+      drags.current.forEach((d) => d.disable())
+      const els = [...charEls.current, ...iconEls.current]
+      gsap.killTweensOf(els)
+      const tl = gsap.timeline()
+      if (reducedMotion()) {
+        tl.to(els, { autoAlpha: 0, duration: 0.35 })
+        return tl
+      }
+      const { vw, vh } = metrics()
+      const cx = vw / 2
+      const cy = vh / 2
+      const reach = Math.hypot(vw, vh) / 2
+      const FAR = 14
+      // the same funnel as the intro, run the other way: z goes from here back out to FAR
+      els.forEach((el) => {
+        const x0 = gsap.getProperty(el, 'x') as number
+        const y0 = gsap.getProperty(el, 'y') as number
+        const s0 = (gsap.getProperty(el, 'scale') as number) || 1
+        const r0 = gsap.getProperty(el, 'rotation') as number
+        const w = el.offsetWidth
+        const h = el.offsetHeight
+        const dx = x0 + w / 2 - cx
+        const dy = y0 + h / 2 - cy
+        const r1 = Math.hypot(dx, dy)
+        const a1 = Math.atan2(dy, dx)
+        const swirl = (Math.random() > 0.5 ? 1 : -1) * rand(1.1, 1.8)
+        const spin = rand(-260, 260)
+        const z = { v: 1 }
+        const draw = () => {
+          const k = 1 / z.v
+          const a = a1 + swirl * (1 - k)
+          gsap.set(el, {
+            x: cx + Math.cos(a) * r1 * k - w / 2,
+            y: cy + Math.sin(a) * r1 * k - h / 2,
+            scale: s0 * k,
+            rotation: r0 + spin * (1 - k),
+            opacity: Math.min(1, k * 6),
+          })
+        }
+        const at = rand(0, 0.9)
+        tl.to(z, { v: FAR, duration: 1.4, ease: 'power2.in', onUpdate: draw }, at)
+        if (Math.random() < 0.35) tl.call(() => sfx.pop(rand(0.5, 0.8), sfx.panOf(x0)), [], at + 0.15)
+      })
+      rings.current.forEach((el, i) => {
+        const z = { v: 1 }
+        const draw = () => {
+          const k = 1 / z.v
+          gsap.set(el, { scale: (reach * 2.3 * k) / 100, opacity: Math.min(1, (1 - k) * 2.2) })
+        }
+        // the rings close back down the hole, last one first
+        tl.to(z, { v: FAR, duration: 1.5, ease: 'none', onUpdate: draw }, 0.9 + (rings.current.length - 1 - i) * 0.15)
+      })
+      tl.call(() => sfx.whoosh(1.6, false, 0.2), [], 0.2)
+      // prepare() brings these back for the next intro (the rings only ever use opacity)
+      tl.set(els, { autoAlpha: 0 })
+      tl.set(rings.current, { opacity: 0 })
+      return tl
+    },
+
     enable() {
       if (!drags.current.length) createDraggables()
       drags.current.forEach((d) => d.enable())
@@ -350,6 +425,47 @@ export const Stage = forwardRef<StageHandle, { aspects: Record<string, number> }
     })
   }
 
+  // turning "reduce motion" on or off in settings stops or restarts the bobbing straight away
+  useEffect(() => {
+    let was = reducedMotion()
+    return settings.subscribe(() => {
+      const now = reducedMotion()
+      if (now === was) return
+      was = now
+      if (!drags.current.length || !drags.current[0].enabled()) return
+      if (now) stopIdle()
+      else startIdle()
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  /** move everything to a fresh scatter (after the window changes shape, or the cast does) */
+  const rescatter = () => {
+    layout()
+    charEls.current.forEach((el, i) => {
+      const p = charHomes.current[i]
+      home.current.set(el, { x: p.x, y: p.y })
+      gsap.to(el, { x: p.x, y: p.y, scale: p.scale, rotation: p.rotation, duration: 0.8, ease: 'power3.inOut' })
+    })
+    iconEls.current.forEach((el, i) => {
+      const p = iconHomes.current[i]
+      home.current.set(el, { x: p.x, y: p.y })
+      gsap.to(el, { x: p.x, y: p.y, scale: p.scale, duration: 0.8, ease: 'power3.inOut' })
+    })
+  }
+
+  // someone left characters off (or brought them back): spread the rest out over the free room
+  const castKey = hiddenChars.join(',')
+  const seenCast = useRef(castKey)
+  useEffect(() => {
+    if (seenCast.current === castKey) return
+    seenCast.current = castKey
+    // only once everything has landed; before that the intro lays things out itself
+    if (!drags.current.length || !drags.current[0].enabled()) return
+    rescatter()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [castKey])
+
   useEffect(() => {
     let timer = 0
     let lastW = window.innerWidth
@@ -364,17 +480,7 @@ export const Stage = forwardRef<StageHandle, { aspects: Record<string, number> }
         lastH = window.innerHeight
         updateBounds()
         if (!big) return
-        layout()
-        charEls.current.forEach((el, i) => {
-          const p = charHomes.current[i]
-          home.current.set(el, { x: p.x, y: p.y })
-          gsap.to(el, { x: p.x, y: p.y, scale: p.scale, rotation: p.rotation, duration: 0.8, ease: 'power3.inOut' })
-        })
-        iconEls.current.forEach((el, i) => {
-          const p = iconHomes.current[i]
-          home.current.set(el, { x: p.x, y: p.y })
-          gsap.to(el, { x: p.x, y: p.y, scale: p.scale, duration: 0.8, ease: 'power3.inOut' })
-        })
+        rescatter()
       }, 180)
     }
     window.addEventListener('resize', onResize)
@@ -403,7 +509,8 @@ export const Stage = forwardRef<StageHandle, { aspects: Record<string, number> }
       {icons.map((ic, i) => (
         <div
           key={i}
-          className="floaty"
+          className={`floaty${hiddenIcons.includes(ic.name) ? ' is-off' : ''}`}
+          data-icon={ic.name}
           ref={(el) => {
             if (el) iconEls.current[i] = el
           }}
@@ -422,7 +529,8 @@ export const Stage = forwardRef<StageHandle, { aspects: Record<string, number> }
       {CHARACTERS.map((c, i) => (
         <div
           key={c.id}
-          className="char"
+          className={`char${hiddenChars.includes(c.id) ? ' is-off' : ''}`}
+          data-char={c.id}
           ref={(el) => {
             if (el) charEls.current[i] = el
           }}
@@ -434,6 +542,8 @@ export const Stage = forwardRef<StageHandle, { aspects: Record<string, number> }
             }}
           >
             <img src={c.src} alt="" draggable={false} />
+            {c.id === 'shima' && santa && <SantaHat />}
+            {c.id === 'mitsumi' && santaToo && <SantaHat className="is-mitsumi" />}
           </div>
           <span className="char-tag" style={{ background: c.color }}>
             {c.name}

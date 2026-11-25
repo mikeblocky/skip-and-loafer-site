@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { RAINBOW } from '../data'
+import { reducedMotion, settings } from '../settings'
 
 /**
  * A little pop wherever you click: a ring and a handful of dots in the site's colours. Left out
@@ -10,7 +11,6 @@ const DOTS = 7
 
 export function ClickBurst() {
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const layer = document.createElement('div')
     layer.className = 'bursts'
     layer.setAttribute('aria-hidden', 'true')
@@ -19,6 +19,7 @@ export function ClickBurst() {
 
     const pop = (e: PointerEvent) => {
       if (e.button !== 0) return
+      if (reducedMotion() || !settings.get().bursts) return
       if ((e.target as Element | null)?.closest?.(SKIP)) return
       // never more than a few at once, however fast someone clicks
       if (layer.childElementCount > 6) layer.firstElementChild?.remove()

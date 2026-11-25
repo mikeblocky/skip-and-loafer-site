@@ -39,6 +39,104 @@ export interface Part {
 
 export const UPDATES: Update[] = [
   {
+    id: 'secret-santa',
+    at: '2026-11-25T21:00:00+07:00',
+    icon: 'snow',
+    color: C.sky,
+    title: 'Secret Santa',
+    intro:
+      'Somebody left a ticket lying around on the site. Nobody knows who it’s from yet, but it looks like a Secret Santa is starting, in parts, all through December.',
+    items: [
+      'Part 1 is out now. Every good story starts at the beginning.',
+    ],
+  },
+  {
+    id: 'settings',
+    at: '2026-11-25T18:00:00+07:00',
+    icon: 'gear',
+    color: C.violet,
+    title: 'Settings and more languages',
+    intro:
+      'The biggest update so far. The sound button in the corner is now a settings button, with sound, accessibility and page options in one place, and the whole site can be read in five languages. The video player, the countdown and the hidden games all got some care too.',
+    items: [
+      'A new Settings panel behind the gear in the corner.',
+      'The site speaks English, Spanish, Brazilian Portuguese, French and German, with more on the way.',
+      'The OP/ED player has its own controls now, with a settings menu for lyrics, furigana, the translation line and speed.',
+      'You can pick which characters float around the page, and the rest spread out to fill the room.',
+      'On a wide screen this list of updates sits down the side, like the sections in Settings.',
+    ],
+    parts: [
+      {
+        title: 'Sound',
+        icon: 'sound',
+        color: C.blue,
+        items: [
+          'A master volume, plus separate volumes for the effects, the music and the OP/ED videos.',
+          'Switches for the little blips on hover and while scrolling, and for the clack when a countdown digit flips.',
+          'Volume sliders glide instead of jumping, so dragging them doesn’t crackle.',
+        ],
+      },
+      {
+        title: 'Seeing and reading',
+        icon: 'book',
+        color: C.teal,
+        items: [
+          'Bigger text in two steps, high contrast, and two plainer fonts: Inter, and Atkinson Hyperlegible for easier reading.',
+          'Colour-blind filters for each kind of red-green and blue-yellow colour blindness and for little or no colour.',
+          'Softer colours, underlined links, wider letter and line spacing, and a bigger cursor or your normal one.',
+          'A reading ruler: a band that follows your pointer or keyboard focus and dims the rest of the page.',
+        ],
+      },
+      {
+        title: 'Motion and the page',
+        icon: 'sparkle',
+        color: C.pink,
+        items: [
+          'Reduce motion, or skip the intro and go straight to the page. The Replay ribbon still plays it in full.',
+          'Turn off the coloured pop where you click, or the rainbow rings behind everything.',
+          'A calm page that hides the floating characters and doodles, or pick exactly which ones stay.',
+          'Characters you leave off no longer leave empty gaps: everyone else spreads out over the free space, right away.',
+          '"What’s new" can wait for its button instead of opening by itself.',
+        ],
+      },
+      {
+        title: 'Languages, time and dates',
+        icon: 'plane',
+        color: C.orange,
+        items: [
+          'Pick a language in Settings, or leave it on Auto to follow your device.',
+          'Pages, buttons, the hidden games and the characters’ lines are all translated. These update notes stay in English for now, and say so.',
+          'The countdown headline keeps its look in every language, with upright words for scripts where a slant looks wrong.',
+          'A 12 or 24-hour clock (Auto uses your language’s usual one), and release times in JST, your local time or both.',
+          'Dates everywhere, including these notes, follow the language you picked.',
+        ],
+      },
+      {
+        title: 'The OP/ED player',
+        icon: 'film',
+        color: C.red,
+        items: [
+          'Play, pause, stop, the time, a scrub bar, volume and fullscreen, all drawn to match the site.',
+          'A little settings menu for lyrics on or off, furigana, which language the translation line is in, and playback speed.',
+          'Lyrics and furigana are shared with Settings, so flipping them in one place flips them in both.',
+          'Muting at zero volume brings a usable volume back instead of staying silent.',
+        ],
+      },
+      {
+        title: 'Games',
+        icon: 'capsule',
+        color: C.green,
+        how: 'Settings › Games',
+        items: [
+          'A Games section with a shortcut into each hidden game and your best score so far.',
+          'Quiz questions, Skip to School goals and everyone’s chatter work in every language.',
+          'Some Settings sections have a small moving preview, so you can see what an option does before you close the panel.',
+          'The bottom of Settings shows which version of the site you’re on.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'new-faces',
     at: '2026-11-19T18:25:00+07:00',
     icon: 'smile',
@@ -243,11 +341,11 @@ export const UPDATES: Update[] = [
 ]
 
 /** a date in the reader's own time zone, e.g. "November 19, 2026 · 1:00 PM" (or their locale's version) */
-export const longDate = (iso: string) => {
+export const longDate = (iso: string, locale?: string) => {
   const d = new Date(iso)
-  const day = d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
-  const time = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+  const day = d.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' })
+  const time = d.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' })
   return `${day} · ${time}`
 }
 /** short, for the thumbnails: "Nov 19" */
-export const shortDate = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+export const shortDate = (iso: string, locale?: string) => new Date(iso).toLocaleDateString(locale, { month: 'short', day: 'numeric' })

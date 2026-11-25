@@ -5,8 +5,9 @@ import { Icon, SCATTER_ICONS } from '../icons'
 import { FlexText } from './FlexText'
 import { sfx } from '../sfx'
 import { openSecret } from '../secrets'
+import { questHint } from '../quest'
+import { dayMonth, monthName, useT } from '../i18n'
 
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const START = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
 const BAND = ['#F53D84', '#F86E1A', '#F5900F', '#3FC800', '#12B266', '#0EA09E', '#1B88E8', '#246BE8', '#3F44D6', '#7A45E0', '#CC3DC0', '#F0344F']
 
@@ -45,6 +46,7 @@ function sector(r0: number, r1: number, a0: number, a1: number) {
 
 /** The ring itself: a band per month, day ticks and the "today" notch. Drawn once. */
 function Dial() {
+  const { t, locale } = useT()
   const now = new Date()
   const todayA = angleOf(now.getMonth() + 1, now.getDate())
   const ticks = useMemo(() => {
@@ -60,12 +62,12 @@ function Dial() {
   return (
     <svg className="bd-ring" viewBox="0 0 1000 1000" aria-hidden="true">
       <circle cx="500" cy="500" r="430" fill="#fff" />
-      {MONTHS.map((name, i) => {
+      {START.map((_, i) => {
         const a0 = (START[i] / 365) * 360
         const a1 = ((START[i + 1] ?? 365) / 365) * 360
         const mid = (a0 + a1) / 2
         return (
-          <g key={name}>
+          <g key={i}>
             <path d={sector(360, 418, a0 + 0.5, a1 - 0.5)} fill={BAND[i]} />
             <text
               x="500"
@@ -76,7 +78,7 @@ function Dial() {
               className="bd-month"
               fill="#fff"
             >
-              {name.slice(0, 3)}
+              {monthName(i + 1, locale, 'short').replace(/\.$/, '')}
             </text>
           </g>
         )
@@ -85,7 +87,7 @@ function Dial() {
       <g transform={`rotate(${todayA} 500 500)`}>
         <path d="M500 328 l-9 -15 h18 z" fill={C.ink} />
         <text x="500" y="300" textAnchor="middle" className="bd-today">
-          today
+          {t('bd.today')}
         </text>
       </g>
     </svg>
@@ -98,6 +100,7 @@ const BURST = Array.from({ length: 14 }, (_, i) => ({
 }))
 
 export function Birthdays() {
+  const { t, locale } = useT()
   const { w: vw, h: vh } = useViewport()
   const mobile = vw < 760
   const D = Math.round(mobile ? Math.min(vw - 28, 460) : Math.min(vw * 0.92, vh * 1.28, 1060))
@@ -139,7 +142,12 @@ export function Birthdays() {
     }
   }
 
+  // Secret Santa: one of ???'s riddles wants the wheel turned to a particular friend
+  // (only once someone has touched it: not when it winds in on its own. Touching it can cut the
+  // wind-in short, so any press, pin click or arrow key counts too, not just the wind-in ending)
+  const settled = useRef(false)
   const pop = () => {
+    if (settled.current) questHint({ kind: 'birthday', name: list[selRef.current].name })
     const box = burst.current
     if (!box) return
     sfx.chime(0.9 + (selRef.current / list.length) * 0.4, 0.8)
@@ -203,6 +211,7 @@ export function Birthdays() {
       minimumMovement: 4,
       snap: (v: number) => nearestTurn(v, -list[nearestIndex(v)].a),
       onPress() {
+        settled.current = true
         spun = 0
         lastRot = gsap.getProperty(el, 'rotation') as number
       },
@@ -226,9 +235,10 @@ export function Birthdays() {
     gsap.fromTo(
       el,
       { rotation: target - 420 },
-      { rotation: target, duration: 2.2, ease: 'expo.out', delay: 0.2, onUpdate: sync, onComplete: () => (d.update(), pop()) },
+      { rotation: target, duration: 2.2, ease: 'expo.out', delay: 0.2, onUpdate: sync, onComplete: () => (d.update(), pop(), (settled.current = true)) },
     )
     const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') settled.current = true
       if (e.key === 'ArrowRight') goTo((selRef.current + 1) % list.length)
       if (e.key === 'ArrowLeft') goTo((selRef.current - 1 + list.length) % list.length)
     }
@@ -241,11 +251,11 @@ export function Birthdays() {
   }, [])
 
   const b = list[sel]
-  const date = `${MONTHS[b.m - 1]} ${b.d}`
+  const date = dayMonth(b.m, b.d, locale)
 
   return (
     <section className={`view view-birthdays${mobile ? ' is-mobile' : ''}`}>
-      <FlexText as="h2" className="bd-title" words={[{ t: 'Birthdays', w: 760, c: C.green }]} data-intro="ui" data-safe="">
+      <FlexText as="h2" className="bd-title" words={[{ t: t('nav.birthdays'), w: 760, c: C.green }]} data-intro="ui" data-safe="">
         <sup className="vt-count">{list.length}</sup>
       </FlexText>
 
@@ -288,12 +298,12 @@ export function Birthdays() {
             <div className="bd-date">{date}</div>
             <div className="bd-count">
               {b.days === 0 ? (
-                <span className="bd-big">Today!</span>
+                <span className="bd-big">{t('bd.isToday')}</span>
               ) : (
                 <>
-                  <span className="bd-in">in</span>
+                  {t('bd.in') && <span className="bd-in">{t('bd.in')}</span>}
                   <span className="bd-big">{b.days}</span>
-                  <span className="bd-in">{b.days === 1 ? 'day' : 'days'}</span>
+                  {t(b.days === 1 ? 'bd.day' : 'bd.days') && <span className="bd-in">{t(b.days === 1 ? 'bd.day' : 'bd.days')}</span>}
                 </>
               )}
             </div>

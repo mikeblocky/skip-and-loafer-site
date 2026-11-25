@@ -46,7 +46,7 @@ export const VOLUMES: Volume[] = [
   { n: 12, src: '/volumes/12.jpg', chapters: [66, 67, 68, 69, 70, 71, 72], buyEn: prh('819145', 12), buyJp: amzn('4065397065'), icon: 'masks' },
   { n: 13, src: '/volumes/13.jpg', chapters: [73, 74, 75, 76, 77, 78], buyJp: amzn('B0DPMT3VW4'), icon: 'torii' },
   { n: 14, src: '/volumes/14.jpg', chapters: [79, 80, 81, 82, 83, 84], inProgress: true, buyJp: amzn('4065456746'), icon: 'sakura' },
-  { n: 15, src: null, chapters: [85], inProgress: true, icon: 'gradcap' },
+  { n: 15, src: null, chapters: [85, 86], inProgress: true, icon: 'gradcap' },
 ]
 
 /** Per-volume colours, hue-matched to each cover. Volume 14 uses its sampled cover colour. */
@@ -174,7 +174,9 @@ export const CHAPTERS: Chapter[] = [
   c(81, 'Head Over Heels', '12207421983877873652', '12207421983877873659'),
   c(82, 'Leisurely Spring Break', '12207421983996851573', '12207421983996851581'),
   c(83, 'Comfortable Friend', '12207421984125525108'),
-  { ...c(84, 'Rippling Final Year', '12207421984406164162', '12207421984406164169'), latest: true },
+  c(84, 'Rippling Final Year', '12207421984406164162', '12207421984406164169'),
+  // Volume 15
+  { ...c(85, 'Wandering Yokohama (temporary name)', '12207421984544045844', '12207421984544045849'), latest: true },
 ]
 
 export const LATEST_CHAPTER = CHAPTERS.find((ch) => ch.latest)!

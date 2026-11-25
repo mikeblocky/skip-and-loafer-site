@@ -374,7 +374,7 @@
   box-shadow: 0 1px 0 color-mix(in oklab, var(--c), #000 22%);
 }
 
-/* the round button by the sound toggle that brings "what's new" back */
+/* the round button by the settings gear that brings "what's new" back */
 .news-toggle {
   position: fixed;
   right: 82px;
@@ -477,4 +477,143 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-variation-settings: 'wght' 850, 'ROND' 100;
+}
+
+/* ---------- history placement: a strip under the update on phones, a list down the side on wide screens ---------- */
+
+.nt-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* phones: the strip goes under the update (it comes first in the page, for keyboard order) */
+.nt-main .nt-history {
+  order: 1;
+}
+.nt-pick-text {
+  display: contents;
+}
+.nt-pick-title,
+.nt-pick-pill {
+  display: none;
+}
+
+@media (min-width: 761px) {
+  /* wide: a wider card at a steady height, every update listed down the left */
+  .nt-card {
+    width: min(760px, 100%);
+    height: min(640px, calc(100dvh - 48px));
+  }
+  .nt-main {
+    flex-direction: row;
+  }
+  .nt-main .nt-history {
+    order: 0;
+    flex: 0 0 212px;
+    flex-direction: column;
+    align-items: stretch;
+    margin: 0;
+    padding: 0;
+    border-top: 0;
+    border-right: 1px solid var(--hair);
+    background: #fbf9f4;
+  }
+  .nt-history .nt-arrow {
+    display: none;
+  }
+  .nt-strip {
+    position: relative;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 10px;
+    overflow: hidden auto;
+    scroll-snap-type: none;
+  }
+  .nt-pick {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 52px;
+    flex-direction: row;
+    gap: 10px;
+    width: auto;
+    height: 52px;
+    padding: 0 10px;
+    text-align: left;
+    opacity: 1;
+    transition: translate 0.3s var(--spring);
+  }
+  .nt-pick:hover {
+    background: none;
+    translate: 3px 0;
+  }
+  .nt-pick.is-on {
+    background: none;
+  }
+  .nt-pick .nt-thumb {
+    flex: none;
+  }
+  .nt-pick-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.25;
+  }
+  .nt-pick-title {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 700;
+    transition: color var(--t-hover);
+  }
+  .nt-pick:hover .nt-pick-title,
+  .nt-pick.is-on .nt-pick-title {
+    color: var(--ink);
+  }
+  /* one pill behind the list that slides to the update you're reading (52px rows, 4px apart) */
+  .nt-pick-pill {
+    display: block;
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    top: 14px;
+    height: 52px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid color-mix(in oklab, var(--c), #fff 65%);
+    box-shadow: var(--shadow-1);
+    translate: 0 calc(var(--i) * 56px);
+    transition:
+      translate 0.45s var(--spring),
+      border-color 0.3s;
+  }
+  .nt-pick-pill::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: 11px;
+    bottom: 11px;
+    width: 4px;
+    border-radius: 0 4px 4px 0;
+    background: var(--c);
+    transition: background 0.3s;
+  }
+  .nt-entry {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 22px 28px 18px;
+  }
+  .nt-foot {
+    border-top: 1px solid var(--hair);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nt-pick-pill,
+  .nt-pick {
+    transition: none;
+  }
 }

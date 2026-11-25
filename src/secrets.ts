@@ -76,8 +76,19 @@ export function openSecret(id: SecretId) {
   window.dispatchEvent(new CustomEvent(OPEN, { detail: id }))
 }
 
+let listening = 0
+
 export function onOpenSecret(fn: (id: SecretId) => void) {
   const h = (e: Event) => fn((e as CustomEvent<SecretId>).detail)
   window.addEventListener(OPEN, h)
-  return () => window.removeEventListener(OPEN, h)
+  listening++
+  listeners.forEach((l) => l())
+  return () => {
+    window.removeEventListener(OPEN, h)
+    listening--
+    listeners.forEach((l) => l())
+  }
 }
+
+/** True once the games can open (they're only listening after the intro has finished). */
+export const secretsReady = () => listening > 0

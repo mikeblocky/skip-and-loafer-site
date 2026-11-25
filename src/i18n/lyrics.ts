@@ -1,0 +1,205 @@
+import type { Cue } from '../lyrics'
+import type { Lang } from './locale'
+
+/**
+ * The OP and ED lyrics in other languages, one line per cue in order (src/lyrics.ts). Translated
+ * from the Japanese, not from the English, and written to be sung along to rather than read
+ * word by word. A language without its own lines shows the English; Japanese shows none.
+ */
+type Song = 'op' | 'ed'
+
+const LINES: Partial<Record<Lang, Record<Song, string[]>>> = {
+  es: {
+    op: [
+      'Tan brillante, tan brillante,',
+      'que sin querer aparto la mirada.',
+      'Ni una palabra que te haga justicia:',
+      'así soy yo, sin saber qué decir.',
+      'En este mundo tan pequeño,',
+      'tu risa saltarina',
+      'suena tan bonita',
+      'que me salvó.',
+      'Instantes que se repiten una y otra vez,',
+      'un futuro que no tiene fin:',
+      'no importa si a ratos nos perdemos,',
+      'vamos a compartirlo todo.',
+      'Tan brillante, tan brillante,',
+      'que sin querer aparto la mirada.',
+      'Ni una palabra que te haga justicia:',
+      'así soy yo, sin saber qué decir.',
+      'Tan ligera, tan ligera,',
+      'me quedé embobado viéndote saltar.',
+      '¿Y si este calor de juventud',
+      'resulta que es amor?',
+      '¿Y si este calor de juventud',
+      'de verdad fuera amor…?',
+    ],
+    ed: [
+      'Una brisa suave y el cielo del atardecer,',
+      'hoy también fue, sin más, un buen día.',
+      'Cambio los planes que tenía apretados',
+      'y camino una estación de más.',
+      'Cada vez que tropiezo',
+      'aprendo a levantarme un poquito mejor.',
+      'Charlas en las que nos dijimos la verdad,',
+      'su calidez se me queda en el pecho.',
+      'Tarareando, por el camino largo,',
+      'este mundo todavía está por descubrir.',
+      'De puntitas, con todas las ganas,',
+      'aunque cada quien lleve su propio paso.',
+      'Le digo adiós al atardecer',
+      'y llega una nueva mañana.',
+      'Estos días que quiero cuidar',
+      'los cruzo dando saltitos. ¡Hasta mañana!',
+    ],
+  },
+  'pt-BR': {
+    op: [
+      'Tão brilhante, tão brilhante,',
+      'que eu acabo desviando o olhar.',
+      'Nem uma palavra à sua altura,',
+      'eu fico sem saber o que dizer.',
+      'Num mundo tão pequeno assim,',
+      'a sua risada saltitante',
+      'ecoa tão bonita',
+      'que me salvou.',
+      'Instantes que se repetem,',
+      'um futuro grande demais pra imaginar:',
+      'tudo bem se a gente se perder,',
+      'vamos dividir tudo, juntos.',
+      'Tão brilhante, tão brilhante,',
+      'que eu acabo desviando o olhar.',
+      'Nem uma palavra à sua altura,',
+      'eu fico sem saber o que dizer.',
+      'Tão leve, tão leve,',
+      'fiquei encantado vendo você saltitar.',
+      'E se esse calorzinho de juventude',
+      'for amor?',
+      'E se esse calorzinho de juventude',
+      'for mesmo amor…',
+    ],
+    ed: [
+      'Um vento gostoso e o pôr do sol,',
+      'hoje, sem nada demais, foi um dia bom.',
+      'Vou mudar a agenda lotada',
+      'e andar uma estação a pé.',
+      'Cada tropeço que eu dou',
+      'me ensina a levantar melhor.',
+      'Conversas de coração aberto,',
+      'o carinho vai aquecendo o meu peito.',
+      'Cantarolando, pelo caminho mais longo,',
+      'esse mundo ainda é um mistério.',
+      'Na pontinha dos pés, com vontade,',
+      'cada um no seu passo, e tudo bem.',
+      'Dou tchau pro entardecer',
+      'e vem uma nova manhã.',
+      'Esses dias que eu quero guardar,',
+      'vou vencendo aos pulinhos. Até amanhã!',
+    ],
+  },
+  fr: {
+    op: [
+      'Si éblouissant, si éblouissant,',
+      'que je finis par détourner les yeux.',
+      'Pas un seul mot qui te ressemble,',
+      'je reste là, sans rien dire.',
+      'Dans ce monde si petit,',
+      'ton rire qui sautille',
+      'résonne si joliment',
+      'qu’il m’a sauvé.',
+      'Des instants qui se répètent,',
+      'un avenir à perte de vue :',
+      'tant pis si l’on s’égare,',
+      'partageons tout, ensemble.',
+      'Si éblouissant, si éblouissant,',
+      'que je finis par détourner les yeux.',
+      'Pas un seul mot qui te ressemble,',
+      'je reste là, sans rien dire.',
+      'Si légère, si légère,',
+      'je te regardais sautiller, sous le charme.',
+      'Et si cette chaleur couleur de jeunesse',
+      'c’était de l’amour ?',
+      'Et si cette chaleur couleur de jeunesse',
+      'c’était vraiment de l’amour…',
+    ],
+    ed: [
+      'Une brise douce et le ciel du couchant,',
+      'encore une journée toute simple, et bien belle.',
+      'J’oublie mon emploi du temps trop chargé',
+      'et je marche une station de plus.',
+      'À chaque fois que je trébuche,',
+      'j’apprends à mieux me relever.',
+      'Ces dialogues à cœur ouvert,',
+      'leur chaleur me gagne doucement.',
+      'Un air fredonné, un détour,',
+      'ce monde reste encore à découvrir.',
+      'Sur la pointe des pieds, de tout mon cœur,',
+      'même si chacun avance à son rythme.',
+      'Je fais signe au crépuscule',
+      'et voilà un nouveau matin.',
+      'Ces jours que je veux protéger,',
+      'je les traverse en sautillant. À demain !',
+    ],
+  },
+  de: {
+    op: [
+      'So hell, so blendend hell,',
+      'dass ich den Blick abwenden muss.',
+      'Kein einziges Wort, das zu dir passt –',
+      'ich bring einfach nichts heraus.',
+      'In dieser kleinen Welt',
+      'klingt dein hüpfendes Lachen',
+      'so wunderschön,',
+      'dass es mich gerettet hat.',
+      'Augenblicke, immer wieder,',
+      'eine Zukunft ohne Ende:',
+      'Ist schon okay, wenn wir uns verlaufen,',
+      'lass uns alles miteinander teilen.',
+      'So hell, so blendend hell,',
+      'dass ich den Blick abwenden muss.',
+      'Kein einziges Wort, das zu dir passt –',
+      'ich bring einfach nichts heraus.',
+      'So leicht, so leicht,',
+      'ich sah dir verzaubert beim Hüpfen zu.',
+      'Und wenn diese junge, blaue Wärme',
+      'Liebe wäre?',
+      'Und wenn diese junge, blaue Wärme',
+      'wirklich Liebe wäre …',
+    ],
+    ed: [
+      'Ein sanfter Wind und Abendrot,',
+      'heute war einfach so ein guter Tag.',
+      'Ich werf den vollgestopften Plan um',
+      'und lauf eine Station zu Fuß.',
+      'Mit jedem Stolpern',
+      'kann ich besser wieder aufstehen.',
+      'Gespräche, in denen wir ehrlich waren,',
+      'ihre Wärme geht mir ins Herz.',
+      'Vor mich hin summen, ein kleiner Umweg,',
+      'diese Welt ist noch so unbekannt.',
+      'Auf Zehenspitzen, mit ganzem Herzen,',
+      'auch wenn jeder sein eigenes Tempo hat.',
+      'Ich wink dem Abendrot zu,',
+      'und ein neuer Morgen beginnt.',
+      'Die Tage, die ich hüten will,',
+      'hüpf ich einfach drüber. Bis morgen!',
+    ],
+  },
+}
+
+/** the translation lines on offer: English plus every shown language that has its own */
+export const lyricLangs = (shown: readonly Lang[]): Lang[] => ['en', ...shown.filter((l) => l !== 'en' && LINES[l])]
+
+/**
+ * The cues with their translation line in `choice` ('auto' = the site's language `site`,
+ * 'off' = none). Japanese needs no translation, and a language without lines shows English.
+ */
+export function lyricsIn(cues: Cue[], song: Song, choice: string, site: Lang): Cue[] {
+  const lang = choice === 'auto' ? site : choice
+  if (lang === 'off' || lang === 'ja') return cues.map((c) => ({ ...c, en: '' }))
+  const lines = LINES[lang as Lang]?.[song]
+  if (!lines || lines.length !== cues.length) return cues
+  return cues.map((c, i) => ({ ...c, en: lines[i] }))
+}
+
+export type { Song }

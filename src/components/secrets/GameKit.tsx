@@ -6,6 +6,7 @@ import { arcade } from '../../arcadeMusic'
 import { secrets } from '../../secrets'
 import { fmt } from './skipRules'
 import { Leaderboard, SaveScore, savedName, useLeaderboard, type GameId } from './SkipBoard'
+import { slot, useT } from '../../i18n'
 
 /**
  * Bits shared by the three newer hidden games (capsule gacha, the quiz and find your friends):
@@ -69,8 +70,9 @@ export type GameBoard = ReturnType<typeof useGameBoard>
 
 /** a row of hearts, the empty ones greyed out */
 export function Hearts({ n, of }: { n: number; of: number }) {
+  const { t } = useT()
   return (
-    <span className="gm-hearts" aria-label={`${n} hearts left`}>
+    <span className="gm-hearts" aria-label={t('game.hearts', { n })}>
       {Array.from({ length: of }, (_, i) => (
         <Icon key={i} name="heart" color={i < n ? C.red : '#e3ddd2'} size={20} />
       ))}
@@ -80,25 +82,27 @@ export function Hearts({ n, of }: { n: number; of: number }) {
 
 /** the time left as a draining bar; it turns red and pulses for the last few seconds */
 export function Clock({ left, of, warn = 5 }: { left: number; of: number; warn?: number }) {
-  const t = Math.max(0, Math.min(1, left / of))
+  const k = Math.max(0, Math.min(1, left / of))
+  const { t } = useT()
   return (
-    <div className={`gm-clock${left <= warn ? ' is-low' : ''}`} role="timer" aria-label={`${Math.ceil(left)} seconds left`}>
-      <i style={{ transform: `scaleX(${t})` }} />
-      <span>{Math.ceil(Math.max(0, left))}s</span>
+    <div className={`gm-clock${left <= warn ? ' is-low' : ''}`} role="timer" aria-label={t('game.secsLeft', { n: Math.ceil(left) })}>
+      <i style={{ transform: `scaleX(${k})` }} />
+      <span>{t('game.secs', { n: Math.ceil(Math.max(0, left)) })}</span>
     </div>
   )
 }
 
 /** the HUD row: whatever the game shows on the left, then score and best on the right */
 export function GameHud({ children, score, best }: { children?: ReactNode; score: number; best: number }) {
+  const { t } = useT()
   return (
     <div className="gm-hud">
       <span className="gm-hud-left">{children}</span>
       <span>
-        score <b className="gm-score">{fmt(score)}</b>
+        {t('game.score')} <b className="gm-score">{fmt(score)}</b>
       </span>
       <span className="gm-hud-best">
-        best <b className="gm-best">{fmt(best)}</b>
+        {t('game.best')} <b className="gm-best">{fmt(best)}</b>
       </span>
     </div>
   )
@@ -114,13 +118,14 @@ export function Chip({ color, children, title }: { color: string; children: Reac
 }
 
 /** The start card: the game's name, how to play, and a big start button low on the screen. */
-export function GameStart({ title, lines, onStart, children, label = 'start' }: {
+export function GameStart({ title, lines, onStart, children, label }: {
   title: string
   lines: string[]
   onStart: () => void
   children?: ReactNode
   label?: string
 }) {
+  const { t } = useT()
   return (
     <div className="gm-card">
       <b className="gm-card-title">{title}</b>
@@ -132,7 +137,7 @@ export function GameStart({ title, lines, onStart, children, label = 'start' }: 
       {children}
       <button className="sx-btn is-strong gm-go" onClick={onStart}>
         <Icon name="play" color="#fff" size={18} />
-        {label}
+        {label ?? t('game.start')}
       </button>
     </div>
   )
@@ -150,6 +155,7 @@ export function GameEnd({ title, score, isBest, won, line, kit, onAgain }: {
 }) {
   // a beat before "play again" works, so a fast last tap doesn't restart by accident
   const [ready, setReady] = useState(false)
+  const { t } = useT()
   useEffect(() => {
     const t = window.setTimeout(() => setReady(true), 700)
     if (isBest && score > 0) window.setTimeout(() => sfx.chime(1.2, 0.8), 300)
@@ -160,11 +166,11 @@ export function GameEnd({ title, score, isBest, won, line, kit, onAgain }: {
     <div className="gm-card is-end">
       <b className="gm-card-title">{title}</b>
       <span>
-        <em className="sg-pts">{fmt(score)}</em> points
+        {slot(t('game.points'), 'n', <em className="sg-pts">{fmt(score)}</em>)}
         {isBest && score > 0 && (
           <>
             {' · '}
-            <em className="sg-new">new best!</em>
+            <em className="sg-new">{t('game.newBest')}</em>
           </>
         )}
       </span>
@@ -172,7 +178,7 @@ export function GameEnd({ title, score, isBest, won, line, kit, onAgain }: {
       <SaveScore board={kit.board} score={score} won={won} name={kit.name} setName={kit.setName} onBest={kit.record} />
       <button className="sx-btn is-strong gm-go" onClick={onAgain} disabled={!ready}>
         <Icon name="replay" color="#fff" size={18} />
-        play again
+        {t('game.again')}
       </button>
     </div>
   )

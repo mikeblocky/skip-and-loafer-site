@@ -11,6 +11,10 @@ import {
 } from './skipRules'
 import { GOAL_BOOST, goalChip, goalReward, makeGoal, dareText, STAR_BOOST, type Goal, type GoalKind } from './skipGoals'
 import { IDLE_TALK, lineFor, TALK_GAP, type TalkEvent } from './skipTalk'
+import { currentLang, t as tr } from '../../i18n'
+
+/** English writes the names in the shouts lower case, like the rest of the game's words */
+const shoutName = (name: string) => (currentLang() === 'en' ? name.toLowerCase() : name)
 
 /** Everything the frame loop carries between frames. It lives in a ref, so frames never re-render. */
 export const newGame = () => ({
@@ -194,12 +198,12 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
     s.dareBy = by
     s.dareAt = s.clock + wait
   }
-  const nameOf = (id: string) => CHARACTERS.find((c) => c.id === id)?.name.toLowerCase() ?? 'someone'
+  const nameOf = (id: string) => shoutName(CHARACTERS.find((c) => c.id === id)?.name ?? '?')
   const startGoal = (by: string) => {
     s.goal = makeGoal(difficulty(s.score), s.lastGoal, by)
     s.lastGoal = s.goal.kind
     speak(by, dareText(s.goal))
-    say(`${nameOf(by)}'s dare!`, 1500)
+    say(tr('sg.dareBy', { name: nameOf(by) }), 1500)
     if (!music.motif(by, 'dare')) sfx.pop(1.6)
   }
   const winGoal = () => {
@@ -218,7 +222,7 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
       s.shieldHits = s.pw.clover > 0 ? s.shieldHits + 1 : 1
       s.pw.clover = Math.max(s.pw.clover, 0) + POWERS.clover.secs
     } else s.pw[k] = Math.max(s.pw[k], 0) + POWERS[k].secs * (1 + 0.48 * boostOf(s.score))
-    say(`dare done! +${fmt(pts)} · ${boost.name}!`, 2000)
+    say(tr('sg.dareDone', { pts: fmt(pts), boost: tr(boost.name) }), 2000)
     if (!music.motif(g.by, 'done')) sfx.chime(1.5, 0.8)
     talk('done', g.by, true)
     // and a heart along with it if you're missing one
@@ -246,7 +250,7 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
       if (s.breakT === 0) {
         s.playT = 0
         music.setRest(false)
-        say('here we go!', 1300)
+        say(tr('sg.go'), 1300)
         breathe(TUNE.breather.rest)
       }
     } else {
@@ -255,7 +259,7 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
       if (s.playT >= BREAK_EVERY && clear) {
         s.breakT = BREAK_LEN
         music.setRest(true)
-        say('break time! catch your breath', 2200)
+        say(tr('sg.breakTime'), 2200)
         talk('break')
         // a heart is always waiting on a break if you're missing one
         if (s.lives < LIVES) spawn('heart', w + 30, 40)
@@ -299,7 +303,7 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
         breathe(TUNE.breather.twist)
         setTiltDir(Math.random() < 0.5 ? -1 : 1)
         setTwists(picked)
-        say(picked.map((t) => TWISTS[t].label).join(' + '), 2000)
+        say(picked.map((t) => tr(TWISTS[t].label)).join(' + '), 2000)
         talk('twist')
         sfx.whoosh(0.5, true, 0.14)
       }
@@ -407,8 +411,7 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
       setPage(next)
       setFlipping(true)
       window.setTimeout(() => setFlipping(false), 800)
-      const lead = CHARACTERS.find((c) => c.id === next.leader)?.name.toLowerCase() ?? 'someone'
-      say(`${fmt(pageAt(pageN - 1))}! new page · ${lead} leads the way`, 2400)
+      say(tr('sg.newPage', { pts: fmt(pageAt(pageN - 1)), name: nameOf(next.leader) }), 2400)
       talk('page', next.leader, true)
       dareSoon(next.leader, 2.6)
       sfx.rustle()
@@ -422,7 +425,7 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
       if (!(s.won && tier === JOIN_AT.length)) music.remix()
       // after the win, each extra level gets its own heads-up (not the one the last friend brought)
       if (s.won && tier > JOIN_AT.length) {
-        say(`level ${tier} · the road gets busier`, 2000)
+        say(tr('sg.level', { n: tier }), 2000)
         dareSoon(speaker())
       }
     }
@@ -435,12 +438,12 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
         s.won = true
         setWon(true)
         breathe(TUNE.breather.win)
-        say('everyone made it to school! keep skipping…', 3200)
+        say(tr('sg.allIn'), 3200)
         // the band plays a fanfare on the next downbeat (falls back to the jingle if it's silent)
         if (!music.cue('win')) sfx.jingle(0.8)
         talk('win', undefined, true)
       } else {
-        say(`${who[joined - 1].name.toLowerCase()} joined! (${joined}/${JOIN_AT.length})`)
+        say(tr('sg.joined', { name: shoutName(who[joined - 1].name), n: joined, total: JOIN_AT.length }))
         if (!music.cue('join')) sfx.chime(1 + joined * 0.08, 0.7)
         talk('join', who[joined - 1].id, true)
         dareSoon(who[joined - 1].id)
@@ -656,7 +659,7 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
           s.pw[k] = k === 'clover' ? POWERS[k].secs : POWERS[k].secs * (1 + 0.48 * boostOf(s.score))
             if (k === 'clover') s.shieldHits = 1
         }
-        say(POWERS[k].label)
+        say(tr(POWERS[k].label))
         sfx.chime(1.4, 0.7)
         if (s.goal?.kind === 'power') s.goal.have = 1
         else if (Math.random() < 0.4) talk('power')
@@ -674,13 +677,13 @@ export function runSkipLoop(s: GameState, io: LoopIO) {
         if (s.shieldHits <= 0) s.pw.clover = 0
         s.hurt = 0.5
         sfx.boing()
-        say(s.shieldHits > 0 ? 'the clover held! one more block left' : 'phew, the clover saved you!')
+        say(tr(s.shieldHits > 0 ? 'sg.cloverHeld' : 'sg.cloverSaved'))
       } else if (s.hurt <= 0 && s.pw.goldheart > 0) {
         // the golden heart breaks first
         s.pw.goldheart = 0
         s.hurt = 1.6
         sfx.thud()
-        say('the golden heart took that one')
+        say(tr('sg.goldTook'))
         if (s.goal?.kind === 'clean' || s.goal?.kind === 'clear') missGoal()
         else talk('hit')
         const f = field.current

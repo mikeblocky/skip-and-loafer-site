@@ -55,7 +55,7 @@ export { VOLUMES } from './volumes'
  */
 export const RELEASE_DAY = 25
 export const RELEASE_UTC_OFFSET_HOURS = 9
-export const NEXT_CHAPTER_NUMBER: number | null = 85
+export const NEXT_CHAPTER_NUMBER: number | null = 86
 
 export function releaseWindow(now = Date.now()) {
   const d = new Date(now)

@@ -282,3 +282,245 @@
     -0.06em -0.06em 0 var(--ink-o),
     0 0.06em 0.3em rgb(0 0 0 / 0.4);
 }
+
+/* ---------- the control bar's extras: stop, volume, settings ---------- */
+
+.pl-gear svg {
+  transition: rotate 0.45s var(--soft);
+}
+.pl-gear.is-on {
+  background: rgb(255 255 255 / 0.2);
+}
+.pl-gear.is-on svg {
+  rotate: 60deg;
+}
+/* volume: the button, and a slider that slides out when you reach for it */
+.pl-vol {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+.pl-vol-range {
+  --v: 100%;
+  appearance: none;
+  width: 0;
+  height: 22px;
+  margin: 0;
+  opacity: 0;
+  background: transparent;
+  cursor: var(--cur-pointer);
+  transition:
+    width 0.3s var(--soft),
+    opacity 0.2s,
+    margin 0.3s var(--soft);
+}
+.pl-vol:hover .pl-vol-range,
+.pl-vol:focus-within .pl-vol-range {
+  width: 76px;
+  margin: 0 6px 0 2px;
+  opacity: 1;
+}
+/* no hover on touch screens: keep it out whenever the bar is roomy enough */
+@media (hover: none) and (min-width: 560px) {
+  .pl-vol-range {
+    width: 64px;
+    margin: 0 6px 0 2px;
+    opacity: 1;
+  }
+}
+.pl-vol-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--c) var(--v), rgb(255 255 255 / 0.26) var(--v));
+}
+.pl-vol-range::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--c) var(--v), rgb(255 255 255 / 0.26) var(--v));
+}
+.pl-vol-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -4px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
+.pl-vol-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
+.pl-vol-range:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+
+/* ---------- settings menu: the same dark glass as the bar, opening up from the gear ---------- */
+
+.pl-menu {
+  position: absolute;
+  right: 12px;
+  bottom: 66px;
+  z-index: 3;
+  display: grid;
+  gap: 4px;
+  width: min(280px, calc(100% - 24px));
+  grid-template-columns: minmax(0, 1fr);
+  max-height: calc(100% - 84px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+  border-radius: 18px;
+  background: rgb(29 27 44 / 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #fff;
+  box-shadow: var(--shadow-2);
+  transform-origin: calc(100% - 70px) 100%;
+  animation: pl-menu-in 0.28s var(--spring);
+}
+@keyframes pl-menu-in {
+  from {
+    opacity: 0;
+    scale: 0.92;
+    translate: 0 8px;
+  }
+}
+.pl-menu-group {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  padding-top: 6px;
+  border-top: 1px solid rgb(255 255 255 / 0.12);
+}
+.pl-menu > .pl-menu-group:first-child,
+.pl-page > .pl-menu-group:first-child,
+.pl-page.pl-menu-group {
+  padding-top: 0;
+  border-top: 0;
+}
+.pl-menu-title {
+  padding: 2px 10px 4px;
+  font-size: 12px;
+  font-variation-settings: 'wght' 800, 'ROND' 100;
+  color: rgb(255 255 255 / 0.6);
+}
+/* each page of the menu; the slide between them is animated in Player.tsx */
+.pl-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+}
+.pl-switch,
+.pl-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  border-radius: 11px;
+  text-align: start;
+  font-size: 14px;
+  font-variation-settings: 'wght' 700, 'ROND' 100;
+  transition: background var(--t-hover);
+}
+.pl-switch:hover:not(:disabled),
+.pl-opt:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.12);
+}
+.pl-switch:disabled,
+.pl-opt:disabled {
+  opacity: 0.4;
+  cursor: var(--cur);
+}
+.pl-opt.is-on {
+  color: color-mix(in oklab, var(--c), #fff 55%);
+}
+/* a small pill switch in the song's colour */
+.pl-switch i {
+  position: relative;
+  flex: none;
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.24);
+  transition: background 0.2s;
+}
+.pl-switch i::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: translate 0.3s var(--spring);
+}
+.pl-switch[aria-checked='true'] i {
+  background: var(--c);
+}
+.pl-switch[aria-checked='true'] i::after {
+  translate: 14px 0;
+}
+.pl-speeds {
+  display: flex;
+  gap: 4px;
+  padding: 2px 4px 4px;
+}
+.pl-speed {
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-variation-settings: 'wght' 750, 'ROND' 100;
+  font-feature-settings: 'tnum';
+  background: rgb(255 255 255 / 0.1);
+  transition: background var(--t-hover);
+}
+.pl-speed:hover {
+  background: rgb(255 255 255 / 0.2);
+}
+.pl-speed.is-on {
+  background: var(--c);
+}
+.pl-menu :focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
+/* a row that opens a page of its own: label, current choice, then a chevron */
+.pl-more span {
+  flex: none;
+}
+.pl-more small {
+  min-width: 0;
+  margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: rgb(255 255 255 / 0.65);
+}
+.pl-more svg {
+  flex: none;
+  margin-left: -6px;
+}
+.pl-back {
+  justify-content: flex-start;
+  gap: 6px;
+  font-variation-settings: 'wght' 800, 'ROND' 100;
+}
+.pl-back svg {
+  rotate: 180deg;
+}

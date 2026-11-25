@@ -5,10 +5,11 @@ import { C } from '../../data'
 import { Icon } from '../../icons'
 import { sfx } from '../../sfx'
 import { safeColor } from '../../letterRules'
-import { ANON, api, clientId, post, remember, store, type Letter } from './mail'
+import { api, clientId, post, remember, store, type Letter } from './mail'
 import { dateOf, paper, reduced, vars, type Geo } from './geometry'
 import { Envelope, Folding, parts, Sheet, turn } from './Paper'
 import { centre, confetti } from './confetti'
+import { serverText, useT } from '../../i18n'
 
 type ReadPhase = 'idle' | 'checking' | 'arrived' | 'opening' | 'read' | 'empty' | 'error'
 
@@ -35,6 +36,7 @@ export function Reader({ g, total, onChange, onWrite }: { g: Geo; total: number 
   const [letter, setLetter] = useState<Letter | null>(null)
   const [msg, setMsg] = useState('')
   const [reported, setReported] = useState(false)
+  const { t: tr } = useT()
   const scene = useRef<HTMLDivElement>(null)
   const root = useRef<HTMLDivElement>(null)
   const anims = useRef<gsap.core.Animation[]>([])
@@ -235,7 +237,7 @@ export function Reader({ g, total, onChange, onWrite }: { g: Geo; total: number 
     <div className="rx" ref={scene} style={vars(g, letter?.color ?? C.pink)}>
       <div className="rx-scene">
         {showBox && (
-          <button className="rx-box" onClick={check} disabled={phase === 'checking'} aria-label="Check the mailbox for a letter">
+          <button className="rx-box" onClick={check} disabled={phase === 'checking'} aria-label={tr('msg.checkLabel')}>
             <Mailbox flag={waiting > 0} />
           </button>
         )}
@@ -246,10 +248,10 @@ export function Reader({ g, total, onChange, onWrite }: { g: Geo; total: number 
             onClick={open}
             role={phase === 'arrived' ? 'button' : undefined}
             tabIndex={phase === 'arrived' ? 0 : undefined}
-            aria-label={phase === 'arrived' ? 'Open the envelope' : undefined}
+            aria-label={phase === 'arrived' ? tr('msg.openEnv') : undefined}
             onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && open()}
           >
-            <Envelope label={letter.mine ? 'your own letter' : `from ${letter.from || ANON}`} icon={paper(letter.color).icon} />
+            <Envelope label={letter.mine ? tr('msg.ownLetter') : tr('msg.from', { name: letter.from || tr('msg.anon') })} icon={paper(letter.color).icon} />
             <div className="lt-holder">
               <Folding
                 selectable={phase === 'read'}
@@ -264,35 +266,35 @@ export function Reader({ g, total, onChange, onWrite }: { g: Geo; total: number 
         {phase === 'idle' && (
           <>
             <p className="rx-count">
-              {total === null ? ' ' : waiting === 0 ? 'empty right now' : `${waiting} in the mailbox`}
+              {total === null ? ' ' : waiting === 0 ? tr('msg.empty') : tr('msg.waiting', { n: waiting })}
             </p>
             <button className="msg-btn" onClick={check}>
               <Icon name="envelope" color="#fff" size={22} />
-              Check the mailbox
+              {tr('msg.check')}
             </button>
           </>
         )}
-        {phase === 'checking' && <p className="rx-count">checking…</p>}
-        {phase === 'arrived' && <p className="rx-hint">{letter?.mine ? 'this one’s yours! tap to open' : 'tap to open'}</p>}
+        {phase === 'checking' && <p className="rx-count">{tr('msg.checking')}</p>}
+        {phase === 'arrived' && <p className="rx-hint">{tr(letter?.mine ? 'msg.yoursTap' : 'msg.tap')}</p>}
         {phase === 'empty' && (
           <>
-            <p className="rx-count">Nothing in there yet.</p>
+            <p className="rx-count">{tr('msg.nothing')}</p>
             <div className="sent-btns">
               <button className="msg-btn" onClick={onWrite}>
                 <Icon name="pencil" color="#fff" size={22} />
-                Write a letter
+                {tr('msg.writeOne')}
               </button>
               <button className="msg-btn is-ghost" onClick={() => setPhase('idle')}>
-                Okay
+                {tr('msg.ok')}
               </button>
             </div>
           </>
         )}
         {phase === 'error' && (
           <>
-            <p className="rx-count">{msg}</p>
+            <p className="rx-count">{serverText(msg, tr)}</p>
             <button className="msg-btn is-ghost" onClick={() => setPhase('idle')}>
-              Try again
+              {tr('msg.retry')}
             </button>
           </>
         )}
@@ -301,15 +303,15 @@ export function Reader({ g, total, onChange, onWrite }: { g: Geo; total: number 
             <div className="sent-btns">
               <button className="msg-btn" onClick={another}>
                 <Icon name="envelope" color="#fff" size={22} />
-                Open another
+                {tr('msg.openAnother')}
               </button>
               <button className="msg-btn is-ghost" onClick={onWrite}>
                 <Icon name="pencil" color={C.orange} size={22} />
-                Write one back
+                {tr('msg.writeBack')}
               </button>
             </div>
             <button className="rx-report" onClick={report} disabled={reported}>
-              {reported ? 'reported' : 'report'}
+              {tr(reported ? 'msg.reported' : 'msg.report')}
             </button>
           </div>
         )}

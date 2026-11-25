@@ -54,14 +54,6 @@
     font-size: 13px;
   }
 
-  /* sound toggle a bit smaller */
-  .sound-toggle {
-    right: 14px;
-    bottom: 14px;
-    width: 44px;
-    height: 44px;
-  }
-
   /* volumes */
   .vol-title {
     font-size: 54px;

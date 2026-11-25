@@ -6,6 +6,7 @@ import { Icon } from '../icons'
 import { useCoverColors } from '../coverColors'
 import { sfx } from '../sfx'
 import { openSecret } from '../secrets'
+import { useT } from '../i18n'
 
 const TILTS = [-4, 3, -2, 5, -3, 2, -5, 4, -2, 3, -4, 2, -3, 5]
 
@@ -13,6 +14,7 @@ export function VolumeCards({ hidden, onOpen }: { hidden: number | null; onOpen:
   const wrap = useRef<HTMLDivElement>(null)
   const track = useRef<HTMLDivElement>(null)
   const colors = useCoverColors()
+  const { t: tr } = useT()
   const openRef = useRef(onOpen)
   openRef.current = onOpen
 
@@ -122,7 +124,7 @@ export function VolumeCards({ hidden, onOpen }: { hidden: number | null; onOpen:
               data-vol={i}
               role="button"
               tabIndex={0}
-              aria-label={`Volume ${v.n}`}
+              aria-label={tr('vol.label', { n: v.n })}
               style={{ '--c': colors[i], '--t': `${TILTS[i % TILTS.length]}deg` } as CSSProperties}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -135,7 +137,7 @@ export function VolumeCards({ hidden, onOpen }: { hidden: number | null; onOpen:
                 <div className="vcard-face">
                   <Icon name={v.icon} color="currentColor" size="46%" className="vcard-mark" />
                   {i === LATEST_VOLUME && <span className="vcard-new">NEW</span>}
-                  {v.inProgress && i !== LATEST_VOLUME && <span className="vcard-flag">in progress</span>}
+                  {v.inProgress && i !== LATEST_VOLUME && <span className="vcard-flag">{tr('vol.inProgress')}</span>}
                   {!v.src && <span className="vcard-soon" />}
                   <span className="vcard-vol">vol.</span>
                   <span className="vcard-num">{v.n}</span>
