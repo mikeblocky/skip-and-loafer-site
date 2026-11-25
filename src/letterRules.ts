@@ -67,12 +67,12 @@ function hasPhone(s: string) {
   return runs.some((r) => r.replace(/\D/g, '').length >= 8)
 }
 
-/** Why this text can't be sent, in words for the writer, or null if it's fine. */
-export function problem(text: string, signer: string | null = null): string | null {
+/** Why this text can't be sent, in words for the writer, or null if it's fine. `max` lets other notes run longer. */
+export function problem(text: string, signer: string | null = null, max = LETTER_MAX): string | null {
   const all = `${text}\n${signer ?? ''}`
   const len = Array.from(text).length
   if (len < LETTER_MIN) return 'write a little more first'
-  if (len > LETTER_MAX) return `keep it under ${LETTER_MAX} characters`
+  if (len > max) return `keep it under ${max} characters`
   if (MARKUP.test(all)) return 'no code or HTML, please'
   if (LINK.test(all)) return 'no links, please'
   if (EMAIL.test(all) || HANDLE.test(all) || SOCIAL.test(all)) return 'no emails, handles or socials'

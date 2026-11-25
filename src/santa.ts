@@ -72,8 +72,8 @@ export const RIBBON: Record<string, string> = {
   '#7A45E0': '#FBBA14',
 }
 
-/** a tag is shorter than a letter */
-export const TAG_MAX = 280
+/** how long a Secret Santa letter may be (longer than a Message tab letter: it's the holidays) */
+export const TAG_MAX = 1000
 /** gifts one person can have in the box at once */
 export const GIFTS_PER_PERSON = 12
 
@@ -87,8 +87,7 @@ export const nameKey = (name: string | null) => (name ? name.normalize('NFKC').t
 
 /** Why this note can't go (same words as the letter rules), or null if it's fine. */
 export function tagProblem(text: string, signer: string | null, to: string | null = null) {
-  if (Array.from(cleanText(text)).length > TAG_MAX) return `keep it under ${TAG_MAX} characters`
-  return problem(text, [signer, to].filter(Boolean).join(' ') || null)
+  return problem(cleanText(text), [signer, to].filter(Boolean).join(' ') || null, TAG_MAX)
 }
 
 /** Pictures: squeezed in the browser, stored in Vercel Blob. GIFs are kept as they are so they still move. */

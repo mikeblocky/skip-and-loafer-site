@@ -396,6 +396,9 @@
   display: block;
   width: 100%;
   min-height: 150px;
+  /* grows with the writing, a line at a time, then scrolls */
+  field-sizing: content;
+  max-height: 420px;
   margin-top: 12px;
   padding: 0;
   border: 0;
