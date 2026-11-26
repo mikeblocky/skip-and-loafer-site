@@ -24,6 +24,8 @@ export const santaZhHans: SantaDict = {
   'santa.toName': '写给谁？写个名字，或者留给所有人',
   'santa.toHint': '只有输入这个名字的人才能找到它。',
   'santa.placeholder': '写给拆开它的人…',
+  'santa.ideas': "Skip 圣诞快乐，Loaf 年快乐！\nSkip 圣诞快乐！愿这个冬天对你温柔一点，零食也都好吃。\n给拆开它的你：你比自己想的做得更好。Loaf 年快乐！\n敬慢慢走回家的路、暖暖的罐装咖啡，和在车站等你的朋友。\n读到这里的话，去喝点热的，再给想念的人发条消息吧。\n谢谢你今年也在这里。下一章再见！\n就算半路摔一跤也没关系，好故事往往就是这样开始的。",
+  'santa.useIdea': "就用这句",
   'santa.addPic': '添加图片或 GIF',
   'santa.removePic': '移除图片',
   'santa.picWorking': '准备中…',

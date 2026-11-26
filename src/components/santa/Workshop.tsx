@@ -12,6 +12,7 @@ import { PAPER, reduced } from '../message/geometry'
 import { centre, confetti } from '../message/confetti'
 import { local, santaApi, santaPost, type Wrapped } from './season'
 import { Present } from './Present'
+import { Ideas } from './Ideas'
 import { Flip, inkOn, LetterBack } from './Letter'
 import { preparePicture, uploadPicture, type Picture } from './picture'
 
@@ -49,6 +50,7 @@ export function Workshop({ burstDate, start, end }: { burstDate: string; start: 
   const [mine, setMine] = useState<Wrapped[]>(local.sent)
   const [round, setRound] = useState(0)
   const letter = useRef<HTMLDivElement>(null)
+  const writing = useRef<HTMLTextAreaElement>(null)
   const box = useRef<HTMLDivElement>(null)
   const anims = useRef<gsap.core.Animation[]>([])
 
@@ -260,17 +262,35 @@ export function Workshop({ burstDate, start, end }: { burstDate: string; start: 
         </span>
       </div>
       {toName && <p className="sv-to-hint">{t('santa.toHint')}</p>}
-      <textarea
-        value={text}
-        maxLength={TAG_MAX + 40}
-        placeholder={t('santa.placeholder')}
-        onChange={(e) => {
-          setText(e.target.value)
-          setErr(null)
-        }}
-        disabled={locked}
-        aria-label={t('santa.tag')}
-      />
+      <div className="sv-write">
+        <textarea
+          ref={writing}
+          value={text}
+          maxLength={TAG_MAX + 40}
+          placeholder={locked ? t('santa.placeholder') : undefined}
+          onChange={(e) => {
+            setText(e.target.value)
+            setErr(null)
+          }}
+          disabled={locked}
+          aria-label={t('santa.tag')}
+        />
+        {/* an empty letter suggests a few lines, typed out one after another */}
+        {!text && !locked && (
+          <Ideas
+            onUse={(idea) => {
+              setText(idea)
+              setErr(null)
+              sfx.rustle()
+              requestAnimationFrame(() => {
+                const el = writing.current
+                el?.focus()
+                el?.setSelectionRange(idea.length, idea.length)
+              })
+            }}
+          />
+        )}
+      </div>
       {pic ? (
         <div className="sv-pic-edit">
           <img src={pic.url} width={pic.w} height={pic.h} alt="" />

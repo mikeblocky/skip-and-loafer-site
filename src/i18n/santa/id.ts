@@ -24,6 +24,8 @@ export const santaId: SantaDict = {
   'santa.toName': 'Untuk siapa? Tulis nama, atau biarkan untuk semua orang',
   'santa.toHint': 'Hanya orang yang mengetik nama ini yang akan menemukannya.',
   'santa.placeholder': 'Pesan untuk siapa pun yang membukanya…',
+  'santa.ideas': "Selamat Skipmas dan Selamat Tahun Roti!\nSelamat Skipmas! Semoga musim dingin ini lembut padamu, dan camilannya enak.\nUntuk siapa pun yang membuka ini: kamu sudah melakukan lebih baik dari yang kamu kira. Selamat Tahun Roti!\nUntuk jalan pulang yang pelan, kopi kaleng hangat, dan teman yang menunggu di stasiun.\nKalau kamu membaca ini, minum sesuatu yang hangat dan kabari orang yang kamu rindukan.\nTerima kasih sudah ada di sini tahun ini. Sampai jumpa di bab berikutnya!\nWalau tersandung di jalan, terus melangkah. Begitulah cerita yang bagus dimulai.",
+  'santa.useIdea': "Pakai ini",
   'santa.addPic': 'Tambah gambar atau GIF',
   'santa.removePic': 'Hapus gambar',
   'santa.picWorking': 'Menyiapkan…',

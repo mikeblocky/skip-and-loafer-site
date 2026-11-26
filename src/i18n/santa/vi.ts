@@ -24,6 +24,8 @@ export const santaVi: SantaDict = {
   'santa.toName': 'Gửi ai? Ghi một cái tên, hoặc để cho mọi người',
   'santa.toHint': 'Chỉ ai gõ đúng tên này mới tìm thấy thư.',
   'santa.placeholder': 'Lời nhắn cho người mở lá thư này…',
+  'santa.ideas': "Giáng sinh Skip vui vẻ và chúc mừng năm Bánh mì!\nGiáng sinh Skip vui vẻ! Mong mùa đông này dịu dàng với bạn, và đồ ăn vặt thật ngon.\nGửi người mở lá thư này: bạn đang làm tốt hơn bạn nghĩ đấy. Chúc mừng năm Bánh mì!\nNâng ly cho những chuyến về nhà chậm rãi, lon cà phê nóng và những người bạn đợi ở nhà ga.\nNếu bạn đang đọc dòng này, hãy uống gì đó ấm ấm và nhắn cho người bạn đang nhớ.\nCảm ơn bạn đã ở đây năm nay. Hẹn gặp lại ở chương tiếp theo!\nDù có vấp ngã giữa đường, cứ đi tiếp nhé. Những câu chuyện hay đều bắt đầu như thế.",
+  'santa.useIdea': "Dùng câu này",
   'santa.addPic': 'Thêm ảnh hoặc GIF',
   'santa.removePic': 'Bỏ ảnh',
   'santa.picWorking': 'Đang chuẩn bị…',

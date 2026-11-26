@@ -24,6 +24,8 @@ export const santaFr: SantaDict = {
   'santa.toName': 'Pour qui ? Un prénom, ou laisse pour tout le monde',
   'santa.toHint': 'Seule la personne qui tapera ce nom la trouvera.',
   'santa.placeholder': 'Un mot pour qui l’ouvrira…',
+  'santa.ideas': "Joyeux Skipmas et bonne année du Pain !\nJoyeux Skipmas ! Que cet hiver soit doux avec toi, et les goûters délicieux.\nÀ qui ouvrira ceci : tu t’en sors mieux que tu ne le crois. Bonne année du Pain !\nAux retours lents à la maison, aux canettes de café chaud et aux amis qui attendent à la gare.\nSi tu lis ceci, bois quelque chose de chaud et écris à quelqu’un qui te manque.\nMerci d’avoir été là cette année. Rendez-vous au prochain chapitre !\nMême si tu trébuches en route, continue. C’est comme ça que commencent les belles histoires.",
+  'santa.useIdea': "Prendre celle-ci",
   'santa.addPic': 'Ajouter une image ou un GIF',
   'santa.removePic': 'Retirer l’image',
   'santa.picWorking': 'Préparation…',

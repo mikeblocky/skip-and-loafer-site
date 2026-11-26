@@ -39,32 +39,52 @@ export interface Part {
 
 export const UPDATES: Update[] = [
   {
-    id: 'santa-box',
+    id: 'skipmas-2026',
     at: '2026-11-26T21:00:00+07:00',
     icon: 'tree',
     color: C.teal,
-    title: 'A Secret Santa box',
+    title: 'Skipmas 2026',
     intro:
-      'There’s a new tab for the holidays. Write a letter, drop it in the big box, and on the 24th it opens up and everyone gets to read everyone’s letters. Until then it stays sealed, so it’ll be a surprise for all of us.',
+      'Winter’s here, and the site’s dressed up for it. This season comes as a series: a Secret Santa story told in parts, and a big box for everyone’s letters that opens on the 24th. Merry Skipmas and Happy Loaf Year!',
     items: [
-      'You can tuck a little something in with your letter, like hot coffee, an onigiri or the first snow.',
-      'Pictures and GIFs work too. They’re made smaller on your device before sending, so they load quickly, and your photo’s location info isn’t included.',
-      'If you’re writing to someone in particular, add their name. Only someone who types that name will find it.',
-      'You can take a letter back out any time until the 23rd.',
-      'From the 24th to the 31st, open the box and tap any letter to flip it over and read it.',
-      'The tab goes away after New Year’s Eve and comes back next winter.',
+      'Secret Santa part 1 is out now.',
+      'Part 2 comes out in 48 hours.',
+      'The Secret Santa giftbox is open for letters until the 23rd.',
     ],
-  },
-  {
-    id: 'secret-santa',
-    at: '2026-11-25T21:00:00+07:00',
-    icon: 'snow',
-    color: C.sky,
-    title: 'Secret Santa (Part 1)',
-    intro:
-      'Somebody left a ticket lying around on the site. Nobody knows who it’s from yet, but it looks like a Secret Santa is starting, in parts, all through December.',
-    items: [
-      'Part 1 is out now. Every good story starts at the beginning.',
+    parts: [
+      {
+        title: 'Secret Santa (Part 1)',
+        icon: 'snow',
+        color: C.sky,
+        items: [
+          'Somebody left a ticket lying around on the site. Nobody knows who it’s from yet, but it looks like a Secret Santa is starting, in parts, all through December.',
+          'Part 1 is out now. Every good story starts at the beginning.',
+        ],
+      },
+      {
+        title: 'Secret Santa (Part 2), coming in 48 hours',
+        icon: 'clock',
+        color: C.violet,
+        items: [
+          'The story carries on in about two days. Finish part 1 first, because part 2 starts where it leaves off.',
+          'Keep what you found in part 1. You’ll need it again.',
+        ],
+      },
+      {
+        title: 'Secret Santa giftbox',
+        icon: 'unwrapped',
+        color: C.teal,
+        how: 'The Secret Santa tab',
+        items: [
+          'Write a letter, drop it in the big box, and on the 24th it opens up and everyone gets to read everyone’s letters. Until then it stays sealed, so it’ll be a surprise for all of us.',
+          'You can tuck a little something in with your letter, like hot coffee, an onigiri or the first snow.',
+          'Pictures and GIFs work too. They’re made smaller on your device before sending, so they load quickly, and your photo’s location info isn’t included.',
+          'If you’re writing to someone in particular, add their name. Only someone who types that name will find it.',
+          'You can take a letter back out any time until the 23rd.',
+          'From the 24th to the 31st, open the box and tap any letter to flip it over and read it.',
+          'The tab goes away after New Year’s Eve and comes back next winter.',
+        ],
+      },
     ],
   },
   {

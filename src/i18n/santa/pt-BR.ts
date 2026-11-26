@@ -24,6 +24,8 @@ export const santaPtBR: SantaDict = {
   'santa.toName': 'Para quem? Um nome, ou deixe para todo mundo',
   'santa.toHint': 'Só quem digitar esse nome vai encontrá-la.',
   'santa.placeholder': 'Um bilhete para quem abrir…',
+  'santa.ideas': "Feliz Skipmas e feliz Ano do Pão!\nFeliz Skipmas! Que este inverno seja gentil com você e que os lanchinhos sejam bons.\nPara quem abrir isto: você está indo melhor do que imagina. Feliz Ano do Pão!\nUm brinde às voltas devagar pra casa, ao café quentinho em lata e aos amigos que esperam na estação.\nSe você está lendo isto, tome algo quentinho e mande mensagem pra alguém de quem sente falta.\nObrigado por estar aqui este ano. Até o próximo capítulo!\nMesmo se tropeçar no caminho, continue. É assim que as boas histórias começam.",
+  'santa.useIdea': "Usar esta",
   'santa.addPic': 'Adicionar imagem ou GIF',
   'santa.removePic': 'Remover a imagem',
   'santa.picWorking': 'Preparando…',

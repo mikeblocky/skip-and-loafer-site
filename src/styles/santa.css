@@ -412,6 +412,63 @@
   resize: none;
   outline: none;
 }
+/* the letter and, while it's empty, the suggestions typing themselves out over its lines */
+.sv-write {
+  position: relative;
+}
+.sv-idea {
+  position: absolute;
+  /* the textarea's top margin collapses through .sv-write, so its first line starts at 0 here */
+  inset: 0 0 auto;
+  margin: 0;
+  font-size: 17px;
+  line-height: 30px;
+  color: color-mix(in oklab, var(--ink), transparent 58%);
+  pointer-events: none;
+  overflow-wrap: anywhere;
+}
+.sv-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  border-radius: 1px;
+  background: var(--w);
+  animation: sv-blink 1s steps(1) infinite;
+}
+@keyframes sv-blink {
+  50% {
+    opacity: 0;
+  }
+}
+.sv-use-idea {
+  position: absolute;
+  right: 0;
+  bottom: 6px;
+  padding: 5px 12px;
+  border: 2px solid color-mix(in oklab, var(--w), #fff 30%);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--w), #fff 88%);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    opacity var(--t-hover) var(--soft),
+    transform var(--t-hover) var(--soft),
+    background var(--t-hover) var(--soft);
+}
+.sv-use-idea:hover,
+.sv-use-idea:focus-visible {
+  background: color-mix(in oklab, var(--w), #fff 70%);
+  transform: translateY(-1px);
+}
+.sv-use-idea.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
 .sv-add-pic {
   position: relative;
   display: flex;

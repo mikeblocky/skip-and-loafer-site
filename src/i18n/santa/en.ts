@@ -26,6 +26,9 @@ export const santaEn = {
   'santa.toName': 'Who it’s for: a name, or leave it for everyone',
   'santa.toHint': 'Only someone who types this name will find it.',
   'santa.placeholder': 'A note for whoever opens this…',
+  /** suggestions typed out in an empty letter, one per line */
+  'santa.ideas': "Merry Skipmas and Happy Loaf Year!\nMerry Skipmas! I hope this winter is gentle with you, and the snacks are good.\nTo whoever opens this: you’re doing better than you think. Happy Loaf Year!\nHere’s to slow walks home, warm cans of coffee and friends who wait at the station.\nIf you’re reading this, drink something warm and message someone you miss.\nThank you for being here this year. See you in the next chapter!\nEven if you trip on the way, keep going. That’s how good stories start.",
+  'santa.useIdea': "Use this",
   'santa.addPic': 'Add a picture or GIF',
   'santa.removePic': 'Remove the picture',
   'santa.picWorking': 'Getting it ready…',

@@ -24,6 +24,8 @@ export const santaDe: SantaDict = {
   'santa.toName': 'Für wen? Ein Name, oder lass es für alle',
   'santa.toHint': 'Nur wer diesen Namen eingibt, findet ihn.',
   'santa.placeholder': 'Ein paar Worte für alle, die ihn öffnen…',
+  'santa.ideas': "Frohe Skipmas und ein frohes Brotjahr!\nFrohe Skipmas! Ich hoffe, dieser Winter ist sanft zu dir und die Snacks sind gut.\nAn alle, die das öffnen: Du machst das besser, als du denkst. Frohes Brotjahr!\nAuf langsame Heimwege, warme Dosenkaffees und Freunde, die am Bahnhof warten.\nWenn du das liest: Trink etwas Warmes und schreib jemandem, den du vermisst.\nDanke, dass du dieses Jahr hier warst. Wir sehen uns im nächsten Kapitel!\nAuch wenn du unterwegs stolperst, geh weiter. So fangen gute Geschichten an.",
+  'santa.useIdea': "Diesen nehmen",
   'santa.addPic': 'Bild oder GIF hinzufügen',
   'santa.removePic': 'Bild entfernen',
   'santa.picWorking': 'Wird vorbereitet…',
