@@ -2,18 +2,7 @@ import { PIC_MAX_BYTES, PIC_MAX_EDGE, sniffImage } from '../../santa'
 import { clientId } from '../message/mail'
 import { santaApi } from './season'
 
-/**
- * Getting a picture ready for a letter, in the browser, before anything is uploaded:
- *
- * - Photos and drawings are redrawn at most 1600px on the long side and saved as WebP at
- *   quality 0.9, which looks the same as the original at a fraction of the size (a phone photo
- *   goes from ~4 MB to ~250 KB). Redrawing also drops the hidden camera data (EXIF), so nobody's
- *   location travels with their picture. A PNG keeps lossless PNG when that comes out smaller
- *   (flat drawings, screenshots); browsers that can't write WebP fall back to JPEG/PNG.
- * - GIFs are kept byte for byte, so they still move. They just have to be under 3 MB.
- *
- * Errors are the server's English wording, so serverText() translates them the same way.
- */
+/** Getting a picture ready for a letter, in the browser, before anything is uploaded: */
 export interface Picture {
   blob: Blob
   w: number

@@ -83,7 +83,7 @@ export const pagesFr: PagesDict = {
   'msg.prev': 'Précédent',
   'msg.next': 'Suivant',
   'msg.part': 'Voir la partie {n} sur {total}',
-  'msg.fine': 'Les lettres avec des liens ou des coordonnées ne peuvent pas être envoyées, et celles que les lecteurs signalent sont retirées.',
+  'msg.fine': 'Pas de liens ni de coordonnées.',
   'msg.goodTitle': 'Des choses sympas à écrire',
   'msg.good1': 'une scène ou un chapitre que tu adores',
   'msg.good2': 'ton perso préféré et pourquoi',

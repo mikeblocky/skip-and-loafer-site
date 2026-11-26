@@ -1,21 +1,6 @@
 /**
  * The Secret Santa quests. A chain of hidden steps, one part at a time, remembered on this
  * device only (like the other secrets). Nothing about it is announced on the page.
- *
- * Part 1, "Beginning":
- *   1. scratch the Ueno Park ticket tucked into the very first update (the code is new each time)
- *   2. put the code through the ticket gate behind volume 1's cover
- *      → Shima walks in and jumps out of his skin, calls Mitsumi, and the site sinks into the void;
- *        Mitsumi runs in and Shima admits he lost the list and buried the gifts
- *   3. catch the five torn pieces of the list as they blow across the pages
- *   4. tape the list back together
- *      → on the back, in someone else's handwriting, three riddles signed "???"
- *   5. solve them: knock on the countdown when its seconds read 25, turn the birthday wheel to
- *      the friend born closest to Christmas, open the book marked with a shrine gate
- *      → flashbacks to how ??? handed them this job; the frozen snow lets go
- *   6. dig the gifts out of the snow, one on each page
- *   7. send each gift to the tab that wished for it (the list says who wants what)
- *      → a key turns up in the snow, and ??? finally speaks: the first key, for part 2
  */
 
 import type { Mode } from './components/Stage'

@@ -1,34 +1,6 @@
 /**
  * The Secret Santa music, "Snow on the Site": cosy and jolly, played live on the site's synth
  * voices (no files), on the music bus.
- *
- * It's one song. Every character's theme is a variation of the same eight-bar tune, over the
- * same chords, at the same pace and with the same small band, so when the theme changes it
- * sounds like the next verse rather than a different track. The tune opens on the hook
- * D – G – B – A (the same four notes as the Christmas opening jingle), and is shaped like a
- * song: the hook, the hook answered, a lift in the middle, the hook coming home.
- *
- *   main     the tune as it is, on celesta
- *   mitsumi  on whistle, with little skipping notes in the gaps
- *   shima    on vibes, a few notes pushed early for an easy, laid-back lilt
- *   lights   Ueno's winter lights: just the long notes on whistle, a glock circling the chord
- *   mystery  ???: the same tune in E minor (the same notes, a sadder home), on a music box, drums hushed
- *
- *   chords   G  Em  C  D | Em7  C  G→D  G      (mystery: Em  C  Am  B7 | Cmaj7  Am  Em→B7  Em)
- *
- * The running order brings the main theme home between the others, and finishes the round on
- * the main theme a step higher, for a lift, before it all starts again. Two bars in the middle
- * of each verse thin out and come back in on a brush roll. The story can cue a theme (`cue`): it
- * comes in at the next half-phrase.
- *
- * What grows as the quest goes on is the band, layer by layer:
- *   0  sleigh bells, a pizzicato bass, a warm pad, the tune
- *   1  a glock answering, a soft kick, a shaker
- *   2  brushes and a bouncing bass
- *   3  a soft clap with the brushes
- * Just that one small band: no extra instruments coming and going.
- *
- * It rests while something else has the music: one of the hidden games, or an OP/ED video.
  */
 import { reportBand, voices as V } from './sfx'
 import { hz } from './gameSong'

@@ -18,7 +18,7 @@ export const gamesFr: GamesDict = {
   'game.streak': '{n} d’affilée',
   'game.board': 'Classement',
   'game.loading': 'chargement…',
-  'game.offline': 'le classement est hors ligne pour l’instant. ton record reste enregistré sur cet appareil.',
+  'game.offline': 'le classement est hors ligne pour l’instant.',
   'game.noScores': 'pas encore de scores. sois le premier !',
   'game.saved': 'enregistré',
   'game.savedRank': 'enregistré · tu es n° {n}',
@@ -56,7 +56,7 @@ export const gamesFr: GamesDict = {
   'ga.dex': 'Ta collection',
   'ga.notMet': 'pas encore rencontré',
   'ga.tip': '{name} · {title} · meilleure {r} · ×{c}',
-  'ga.note': '{met}/{all} rencontrés · {pulls} cartes collectées · enregistré sur cet appareil',
+  'ga.note': '{met}/{all} rencontrés · {pulls} cartes collectées',
 
   'fr.react.mitsumi': 'Attends-toi à un plan détaillé du trajet, et à au moins un mauvais virage.',
   'fr.react.makoto': 'Une balade tranquille, un bon conseil de lecture et un fou rire inattendu.',

@@ -1,28 +1,4 @@
-/**
- * Skip to School: the difficulty curve.
- *
- * One number, D, drives how hard the road is. It depends only on the score:
- *
- *     D(score) = 1 - (1 + score / SCALE) ^ -POWER
- *
- * D starts at 0, climbs briskly through the first few thousand points, keeps easing upward in
- * the mid-game and creeps toward 1 late in the run without ever flattening out or jumping. Road
- * speed, how far apart the patterns are, which patterns turn up, how often hearts and power-ups
- * come, how strong the boosts are and the late-game events all read their values off this one
- * curve. Nothing switches on at a fixed score: each knob blends in over a stretch of the curve.
- *
- * With the defaults (the first six friends ≈ 2 minutes, 10k ≈ 8 minutes; past 10k the points speed up
- * (see paceOf in skipRules), so a clean run reaches 100k ≈ 15, 1M ≈ 21 and 10M ≈ 26 minutes):
- *
- *     score   0     1k    2.5k  5k    10k   20k   50k   100k  1M    10M
- *     D       0     .18   .33   .45   .58   .68   .79   .85   .95   .98
- *     speed   300   594   777   902   990   1043  1078  1089  1099  1100
- *
- * Top speed settles by ~100k; past that the road gets harder through denser patterns, more and
- * stacked twists and the 10k+ events, which keep building all the way to a million.
- *
- * Tuning: everything to tweak lives in CURVE and TUNE below.
- */
+/** Skip to School: the difficulty curve. */
 
 export const CURVE = {
   /** score at which the curve is a quarter of the way up; bigger = slower, longer game */

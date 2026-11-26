@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { gsap } from './gsap'
 import { C, CHARACTERS, RAINBOW } from './data'
@@ -8,7 +8,6 @@ import { Volumes } from './components/Volumes'
 import { Birthdays } from './components/Birthdays'
 import { Anime } from './components/Anime'
 import { Message } from './components/Message'
-import { Santa } from './components/santa/Santa'
 import { Bookmarks, type NavId } from './components/Bookmarks'
 import { Viewer } from './components/Viewer'
 import { preloadCovers } from './coverColors'
@@ -20,11 +19,14 @@ import { Notes } from './components/Notes'
 import { ClickBurst } from './components/ClickBurst'
 import { sfx } from './sfx'
 import { reducedMotion, settings } from './settings'
-import { SettingsPanel } from './components/Settings'
 import { Ruler } from './components/Ruler'
 import { useT } from './i18n'
 import { Quest } from './components/quest/Quest'
 import { questMusic } from './questMusic'
+
+// opened rarely or only in season: their own chunks
+const Santa = lazy(() => import('./components/santa/Santa').then((m) => ({ default: m.Santa })))
+const SettingsPanel = lazy(() => import('./components/Settings').then((m) => ({ default: m.SettingsPanel })))
 
 function loadImg(src: string) {
   return new Promise<HTMLImageElement>((res, rej) => {
@@ -274,7 +276,11 @@ export default function App() {
       >
         <Icon name="gear" color="#1D1B2C" size={24} />
       </button>
-      {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && (
+        <Suspense fallback={null}>
+          <SettingsPanel onClose={() => setSettingsOpen(false)} />
+        </Suspense>
+      )}
 
       <FlexText
         as="div"
@@ -294,7 +300,11 @@ export default function App() {
         {view === 'birthdays' && <Birthdays />}
         {view === 'anime' && <Anime />}
         {view === 'message' && <Message />}
-        {view === 'santa' && <Santa />}
+        {view === 'santa' && (
+          <Suspense fallback={null}>
+            <Santa />
+          </Suspense>
+        )}
       </main>
 
       {book !== null && view === 'volumes' && (

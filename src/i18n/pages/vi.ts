@@ -83,7 +83,7 @@ export const pagesVi: PagesDict = {
   'msg.prev': 'Trước',
   'msg.next': 'Tiếp',
   'msg.part': 'Xem phần {n}/{total}',
-  'msg.fine': 'Thư có đường link hoặc thông tin liên lạc sẽ không gửi được, và thư bị người đọc báo cáo sẽ bị gỡ.',
+  'msg.fine': 'Không kèm link hay thông tin liên lạc.',
   'msg.goodTitle': 'Những điều dễ thương để viết',
   'msg.good1': 'một cảnh hay một chương bạn thích',
   'msg.good2': 'nhân vật bạn thích nhất và lý do',

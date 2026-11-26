@@ -98,7 +98,7 @@ export const pagesEn = {
   'msg.prev': 'Previous',
   'msg.next': 'Next',
   'msg.part': 'Show part {n} of {total}',
-  'msg.fine': 'Letters with links or contact details can’t be sent, and letters readers report are taken down.',
+  'msg.fine': 'No links or contact details.',
   'msg.goodTitle': 'Lovely things to write',
   'msg.good1': 'a scene or chapter you love',
   'msg.good2': 'your favourite character and why',

@@ -3,25 +3,6 @@
  * everyone; nobody can see inside until the box bursts, and then the letters fly out to all.
  * A letter can carry a picture or GIF, and can be written to a name instead of to everyone:
  * those stay out of the shared pile and turn up for whoever looks that name up.
- *
- *   GET  /api/santa?count                    → { total, canSend, canOpen, year, pics }
- *   GET  /api/santa?mine=<id,id>             → { have: [id…] }   which of yours are still in the box
- *   GET  /api/santa?page=<n>&me=<client>     → { gifts, total, more }   the shared pile, once it has burst
- *   GET  /api/santa?for=<name>&me=<client>   → { gifts }   letters written to that name, once it has burst
- *   GET  /api/santa?img=<path>               → the picture itself, from a private Blob store, once it has burst
- *   POST /api/santa?upload  (raw picture bytes, header x-santa-me)  → { pic }   a picture for a letter
- *   POST /api/santa {action:'send', text, from, to, wrap, inside, pic?: {id, w, h}, me}   → { id, total }
- *   POST /api/santa {action:'back', id, me}                          → { ok, total }   take yours out again
- *   POST /api/santa {action:'report', id, me}                        → { ok }
- *
- * `me` is the same random browser id the Message tab uses. Notes are checked with the letter rules;
- * a letter that three people report is taken out, picture and all. Each season's Redis keys
- * expire in mid-January; its pictures (in Vercel Blob, under santa/<year>/) are deleted when the
- * next season's first letter goes in.
- *
- * On the dev server (SL_DEV_API is set by vite.config.ts) letters live under a separate prefix,
- * pictures stay in memory unless a Blob store is reachable, and the `x-santa-force:
- * collect|open` header lets the page preview either half of the season on any date.
  */
 import { createClient } from 'redis'
 import { del, get, list, put } from '@vercel/blob'

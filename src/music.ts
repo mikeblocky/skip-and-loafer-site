@@ -3,11 +3,6 @@
  * (with at most one voice alongside it). On top of that a section gets ONE colour, never more:
  * a glockenspiel countermelody, a tambourine, or brass pushes (or nothing). Energy comes from the
  * drums driving harder and the tempo climbing, not from piling on more instruments.
- *
- * The game's song (see ./gameSong), played live on the site's synth voices. Each section comes
- * back re-arranged, every note gets a little human looseness and the eighths swing a touch.
- * Tempo follows the game (setPace), and a "danger" flag makes the drums more urgent. Sections end
- * on a different fill each time, and the band changes style every time round so it never settles.
  */
 import { voices as V } from './sfx'
 import { CHORD, diatonic, EVENTS, hz, LIFT, SONG, UNLOCKS, type Lead } from './gameSong'

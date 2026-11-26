@@ -83,7 +83,7 @@ export const pagesPtBR: PagesDict = {
   'msg.prev': 'Anterior',
   'msg.next': 'Próximo',
   'msg.part': 'Mostrar parte {n} de {total}',
-  'msg.fine': 'Cartas com links ou contatos não podem ser enviadas, e cartas denunciadas pelos leitores são removidas.',
+  'msg.fine': 'Sem links ou contatos.',
   'msg.goodTitle': 'Coisas legais para escrever',
   'msg.good1': 'uma cena ou capítulo que você ama',
   'msg.good2': 'seu personagem favorito e por quê',

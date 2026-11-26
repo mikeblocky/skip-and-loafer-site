@@ -997,9 +997,6 @@ function festiveTransition(lead: number) {
  * a chord at each change, a bass line, sleigh bells on the backbeat). Where it is in the song
  * comes from the clock, so it always picks up in the right place, and everyone's countdown plays
  * the same bar at the same moment. It goes through the music volume, since it's a song.
- *
- * When more than one digit flips at once (a new minute, hour or day), only the first plays. And
- * while the Secret Santa music is playing, it keeps quiet: one song at a time.
  */
 const P = {
   A2: 110, B2: 123.47, C3: 130.81, D3: 146.83, E3: 164.81, G2: 98, G3: 196, A3: 220, B3: 246.94,

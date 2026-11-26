@@ -18,7 +18,7 @@ export const gamesEs: GamesDict = {
   'game.streak': '{n} seguidos',
   'game.board': 'Clasificación',
   'game.loading': 'cargando…',
-  'game.offline': 'la clasificación no está disponible ahora. tu récord se sigue guardando en este dispositivo.',
+  'game.offline': 'la clasificación no está disponible ahora.',
   'game.noScores': 'todavía no hay puntuaciones. ¡sé el primero!',
   'game.saved': 'guardado',
   'game.savedRank': 'guardado · ¡vas #{n}!',
@@ -56,7 +56,7 @@ export const gamesEs: GamesDict = {
   'ga.dex': 'Tu colección',
   'ga.notMet': 'todavía no se conocen',
   'ga.tip': '{name} · {title} · mejor {r} · ×{c}',
-  'ga.note': '{met}/{all} conocidos · {pulls} cartas · guardado en este dispositivo',
+  'ga.note': '{met}/{all} conocidos · {pulls} cartas',
 
   'fr.react.mitsumi': 'Prepárate para un plan detallado del camino, y al menos un giro equivocado.',
   'fr.react.makoto': 'Un paseo tranquilo, una buena recomendación de libro y una risa inesperada.',

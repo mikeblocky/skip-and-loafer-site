@@ -83,7 +83,7 @@ export const pagesJa: PagesDict = {
   'msg.prev': '前へ',
   'msg.next': '次へ',
   'msg.part': '{total}枚中{n}枚目を表示',
-  'msg.fine': 'リンクや連絡先が入った手紙は送れません。通報された手紙は削除されます。',
+  'msg.fine': 'リンクや連絡先は書けません。',
   'msg.goodTitle': '書いてほしいこと',
   'msg.good1': '好きなシーンや話',
   'msg.good2': '推しキャラとその理由',

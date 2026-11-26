@@ -83,7 +83,7 @@ export const pagesKo: PagesDict = {
   'msg.prev': '이전',
   'msg.next': '다음',
   'msg.part': '{total}개 중 {n}번째 보기',
-  'msg.fine': '링크나 연락처가 들어간 편지는 보낼 수 없고, 신고된 편지는 삭제돼요.',
+  'msg.fine': '링크나 연락처는 쓸 수 없어요.',
   'msg.goodTitle': '이런 걸 써 주세요',
   'msg.good1': '좋아하는 장면이나 화',
   'msg.good2': '최애 캐릭터와 그 이유',

@@ -83,7 +83,7 @@ export const pagesDe: PagesDict = {
   'msg.prev': 'Zurück',
   'msg.next': 'Weiter',
   'msg.part': 'Teil {n} von {total} zeigen',
-  'msg.fine': 'Briefe mit Links oder Kontaktdaten können nicht verschickt werden, und gemeldete Briefe werden entfernt.',
+  'msg.fine': 'Keine Links oder Kontaktdaten.',
   'msg.goodTitle': 'Schöne Sachen zum Schreiben',
   'msg.good1': 'eine Szene oder ein Kapitel, das du liebst',
   'msg.good2': 'deine Lieblingsfigur und warum',

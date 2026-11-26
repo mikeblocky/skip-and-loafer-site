@@ -1,10 +1,6 @@
 /**
  * What a letter in the Message tab may contain. Shared by the page (instant feedback while you
  * write) and by api/messages.ts (the real check), so both always agree.
- *
- * Letters go to strangers, so anything that could identify someone or lead off the site is
- * refused outright, along with a small list of clearly hostile words. Everything else is left to
- * readers, who can report a letter.
  */
 
 export const LETTER_MAX = 500

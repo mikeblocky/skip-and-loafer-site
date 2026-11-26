@@ -9,3 +9,7 @@ dist
 !.env.example
 # demo recordings (large videos) stay local
 recordings/
+# TypeScript build cache
+*.tsbuildinfo
+# local soundtrack masters (large audio)
+soundtracks/

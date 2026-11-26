@@ -90,7 +90,7 @@ function Gate({ onClose, onPass }: { onClose: () => void; onPass: () => void }) 
               Play part 1 again
             </button>
           </div>
-          <p className="qg-fine">Starting again needs a freshly scratched ticket. Your key stays yours.</p>
+          <p className="qg-fine">You want to try again? A new ticket should be used!</p>
         </div>
       </div>
     )

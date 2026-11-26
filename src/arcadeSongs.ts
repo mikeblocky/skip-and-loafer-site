@@ -1,14 +1,6 @@
 /**
  * Songs for the three newer hidden games, played by src/arcadeMusic.ts. Each has its own key,
  * groove and instruments so the games don't sound alike:
- *
- *   gacha:  "toy shop"      C major, a bouncy music-box tune on glockenspiel and chip
- *   quiz:   "on the spot"   A minor, a staccato game-show tune over a ticking clock
- *   poll:   "morning crowd" D major, a swingy walk-to-school tune on kalimba and whistle
- *
- * Every song has the same form: an intro once, then verse, verse, chorus, bridge, chorus, and
- * round again a little higher each time. Melodies are [midi note (0 = rest), length in eighths],
- * eight eighths to a bar, one chord per bar.
  */
 export type Lead = 'kalimba' | 'whistle' | 'glock' | 'chip'
 export type Groove = 'bounce' | 'tick' | 'shuffle'

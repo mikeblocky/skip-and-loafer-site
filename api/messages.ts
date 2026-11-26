@@ -1,18 +1,4 @@
-/**
- * Letters for the Message tab: fans write a short note, and anyone can open one at random.
- *
- * Runs on the server only (a Vercel-style function, and through the dev server locally), so the
- * Redis password in REDIS_URL never reaches the browser.
- *
- *   GET  /api/messages?me=<client>&not=<id,id>   → { letter | null, total }   open one at random
- *   GET  /api/messages?mine=<id,id>               → { opens: {id: n}, total }  how often yours were opened
- *   POST /api/messages {action:'send', text, from, color, me}   → { id, total }
- *   POST /api/messages {action:'report', id, me}                → { ok }
- *
- * `me` is a random id the browser makes for itself (not personal): it marks which letters are your
- * own (they're in the mix too, but don't count as reads) and lets one reader report a letter only once. Letters are checked with the same
- * rules the page shows (src/letterRules.ts); a letter that three readers report is taken down.
- */
+/** Letters for the Message tab: fans write a short note, and anyone can open one at random. */
 import { createClient } from 'redis'
 import { cleanSigner, cleanText, problem, safeColor } from '../src/letterRules.js'
 

@@ -1,15 +1,6 @@
 /**
  * The Secret Santa tab: a limited-time gift exchange, once a year. Shared by the page and by
  * api/santa.ts, so both agree on the dates and on what a gift may hold.
- *
- *   25 Nov – 23 Dec   write a letter (a note, a little something tucked in, maybe a picture), to
- *                     everyone or to one name, and drop it in the big box
- *   24 Dec – 31 Dec   the box bursts, the letters fly out across the page and everyone can read them
- *   the rest of the year the tab isn't there at all
- *
- * The page goes by the reader's own calendar. The server is generous at the edges so that
- * nobody is turned away on their own date: the box takes gifts until 23 December has ended
- * everywhere on Earth, and opens once 24 December has begun anywhere (UTC+14 to UTC−12).
  */
 import { cleanSigner, cleanText, problem, STATIONERY } from './letterRules.js'
 

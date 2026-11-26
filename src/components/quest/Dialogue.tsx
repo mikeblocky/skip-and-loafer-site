@@ -149,7 +149,7 @@ function ChapterCard({ ch, onGo }: { ch: Chapter; onGo: () => void }) {
       <div className="qc-card">
         <span className="qc-kicker">
           <Icon name="snow" color="#fff" size={14} />
-          Secret Santa · Part 1 · Chapter {ch.n}
+          Skipmas 2026
         </span>
         <h3 className="qc-title">{ch.title}</h3>
         {ch.note && <p className="qc-note">{ch.note}</p>}
@@ -187,7 +187,7 @@ export function Dialogue({
   /** who is on screen, and how each of them arrives (in order) */
   cast: [Speaker, Entry][]
   dark?: boolean
-  /** a flashback: when and where, e.g. "One week earlier · the shoe lockers" */
+  /** a flashback: when, e.g. "One week earlier" */
   past?: string
   /** a painted place behind them; without one, the site shows through */
   bg?: Backdrop
@@ -200,7 +200,7 @@ export function Dialogue({
   snow?: boolean
   /** after the last line, the two of them walk off together */
   exit?: boolean
-  /** when and where, for a scene that isn't a flashback, e.g. "The next morning · the school gate" */
+  /** when, for a scene that isn't a flashback, e.g. "The next morning" */
   when?: string
   onDone: () => void
 }) {

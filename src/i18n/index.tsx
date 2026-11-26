@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from 'react'
+import { Fragment, useSyncExternalStore, type ReactNode } from 'react'
 import { settings, useSettings } from '../settings'
 import { en, type Dict, type Key } from './en'
 import { ja } from './ja'
@@ -22,19 +22,41 @@ import { LANGS, localeOf, resolveLang, type Lang } from './locale'
 export { LANGS, deviceLang, type Lang } from './locale'
 export type { Key } from './en'
 
-const DICTS: Record<Lang, Dict> = {
-  en,
-  ja,
-  ko,
-  'zh-Hans': zhHans,
-  'zh-Hant': zhHant,
-  es,
-  'pt-BR': ptBR,
-  fr,
-  de,
-  id,
-  vi,
-  th,
+/** English ships with the page; every other language is its own chunk, fetched when picked */
+const LOADERS: Record<Exclude<Lang, 'en'>, () => Promise<Dict>> = {
+  ja: () => import('./ja').then((m) => m.ja),
+  ko: () => import('./ko').then((m) => m.ko),
+  'zh-Hans': () => import('./zh-Hans').then((m) => m.zhHans),
+  'zh-Hant': () => import('./zh-Hant').then((m) => m.zhHant),
+  es: () => import('./es').then((m) => m.es),
+  'pt-BR': () => import('./pt-BR').then((m) => m.ptBR),
+  fr: () => import('./fr').then((m) => m.fr),
+  de: () => import('./de').then((m) => m.de),
+  id: () => import('./id').then((m) => m.id),
+  vi: () => import('./vi').then((m) => m.vi),
+  th: () => import('./th').then((m) => m.th),
+}
+const DICTS: Partial<Record<Lang, Dict>> = { en }
+const pending = new Map<Lang, Promise<void>>()
+let version = 0
+const subs = new Set<() => void>()
+const subscribe = (f: () => void) => (subs.add(f), () => void subs.delete(f))
+
+/** fetch a language's words; components using useT() re-render once they arrive */
+export function loadLang(lang: Lang): Promise<void> {
+  if (DICTS[lang]) return Promise.resolve()
+  let p = pending.get(lang)
+  if (!p) {
+    p = LOADERS[lang as Exclude<Lang, 'en'>]()
+      .then((d) => {
+        DICTS[lang] = d
+        version++
+        subs.forEach((f) => f())
+      })
+      .catch(() => void pending.delete(lang))
+    pending.set(lang, p)
+  }
+  return p
 }
 
 export const currentLang = (): Lang => resolveLang(settings.get().lang)
@@ -47,7 +69,9 @@ function fill(s: string, vars?: Record<string, string | number>) {
 
 export function translate(lang: Lang, key: Key, vars?: Record<string, string | number>) {
   // ?? not ||: an empty string is a real translation (a word some languages leave out)
-  return fill(DICTS[lang][key] ?? en[key], vars)
+  const dict = DICTS[lang]
+  if (!dict) void loadLang(lang)
+  return fill(dict?.[key] ?? en[key], vars)
 }
 
 /** for code outside React (aria labels set once, sounds, etc.) */
@@ -77,6 +101,7 @@ export function slot(s: string, name: string, node: ReactNode): ReactNode {
 export function useT() {
   const { lang: pref } = useSettings()
   const lang = resolveLang(pref)
+  useSyncExternalStore(subscribe, () => version)
   return {
     t: (key: Key, vars?: Record<string, string | number>) => translate(lang, key, vars),
     lang,

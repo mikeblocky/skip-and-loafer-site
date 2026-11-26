@@ -83,7 +83,7 @@ export const pagesZhHant: PagesDict = {
   'msg.prev': '上一頁',
   'msg.next': '下一頁',
   'msg.part': '顯示第{n}頁，共{total}頁',
-  'msg.fine': '含有連結或聯絡方式的信無法寄出，被讀者檢舉的信會被撤下。',
+  'msg.fine': '不能包含連結或聯絡方式。',
   'msg.goodTitle': '可以寫這些喔',
   'msg.good1': '你喜歡的場景或某一話',
   'msg.good2': '你最喜歡的角色和原因',

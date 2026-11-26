@@ -18,7 +18,7 @@ export const gamesDe: GamesDict = {
   'game.streak': '{n} in Folge',
   'game.board': 'Bestenliste',
   'game.loading': 'lädt…',
-  'game.offline': 'die Bestenliste ist gerade offline. dein Rekord wird trotzdem auf diesem Gerät gespeichert.',
+  'game.offline': 'die Bestenliste ist gerade offline.',
   'game.noScores': 'noch keine Punkte. sei die oder der Erste!',
   'game.saved': 'gespeichert',
   'game.savedRank': 'gespeichert · du bist auf Platz {n}',
@@ -56,7 +56,7 @@ export const gamesDe: GamesDict = {
   'ga.dex': 'Deine Sammlung',
   'ga.notMet': 'noch nicht getroffen',
   'ga.tip': '{name} · {title} · beste {r} · ×{c}',
-  'ga.note': '{met}/{all} getroffen · {pulls} Karten gesammelt · auf diesem Gerät gespeichert',
+  'ga.note': '{met}/{all} getroffen · {pulls} Karten gesammelt',
 
   'fr.react.mitsumi': 'Rechne mit einem detaillierten Plan für den Weg, und mindestens einmal falsch abbiegen.',
   'fr.react.makoto': 'Ein ruhiger Weg, ein guter Buchtipp und ein überraschender Lacher.',

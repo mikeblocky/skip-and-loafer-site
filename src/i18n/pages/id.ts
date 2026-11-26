@@ -83,7 +83,7 @@ export const pagesId: PagesDict = {
   'msg.prev': 'Sebelumnya',
   'msg.next': 'Berikutnya',
   'msg.part': 'Tampilkan bagian {n} dari {total}',
-  'msg.fine': 'Surat berisi tautan atau kontak nggak bisa dikirim, dan surat yang dilaporkan pembaca akan dihapus.',
+  'msg.fine': 'Tanpa tautan atau kontak.',
   'msg.goodTitle': 'Hal-hal manis untuk ditulis',
   'msg.good1': 'adegan atau bab yang kamu suka',
   'msg.good2': 'karakter favoritmu dan alasannya',

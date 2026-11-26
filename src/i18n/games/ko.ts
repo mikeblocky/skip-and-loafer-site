@@ -18,7 +18,7 @@ export const gamesKo: GamesDict = {
   'game.streak': '{n}연속',
   'game.board': '랭킹',
   'game.loading': '불러오는 중…',
-  'game.offline': '지금은 랭킹에 연결할 수 없어요. 최고 기록은 이 기기에 저장돼요.',
+  'game.offline': '지금은 랭킹에 연결할 수 없어요.',
   'game.noScores': '아직 기록이 없어요. 첫 번째가 되어 보세요!',
   'game.saved': '저장했어요',
   'game.savedRank': '저장했어요 · {n}위!',
@@ -56,7 +56,7 @@ export const gamesKo: GamesDict = {
   'ga.dex': '내 컬렉션',
   'ga.notMet': '아직 못 만났어요',
   'ga.tip': '{name} · {title} · 최고 {r} · ×{c}',
-  'ga.note': '{met}/{all}명 만남 · 카드 {pulls}장 모음 · 이 기기에 저장',
+  'ga.note': '{met}/{all}명 만남 · 카드 {pulls}장 모음',
 
   'fr.react.mitsumi': '등굣길 계획은 완벽해요. 그래도 한 번은 길을 잘못 들 거예요.',
   'fr.react.makoto': '조용한 등굣길, 좋은 책 추천, 그리고 뜻밖의 웃음.',

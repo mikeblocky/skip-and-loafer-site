@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { C } from '../../data'
 import { Icon } from '../../icons'
 import { sfx } from '../../sfx'
 import { SECRETS, onOpenSecret, secrets, type SecretId, type SecretInfo } from '../../secrets'
 import { FlexText } from '../FlexText'
-import { Gacha } from './Gacha'
-import { SkipGame } from './SkipGame'
-import { Poll } from './Poll'
-import { Quiz } from './Quiz'
+// each game is its own chunk, fetched the first time it's opened
+const Gacha = lazy(() => import('./Gacha').then((m) => ({ default: m.Gacha })))
+const SkipGame = lazy(() => import('./SkipGame').then((m) => ({ default: m.SkipGame })))
+const Poll = lazy(() => import('./Poll').then((m) => ({ default: m.Poll })))
+const Quiz = lazy(() => import('./Quiz').then((m) => ({ default: m.Quiz })))
 import { rich, useT } from '../../i18n'
 
 const COLORS: Record<SecretId, string> = { gacha: C.pink, skip: C.orange, poll: C.red, quiz: C.blue }
@@ -82,10 +83,12 @@ export function Secrets() {
     <>
       {info && (
         <Overlay info={info} onClose={close}>
-          {info.id === 'gacha' && <Gacha />}
-          {info.id === 'skip' && <SkipGame />}
-          {info.id === 'poll' && <Poll />}
-          {info.id === 'quiz' && <Quiz />}
+          <Suspense fallback={null}>
+            {info.id === 'gacha' && <Gacha />}
+            {info.id === 'skip' && <SkipGame />}
+            {info.id === 'poll' && <Poll />}
+            {info.id === 'quiz' && <Quiz />}
+          </Suspense>
         </Overlay>
       )}
 

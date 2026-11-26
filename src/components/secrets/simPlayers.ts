@@ -1,12 +1,6 @@
 /**
  * Simulated players for tuning ./gameCurves (not used by the site). Run it from the browser
  * console on the dev server:
- *
- *     (await import('/src/components/secrets/simPlayers.ts')).report()
- *
- * Each player is a few numbers: how fast they tap, how often they slip, how much they know.
- * They're rough models, but they show whether practice pays off: a better player should always
- * get clearly further, and nobody should be able to play forever.
  */
 import { GACHA, POLL, QUIZ } from './gameCurves'
 

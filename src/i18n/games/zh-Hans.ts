@@ -18,7 +18,7 @@ export const gamesZhHans: GamesDict = {
   'game.streak': '{n}连击',
   'game.board': '排行榜',
   'game.loading': '加载中…',
-  'game.offline': '排行榜暂时连不上。你的最高分仍会保存在这台设备上。',
+  'game.offline': '排行榜暂时连不上。',
   'game.noScores': '还没有人上榜，快来当第一名吧！',
   'game.saved': '已保存',
   'game.savedRank': '已保存 · 你是第{n}名',
@@ -56,7 +56,7 @@ export const gamesZhHans: GamesDict = {
   'ga.dex': '我的收藏',
   'ga.notMet': '还没遇到',
   'ga.tip': '{name} · {title} · 最高 {r} · ×{c}',
-  'ga.note': '已遇到{met}/{all}人 · 收集了{pulls}张卡 · 保存在这台设备上',
+  'ga.note': '已遇到{met}/{all}人 · 收集了{pulls}张卡',
 
   'fr.react.mitsumi': '她会把上学路线计划得清清楚楚，但至少会走错一次。',
   'fr.react.makoto': '安静的一路，一本好书推荐，还有一次意外的笑声。',

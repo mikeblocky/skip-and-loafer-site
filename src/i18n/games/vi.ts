@@ -18,7 +18,7 @@ export const gamesVi: GamesDict = {
   'game.streak': '{n} liên tiếp',
   'game.board': 'Bảng xếp hạng',
   'game.loading': 'đang tải…',
-  'game.offline': 'bảng xếp hạng đang tạm nghỉ. điểm cao nhất của bạn vẫn được lưu trên máy này.',
+  'game.offline': 'bảng xếp hạng đang tạm nghỉ.',
   'game.noScores': 'chưa có điểm nào. làm người đầu tiên đi!',
   'game.saved': 'đã lưu',
   'game.savedRank': 'đã lưu · bạn hạng {n}',
@@ -56,7 +56,7 @@ export const gamesVi: GamesDict = {
   'ga.dex': 'Bộ sưu tập của bạn',
   'ga.notMet': 'chưa gặp',
   'ga.tip': '{name} · {title} · cao nhất {r} · ×{c}',
-  'ga.note': 'đã gặp {met}/{all} · thu được {pulls} thẻ · lưu trên máy này',
+  'ga.note': 'đã gặp {met}/{all} · thu được {pulls} thẻ',
 
   'fr.react.mitsumi': 'Chuẩn bị nghe kế hoạch đi đường chi tiết, và ít nhất một lần rẽ nhầm.',
   'fr.react.makoto': 'Một chuyến đi yên bình, một cuốn sách hay được giới thiệu, và một tràng cười bất ngờ.',

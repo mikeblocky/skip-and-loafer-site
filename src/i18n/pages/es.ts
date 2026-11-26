@@ -83,7 +83,7 @@ export const pagesEs: PagesDict = {
   'msg.prev': 'Anterior',
   'msg.next': 'Siguiente',
   'msg.part': 'Ver parte {n} de {total}',
-  'msg.fine': 'No se pueden enviar cartas con enlaces o datos de contacto, y las cartas que se denuncian se retiran.',
+  'msg.fine': 'Sin enlaces ni datos de contacto.',
   'msg.goodTitle': 'Cosas bonitas para escribir',
   'msg.good1': 'una escena o capítulo que te encante',
   'msg.good2': 'tu personaje favorito y por qué',

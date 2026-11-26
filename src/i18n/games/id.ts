@@ -18,7 +18,7 @@ export const gamesId: GamesDict = {
   'game.streak': '{n} beruntun',
   'game.board': 'Papan skor',
   'game.loading': 'memuat…',
-  'game.offline': 'papan skor lagi offline. skor terbaikmu tetap tersimpan di perangkat ini.',
+  'game.offline': 'papan skor lagi offline.',
   'game.noScores': 'belum ada skor. jadilah yang pertama!',
   'game.saved': 'tersimpan',
   'game.savedRank': 'tersimpan · kamu peringkat #{n}',
@@ -56,7 +56,7 @@ export const gamesId: GamesDict = {
   'ga.dex': 'Koleksimu',
   'ga.notMet': 'belum ketemu',
   'ga.tip': '{name} · {title} · terbaik {r} · ×{c}',
-  'ga.note': '{met}/{all} ditemui · {pulls} kartu terkumpul · tersimpan di perangkat ini',
+  'ga.note': '{met}/{all} ditemui · {pulls} kartu terkumpul',
 
   'fr.react.mitsumi': 'Siap-siap dengan rencana perjalanan yang detail, dan setidaknya satu kali salah belok.',
   'fr.react.makoto': 'Jalan yang tenang, rekomendasi buku yang bagus, dan tawa yang tak terduga.',

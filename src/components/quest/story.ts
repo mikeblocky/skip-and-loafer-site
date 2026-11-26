@@ -1,21 +1,7 @@
 import type { Chapter, Entry, Line, Speaker } from './Dialogue'
 import type { Backdrop } from './SceneBg'
 
-/**
- * Secret Santa, part 1. Four chapters:
- *
- *   1 · The Ticket    the hat, the phone call, the site going dark, the letter in the shoe locker
- *   2 · The List      the torn list, and the riddles on its back
- *   3 · The Riddles   three lanterns, any order: the empty box, Ueno Park last winter, a film set
- *   4 · The Key       the presents go out, a key turns up, ??? says a name nobody uses any more,
- *                     Mitsumi gets a hat too, it snows, and the next morning they walk to school
- *
- * Write it the way people actually talk: short lines, interruptions, nobody makes speeches.
- * Narration is just a quick note of what happens, never a description for its own sake.
- *
- * Text effects inside a line: *italics*, {shake:…}, {wave:…}, {small:…}, {big:…}, {glow:…}.
- * A line's `fx` is a moment for the whole screen: shake, flash, dark, snow or glow.
- */
+/** Secret Santa, part 1. Four chapters: */
 export interface Scene {
   lines: Line[]
   cast: [Speaker, Entry][]
@@ -89,7 +75,7 @@ export const ARRIVE: Scene = {
 
 /** flashback: the letter in Mitsumi's shoe locker */
 export const LETTER: Scene = {
-  past: 'A week ago · the shoe lockers',
+  past: 'A week ago',
   bg: 'lockers',
   cast: both('here', 'here'),
   lines: [
@@ -188,7 +174,7 @@ export const CLOCK: Scene = {
 
 /** flashback: the empty box, on the walk home */
 export const BOX: Scene = {
-  past: 'Three days ago · walking home',
+  past: 'Three days ago',
   bg: 'street',
   cast: both('here', 'here'),
   lines: [
@@ -238,7 +224,7 @@ export const SEAL: Scene = {
 
 /** flashback: the Santa at Ueno Park */
 export const UENO: Scene = {
-  past: 'Last December · Ueno Park',
+  past: 'Last December',
   bg: 'ueno',
   cast: both('here', 'here'),
   lines: [
@@ -256,7 +242,7 @@ export const UENO: Scene = {
 
 /** flashback, further back: Shima at eight, on a commercial shoot */
 export const SET: Scene = {
-  past: 'Nine years ago · on set at Ueno Park',
+  past: 'Nine years ago',
   bg: 'set',
   cast: [],
   lines: [
@@ -342,7 +328,7 @@ export const HAT_TOO: Scene = {
 
 /** the next morning, on the way to school: they talk it all over, then head in together */
 export const WALK: Scene = {
-  when: 'The next morning · on the way to school',
+  when: 'The next morning',
   bg: 'school',
   snow: true,
   mitsumiHat: true,

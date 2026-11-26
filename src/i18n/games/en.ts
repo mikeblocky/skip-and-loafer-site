@@ -22,7 +22,7 @@ export const gamesEn = {
   'game.streak': '{n} in a row',
   'game.board': 'Leaderboard',
   'game.loading': 'loading…',
-  'game.offline': 'the leaderboard is offline right now. your best still saves on this device.',
+  'game.offline': 'the leaderboard is offline right now.',
   'game.noScores': 'no scores yet. be the first!',
   'game.saved': 'saved',
   'game.savedRank': 'saved · you’re #{n}',
@@ -61,7 +61,7 @@ export const gamesEn = {
   'ga.dex': 'Your collection',
   'ga.notMet': 'not met yet',
   'ga.tip': '{name} · {title} · best {r} · ×{c}',
-  'ga.note': '{met}/{all} met · {pulls} cards collected · saved on this device',
+  'ga.note': '{met}/{all} met · {pulls} cards collected',
 
   // find your friends (our own little reactions, not quotes from the series)
   'fr.react.mitsumi': 'Expect a detailed plan for the walk, and at least one wrong turn.',

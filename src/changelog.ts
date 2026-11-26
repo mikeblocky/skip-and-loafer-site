@@ -5,9 +5,6 @@ import type { IconName } from './icons'
  * What's new on the site, newest first. When something worth telling people about ships, add an
  * entry at the top with a fresh id: anyone who's been here before sees the "what's new" card
  * once, opened on the first entry they haven't seen. Brand new visitors skip it.
- *
- * `at` is when it went up, with its time zone; everyone sees it in their own local time.
- * Keep it short and plain, like patch notes you'd post for friends.
  */
 export interface Update {
   id: string

@@ -18,7 +18,7 @@ export const gamesJa: GamesDict = {
   'game.streak': '{n}連続',
   'game.board': 'ランキング',
   'game.loading': '読み込み中…',
-  'game.offline': 'ランキングは今つながりません。ベストスコアはこの端末に保存されます。',
+  'game.offline': 'ランキングは今つながりません。',
   'game.noScores': 'まだスコアがありません。一番乗りしよう！',
   'game.saved': '保存しました',
   'game.savedRank': '保存しました · {n}位！',
@@ -56,7 +56,7 @@ export const gamesJa: GamesDict = {
   'ga.dex': 'コレクション',
   'ga.notMet': 'まだ出会っていない',
   'ga.tip': '{name} · {title} · 最高 {r} · ×{c}',
-  'ga.note': '{met}/{all}人と出会った · カード{pulls}枚 · この端末に保存',
+  'ga.note': '{met}/{all}人と出会った · カード{pulls}枚',
 
   'fr.react.mitsumi': '通学路の計画はばっちり。でも一回は道をまちがえるかも。',
   'fr.react.makoto': '静かな道のり、おすすめの本、それと思わぬ笑い。',

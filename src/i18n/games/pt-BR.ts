@@ -18,7 +18,7 @@ export const gamesPtBR: GamesDict = {
   'game.streak': '{n} seguidas',
   'game.board': 'Ranking',
   'game.loading': 'carregando…',
-  'game.offline': 'o ranking está fora do ar agora. seu recorde continua salvo neste aparelho.',
+  'game.offline': 'o ranking está fora do ar agora.',
   'game.noScores': 'ainda não tem pontuação. seja o primeiro!',
   'game.saved': 'salvo',
   'game.savedRank': 'salvo · você está em #{n}',
@@ -56,7 +56,7 @@ export const gamesPtBR: GamesDict = {
   'ga.dex': 'Sua coleção',
   'ga.notMet': 'ainda não se conheceram',
   'ga.tip': '{name} · {title} · melhor {r} · ×{c}',
-  'ga.note': '{met}/{all} conhecidos · {pulls} cartas coletadas · salvo neste aparelho',
+  'ga.note': '{met}/{all} conhecidos · {pulls} cartas coletadas',
 
   'fr.react.mitsumi': 'Espere um plano detalhado do caminho, e pelo menos uma curva errada.',
   'fr.react.makoto': 'Uma caminhada tranquila, uma boa indicação de livro e uma risada surpresa.',

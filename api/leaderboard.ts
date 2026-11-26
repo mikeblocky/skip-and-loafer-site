@@ -1,16 +1,6 @@
 /**
  * Leaderboards for the hidden games: one board per game, picked with ?game= (skip by default,
  * so Skip to School's board and its saved scores carry on as they were).
- *
- * Runs on the server only (a Vercel-style function, and through the dev server locally), so the
- * Redis password in REDIS_URL never reaches the browser.
- *
- *   GET  /api/leaderboard?game=quiz            → { entries }
- *   POST /api/leaderboard?game=quiz {name, score, won}  → { entries, rank, best }
- *
- * Each name keeps its best score only. Names are typed by players, so they're cleaned up and
- * capped; posts are rate-limited per address. Scores come from the browser, so this is a
- * friendly board, not a cheat-proof one.
  */
 import { createClient } from 'redis'
 

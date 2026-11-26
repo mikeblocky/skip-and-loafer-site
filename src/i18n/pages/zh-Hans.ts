@@ -83,7 +83,7 @@ export const pagesZhHans: PagesDict = {
   'msg.prev': '上一页',
   'msg.next': '下一页',
   'msg.part': '显示第{n}页，共{total}页',
-  'msg.fine': '含有链接或联系方式的信无法寄出，被读者举报的信会被撤下。',
+  'msg.fine': '不能包含链接或联系方式。',
   'msg.goodTitle': '可以写这些哦',
   'msg.good1': '你喜欢的场景或某一话',
   'msg.good2': '你最喜欢的角色和理由',
