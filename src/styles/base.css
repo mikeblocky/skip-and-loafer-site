@@ -1,9 +1,82 @@
+/* Allo comes from the allo-font package: the variable face plus its nine obliques */
 @font-face {
   font-family: 'Allo';
-  src: url('/fonts/AlloVariable.woff2') format('woff2');
+  src: url('allo-font/fonts/webfonts/AlloVariable.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: block;
+}
+
+@font-face {
+  font-family: 'Allo';
+  src: url('allo-font/fonts/webfonts/Allo-ThinOblique.woff2') format('woff2');
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Allo';
+  src: url('allo-font/fonts/webfonts/Allo-ExtraLightOblique.woff2') format('woff2');
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Allo';
+  src: url('allo-font/fonts/webfonts/Allo-LightOblique.woff2') format('woff2');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Allo';
+  src: url('allo-font/fonts/webfonts/Allo-Oblique.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Allo';
+  src: url('allo-font/fonts/webfonts/Allo-MediumOblique.woff2') format('woff2');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Allo';
+  src: url('allo-font/fonts/webfonts/Allo-SemiBoldOblique.woff2') format('woff2');
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Allo';
+  src: url('allo-font/fonts/webfonts/Allo-BoldOblique.woff2') format('woff2');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Allo';
+  src: url('allo-font/fonts/webfonts/Allo-ExtraBoldOblique.woff2') format('woff2');
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Allo';
+  src: url('allo-font/fonts/webfonts/Allo-BlackOblique.woff2') format('woff2');
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
 }
 
 :root {
