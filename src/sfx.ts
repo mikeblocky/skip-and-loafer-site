@@ -6,6 +6,7 @@
  */
 
 import { settings } from './settings'
+import { localPhase } from './santa'
 
 const KEY = 'sl-sound'
 let ctx: AudioContext | null = null
@@ -326,6 +327,16 @@ const onMusic =
     }
   }
 
+/**
+ * Whether the Secret Santa music (src/questMusic.ts) is playing right now. The countdown's
+ * Christmas song keeps quiet while it does, so there's only ever one song at a time. questMusic
+ * reports in itself (it already imports this file). Every copy of it that ever loaded is asked,
+ * so an old copy left over from a dev-server reload can't answer for the one that's playing.
+ */
+const bands: (() => boolean)[] = []
+export const reportBand = (playing: () => boolean) => void bands.push(playing)
+const bandPlaying = () => bands.some((b) => b())
+
 export const voices = {
   live: () => live(),
   now: () => ctx?.currentTime ?? 0,
@@ -420,7 +431,9 @@ export const sfx = {
   },
   /** A flip block landing: a woodblock knock, like a toy one. */
   clack(pitch = 1) {
-    if (!live() || !gate('clack', 35)) return
+    if (!live()) return
+    if (festive()) return festiveTick()
+    if (!gate('clack', 35)) return
     noise({ dur: 0.04, f: 1500 * pitch * vary(0.08), q: 2.5, g: 0.032 * vary(0.2), a: 0.002 })
     pluck({ f: 440 * pitch * vary(0.03), dur: 0.12, g: 0.055 * vary(0.15), wood: 0.7 })
   },
@@ -474,6 +487,7 @@ export const sfx = {
    */
   jingle(g = 1) {
     if (!live() || !gate('jingle', 1500)) return
+    if (festive()) return festiveJingle(g)
     const e = 0.15 // one eighth note, ~200 bpm feel
     const N = { E3: 164.81, G3: 196, C3: 130.81, D3: 146.83, G4: 392, B4: 493.88, D5: 587.33, E5: 659.25, Fs5: 739.99, G5: 783.99, A5: 880, B5: 987.77, D6: 1174.66 }
     // [note, length in eighths]
@@ -576,6 +590,7 @@ export const sfx = {
    */
   swell(lead = 2.75) {
     if (!live()) return
+    if (festive()) return festiveSwell(lead)
     buildUp(lead, 1, true)
   },
   /**
@@ -584,6 +599,7 @@ export const sfx = {
    */
   transition(lead = 0.65) {
     if (!live() || !gate('transition', 400)) return
+    if (festive()) return festiveTransition(lead)
     buildUp(lead, 0.7, false)
     glock({ f: 587.33, dur: 0.9, g: 0.045, delay: lead })
     glock({ f: 783.99, dur: 1.1, g: 0.04, delay: lead + 0.06 * vary(0.3) })
@@ -667,6 +683,7 @@ const classic = {
    */
   jingle(g = 1) {
     if (!live() || !gate('jingle', 1500)) return
+    if (festive()) return festiveJingle(g)
     const e = 0.15 // one eighth note, ~200 bpm feel
     const N = { E3: 164.81, G3: 196, C3: 130.81, D3: 146.83, G4: 392, B4: 493.88, D5: 587.33, E5: 659.25, Fs5: 739.99, G5: 783.99, A5: 880, B5: 987.77, D6: 1174.66 }
     // [note, length in eighths]
@@ -833,4 +850,246 @@ function buildUpClassic(lead: number, level: number, hint: boolean) {
   ;[392, 440, 493.88].forEach((f, i) => {
     pluck({ f, dur: 0.3, g: (0.04 + i * 0.008) * level, delay: lead - (3 - i) * e, wood: 0.2 })
   })
+}
+
+// ───────── Christmas: the opening and the page turns, during the Secret Santa season ─────────
+
+/**
+ * On while the Secret Santa tab is (25 Nov – 31 Dec, see src/santa.ts). On the dev server,
+ * `?santa=collect|open` turns it on any day and `?santa=off` turns it off.
+ */
+function festive() {
+  if (import.meta.env.DEV) {
+    const v = new URLSearchParams(location.search).get('santa')
+    if (v === 'off') return false
+    if (v === 'collect' || v === 'open') return true
+  }
+  return localPhase() !== null
+}
+
+/** A soft shake of sleigh bells: a couple of small bells and a breath of shimmer, ringing out gently. */
+function sleigh({ g = 0.012, delay = 0, pan = 0, n = 2 }: { g?: number; delay?: number; pan?: number; n?: number }) {
+  for (let i = 0; i < n; i++) {
+    const at = delay + Math.random() * 0.03
+    const f = 2300 * vary(0.1)
+    tone({ f, dur: 0.32 * vary(0.2), g: g * 0.5 * vary(0.25), a: 0.004, delay: at, pan })
+    tone({ f: f * 2.37, dur: 0.18 * vary(0.2), g: g * 0.18, a: 0.003, delay: at, pan })
+  }
+  noise({ dur: 0.16, f: 6800, q: 2.5, g: g * 0.45, a: 0.012, delay, pan })
+}
+
+/** Sleigh bells heard from a distance: a soft, steady shimmer that swells and fades. */
+function shimmer({ dur, g = 0.01, delay = 0, a = 0.5 }: { dur: number; g?: number; delay?: number; a?: number }) {
+  noise({ dur, f: 6400, q: 3, g, a: Math.min(dur * 0.9, a), delay, pan: -0.2 })
+  noise({ dur, f: 7600, q: 3, g: g * 0.7, a: Math.min(dur * 0.9, a * 1.2), delay, pan: 0.2 })
+}
+
+/** A big round bell, struck softly: the note, a hum an octave down and a few overtones ringing on. */
+function bell({ f, dur = 2.6, g = 0.04, delay = 0, pan = 0 }: { f: number; dur?: number; g?: number; delay?: number; pan?: number }) {
+  tone({ f, dur, g, a: 0.008, delay, pan })
+  tone({ f: f * 0.5, dur: dur * 1.2, g: g * 0.4, a: 0.03, delay, pan })
+  // the soft minor-third overtone is what makes a bell sound like a bell
+  tone({ f: f * 1.19, dur: dur * 0.5, g: g * 0.1, a: 0.008, delay, pan })
+  tone({ f: f * 2, dur: dur * 0.6, g: g * 0.25, a: 0.006, delay, pan })
+  tone({ f: f * 2.76, dur: dur * 0.3, g: g * 0.08, a: 0.005, delay, pan })
+}
+
+/**
+ * A celesta note: round and soft to start, with a quiet octave on top, ringing long enough to
+ * run into the next note so a line of them sounds joined up rather than plinky.
+ */
+function celesta({ f, dur, g = 0.04, delay = 0, pan = 0 }: { f: number; dur: number; g?: number; delay?: number; pan?: number }) {
+  tone({ f, dur, g, a: 0.012, delay, pan })
+  tone({ f: f * 2, dur: dur * 0.6, g: g * 0.22, a: 0.01, delay, pan })
+  tone({ f: f * 3, dur: dur * 0.25, g: g * 0.05, a: 0.008, delay, pan })
+}
+
+/** A warm chord that fades in and out underneath, two slightly detuned voices per note for width. */
+function pad(notes: number[], { dur, g = 0.012, delay = 0 }: { dur: number; g?: number; delay?: number }) {
+  for (const f of notes) {
+    tone({ f: f * 0.998, dur, g, a: Math.min(0.25, dur * 0.4), delay, pan: -0.35 })
+    tone({ f: f * 1.002, dur, g, a: Math.min(0.25, dur * 0.4), delay, pan: 0.35 })
+  }
+}
+
+/**
+ * The opening theme in its winter coat: a lilting tune on celesta in a gentle swing (long–short,
+ * long–short), a soft chord under each bar and one round bass note, sleigh bells only on the
+ * downbeats, and a bell and a slow twinkle on the last note. About two and a half seconds.
+ */
+function festiveJingle(g = 1) {
+  const u = 0.13 // one swing third: a long note is two of these, a short one is one
+  const N = {
+    G2: 98, D3: 146.83, C3: 130.81, G3: 196, A3: 220, B3: 246.94, C4: 261.63, D4: 293.66, E4: 329.63, Fs4: 369.99, G4: 392,
+    B4: 493.88, D5: 587.33, E5: 659.25, Fs5: 739.99, G5: 783.99, A5: 880, B5: 987.77, D6: 1174.66, G6: 1567.98,
+  }
+  // [note, length in thirds]: eight short bars of three thirds, then the long last note
+  const melody: [number, number][] = [
+    [N.D5, 2], [N.G5, 1], [N.B5, 2], [N.A5, 1], [N.G5, 2], [N.E5, 1], [N.G5, 3],
+    [N.A5, 2], [N.B5, 1], [N.D6, 2], [N.B5, 1], [N.A5, 2], [N.Fs5, 1], [N.A5, 3],
+    [N.G5, 6],
+  ]
+  let step = 0
+  melody.forEach(([f, len], i) => {
+    const last = i === melody.length - 1
+    // the short note of each pair sits a touch softer, like a hand on the keys
+    const soft = len === 1 ? 0.78 : 1
+    const at = step * u + (step ? (Math.random() - 0.5) * 0.008 : 0)
+    celesta({ f: f * vary(0.002), dur: last ? 2.2 : len * u + 0.45, g: 0.042 * g * soft * (last ? 1.15 : 1), delay: at })
+    step += len
+  })
+  const bar = 3 * u
+  const end = 24 * u
+
+  // a chord and a bass note per bar: G G C G | D G D G
+  const harmony: [number[], number][] = [
+    [[N.G3, N.B3, N.D4], N.G2], [[N.G3, N.B3, N.D4], N.G2], [[N.C4, N.E4, N.G4], N.C3], [[N.G3, N.B3, N.D4], N.G2],
+    [[N.A3, N.D4, N.Fs4], N.D3], [[N.G3, N.B3, N.D4], N.G2], [[N.A3, N.C4, N.Fs4], N.D3], [[N.A3, N.C4, N.Fs4], N.D3],
+  ]
+  harmony.forEach(([chord, bass], b) => {
+    pad(chord, { dur: bar + 0.25, g: 0.011 * g, delay: b * bar })
+    tone({ f: bass, dur: bar + 0.2, g: 0.06 * g, a: 0.02, delay: b * bar })
+  })
+  pad([N.G3, N.B3, N.D4, N.G4], { dur: 2.2, g: 0.012 * g, delay: end })
+  tone({ f: N.G2, dur: 2.2, g: 0.065 * g, a: 0.02, delay: end })
+
+  // sleigh bells: just on each downbeat, under a faint shimmer the whole way through
+  shimmer({ dur: end + 1.2, g: 0.004 * g, a: 0.6 })
+  for (let b = 0; b < 8; b++) sleigh({ g: (b % 2 ? 0.008 : 0.011) * g, delay: b * bar, pan: b % 2 ? 0.2 : -0.2 })
+  sleigh({ g: 0.014 * g, delay: end, n: 3 })
+
+  // the last note: a bell under it, and a slow twinkle drifting up and away
+  bell({ f: N.G4, dur: 2.6, g: 0.035 * g, delay: end })
+  ;[N.B5, N.D6, N.G6].forEach((f, i) => celesta({ f, dur: 1.1, g: 0.012 * g * (1 - i * 0.2), delay: end + 0.35 + i * 0.16 }))
+}
+
+/**
+ * The build-up under the opening funnel, Christmas edition: the same warm swell and pickup into
+ * the tune, with sleigh bells drifting closer as a soft shimmer and a few slow twinkles.
+ */
+function festiveSwell(lead: number) {
+  buildUp(lead, 0.85, false)
+  shimmer({ dur: lead + 0.4, g: 0.009, a: lead * 0.9 })
+  // a few bells on a steady pulse, getting a little nearer each time
+  const beat = 0.39
+  for (let t = lead - beat * 5, i = 0; t < lead - 0.05; t += beat, i++) {
+    if (t > 0) sleigh({ g: 0.004 + i * 0.0015, delay: t, pan: -0.4 + i * 0.08, n: 1 })
+  }
+  const sparkle = [1174.66, 1318.51, 1567.98]
+  for (let i = 0; i < 3; i++) {
+    celesta({ f: sparkle[i], dur: 1.2, g: 0.01, delay: lead * (0.35 + i * 0.18), pan: (i - 1) * 0.4 })
+  }
+}
+
+/** A page turn, Christmas edition: a smooth little rise under a shimmer, landing on a soft bell and two notes. */
+function festiveTransition(lead: number) {
+  buildUp(lead, 0.55, false)
+  shimmer({ dur: lead + 0.5, g: 0.008, a: lead * 0.85 })
+  sleigh({ g: 0.011, delay: lead, n: 2 })
+  bell({ f: 392, dur: 1.8, g: 0.026, delay: lead })
+  celesta({ f: 1174.66, dur: 1, g: 0.026, delay: lead })
+  celesta({ f: 1567.98, dur: 1.2, g: 0.02, delay: lead + 0.13 })
+}
+
+/**
+ * The countdown's flip, Christmas edition: a little carol, one beat per second. Every flip plays
+ * that second's beat of an original 16-bar song in G (melody with its in-between eighth notes,
+ * a chord at each change, a bass line, sleigh bells on the backbeat). Where it is in the song
+ * comes from the clock, so it always picks up in the right place, and everyone's countdown plays
+ * the same bar at the same moment. It goes through the music volume, since it's a song.
+ *
+ * When more than one digit flips at once (a new minute, hour or day), only the first plays. And
+ * while the Secret Santa music is playing, it keeps quiet: one song at a time.
+ */
+const P = {
+  A2: 110, B2: 123.47, C3: 130.81, D3: 146.83, E3: 164.81, G2: 98, G3: 196, A3: 220, B3: 246.94,
+  C4: 261.63, D4: 293.66, E4: 329.63, Fs4: 369.99, G4: 392,
+  B4: 493.88, D5: 587.33, E5: 659.25, Fs5: 739.99, G5: 783.99, A5: 880, B5: 987.77, C6: 1046.5, D6: 1174.66, E6: 1318.51,
+}
+const GM = [P.G3, P.B3, P.D4]
+const EM = [P.G3, P.B3, P.E4]
+const CM = [P.G3, P.C4, P.E4]
+const DM = [P.A3, P.D4, P.Fs4]
+const AM = [P.A3, P.C4, P.E4]
+const D7 = [P.A3, P.C4, P.Fs4]
+
+interface Bar {
+  /** [note, beats]; 0 is a rest */
+  tune: [number, number][]
+  /** [chord, bass root, bass fifth, beats] */
+  chords: [number[], number, number, number][]
+}
+const CAROL: Bar[] = [
+  // A: the tune
+  { tune: [[P.B4, 0.5], [P.D5, 0.5], [P.G5, 1], [P.Fs5, 0.5], [P.G5, 0.5], [P.A5, 1]], chords: [[GM, P.G2, P.D3, 4]] },
+  { tune: [[P.B5, 1.5], [P.A5, 0.5], [P.G5, 1], [P.E5, 1]], chords: [[EM, P.E3, P.B2, 4]] },
+  { tune: [[P.E5, 0.5], [P.G5, 0.5], [P.C6, 1], [P.B5, 0.5], [P.A5, 0.5], [P.G5, 1]], chords: [[CM, P.C3, P.G2, 4]] },
+  { tune: [[P.A5, 2], [P.Fs5, 1], [P.D5, 1]], chords: [[DM, P.D3, P.A2, 4]] },
+  { tune: [[P.B4, 0.5], [P.D5, 0.5], [P.G5, 1], [P.A5, 0.5], [P.B5, 0.5], [P.D6, 1]], chords: [[GM, P.G2, P.D3, 4]] },
+  { tune: [[P.E6, 1.5], [P.D6, 0.5], [P.B5, 1], [P.G5, 1]], chords: [[EM, P.E3, P.B2, 4]] },
+  { tune: [[P.A5, 1], [P.C6, 1], [P.B5, 0.5], [P.A5, 0.5], [P.Fs5, 1]], chords: [[AM, P.A2, P.E3, 2], [D7, P.D3, P.A2, 2]] },
+  { tune: [[P.G5, 3], [0, 1]], chords: [[GM, P.G2, P.D3, 4]] },
+  // B: the lift, then home
+  { tune: [[P.E5, 1], [P.G5, 1], [P.C6, 1.5], [P.B5, 0.5]], chords: [[CM, P.C3, P.G2, 4]] },
+  { tune: [[P.B5, 1], [P.D6, 1], [P.G5, 2]], chords: [[GM, P.G2, P.D3, 4]] },
+  { tune: [[P.A5, 0.5], [P.B5, 0.5], [P.C6, 1], [P.E6, 1], [P.C6, 1]], chords: [[AM, P.A2, P.E3, 4]] },
+  { tune: [[P.B5, 1.5], [P.A5, 0.5], [P.Fs5, 1], [P.A5, 1]], chords: [[DM, P.D3, P.A2, 4]] },
+  { tune: [[P.G5, 0.5], [P.A5, 0.5], [P.B5, 1], [P.E6, 1], [P.B5, 1]], chords: [[EM, P.E3, P.B2, 4]] },
+  { tune: [[P.C6, 1], [P.E6, 1], [P.D6, 1], [P.C6, 1]], chords: [[CM, P.C3, P.G2, 4]] },
+  { tune: [[P.B5, 1], [P.A5, 1], [P.Fs5, 0.5], [P.A5, 0.5], [P.C6, 1]], chords: [[D7, P.D3, P.A2, 4]] },
+  { tune: [[P.B5, 2], [P.G5, 2]], chords: [[GM, P.G2, P.D3, 4]] },
+]
+const BEATS = CAROL.length * 4
+
+/** everything in the song that starts within this beat: [what, when in the beat, ...] */
+function beatOf(n: number) {
+  const bar = CAROL[Math.floor(n / 4)]
+  const beat = n % 4
+  const tune: { f: number; at: number; len: number }[] = []
+  let t = 0
+  for (const [f, len] of bar.tune) {
+    if (f && t >= beat && t < beat + 1) tune.push({ f, at: t - beat, len })
+    t += len
+  }
+  const chords: { notes: number[]; root: number; fifth: number; len: number; half: boolean }[] = []
+  t = 0
+  for (const [notes, root, fifth, len] of bar.chords) {
+    if (t === beat) chords.push({ notes, root, fifth, len, half: false })
+    else if (t + 2 === beat && len === 4) chords.push({ notes, root, fifth, len: 2, half: true })
+    t += len
+  }
+  return { tune, chords }
+}
+
+let lastTick = 0
+let lastBeat = -1
+function festiveTick() {
+  const now = performance.now()
+  // the other digits of the same flip arrive a moment later
+  if (now - lastTick < 80) return
+  lastTick = now
+  // the Secret Santa music has the floor: one song at a time
+  if (bandPlaying()) return
+  const n = Math.floor(Date.now() / 1000) % BEATS
+  if (n === lastBeat) return
+  lastBeat = n
+  route = 'music'
+  try {
+    const { tune, chords } = beatOf(n)
+    for (const { f, at, len } of tune) {
+      // a long note rings on; the short in-between ones sit a touch softer
+      celesta({ f: f * vary(0.002), dur: Math.max(0.7, len + 0.5), g: 0.03 * (len < 1 ? 0.8 : 1) * vary(0.06), delay: at })
+    }
+    for (const { notes, root, fifth, len, half } of chords) {
+      // the chord and bass come in at each change; halfway through a long one the bass steps to the fifth
+      if (!half) pad(notes, { dur: len + 0.3, g: 0.006 })
+      tone({ f: half ? fifth : root, dur: Math.min(len, 2) + 0.2, g: 0.04, a: 0.02 })
+    }
+    // sleigh bells, softly, on the backbeat
+    if (n % 2 === 1) sleigh({ g: 0.006, n: 1 })
+    // the last bar: a bell rings the song home before it starts again
+    if (n === BEATS - 4) bell({ f: P.G4, dur: 3.4, g: 0.022 })
+  } finally {
+    route = 'sfx'
+  }
 }

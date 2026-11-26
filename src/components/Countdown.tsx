@@ -39,7 +39,10 @@ export function Block({ d, quiet = false }: { d: string; quiet?: boolean }) {
       return
     }
     if (quiet || !settings.get().clacks) return
-    const id = window.setTimeout(() => sfx.clack(0.85 + Math.random() * 0.35), 230)
+    const id = window.setTimeout(() => {
+      // not over the intro: the page is only ready once it has played (and again after Replay)
+      if (document.querySelector('.content.is-ready')) sfx.clack(0.85 + Math.random() * 0.35)
+    }, 230)
     return () => clearTimeout(id)
   }, [d])
   const face = (digit: string, color: string, cls: string, key: string) => (

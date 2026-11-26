@@ -653,6 +653,21 @@ function shiver() {
  * drifts on each page and the checklist in the corner. The serious theme plays the whole way
  * through, until the key is found.
  */
+/** `?questmusic=0..3` on the dev server: the quest music's level to play, or null */
+function devQuestMusic(): number | null {
+  if (!import.meta.env.DEV) return null
+  const v = new URLSearchParams(location.search).get('questmusic')
+  const n = v === null || v === '' ? NaN : Number(v)
+  return Number.isFinite(n) ? Math.max(0, Math.min(3, n)) : null
+}
+const MOTIFS: MotifName[] = ['main', 'mitsumi', 'shima', 'mystery', 'lights']
+/** `&motif=…` alongside it: which theme to bring in */
+function devMotif(): MotifName | null {
+  if (devQuestMusic() === null) return null
+  const v = new URLSearchParams(location.search).get('motif') as MotifName | null
+  return v && MOTIFS.includes(v) ? v : null
+}
+
 export function Quest({
   view: at,
   ready,
@@ -726,7 +741,10 @@ export function Quest({
   // visit (unless it's switched off in Settings › Sound)
   const { santaTheme, santaSnow } = useSettings()
   const reward = q.keys.includes('ueno') && santaTheme && !questOn && phase === 'idle'
-  const on = questOn || reward || (phase !== 'idle' && phase !== 'gate' && phase !== 'key')
+  // dev server only: ?questmusic=0..3 plays the music at that level (and &motif=… picks a theme),
+  // to hear how it sits with everything else without playing through the quest
+  const devMusic = devQuestMusic()
+  const on = devMusic !== null || questOn || reward || (phase !== 'idle' && phase !== 'gate' && phase !== 'key')
   // how far along: the theme builds the whole way, a step for each task, and a lift in the scenes
   const found = q.gifts.filter((g) => g.found).length
   const base =
@@ -754,7 +772,7 @@ export function Quest({
             : s === CALL
               ? 1.25
               : Math.min(3, base + 0.75)
-        : base
+        : devMusic ?? base
   // one place starts it and sets how much is going on (starting it used to reset the level to 0)
   // and it stops when nothing wants it (the reward switched off, or the gate opened)
   useEffect(() => {
@@ -768,6 +786,10 @@ export function Quest({
     questMusic.setLevel(target)
   }, [on, ready, phase, target])
   useEffect(() => () => questMusic.stop(), [])
+  useEffect(() => {
+    const m = devMotif()
+    if (m) questMusic.cue(m)
+  }, [])
   // each scene brings in the leitmotif that fits it: Shima's, Mitsumi's, ???'s, the park's lights
   useEffect(() => {
     if (!s) return
