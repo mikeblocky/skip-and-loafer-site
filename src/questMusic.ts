@@ -2,35 +2,42 @@
  * The Secret Santa music, "Snow on the Site": cosy and jolly, played live on the site's synth
  * voices (no files), on the music bus.
  *
- * It's built from leitmotifs that share one hook, D – G – B – A (the same four notes the
- * Christmas opening jingle starts with). Every theme states it in its own way, which is what
- * makes them feel like one soundtrack and stick in your head. Each theme is eight bars shaped
- * like a song: the hook, the hook answered, something new in the middle, the hook coming home.
- * And each has its own pace and feel, so the music keeps moving instead of droning:
+ * It's one song. Every character's theme is a variation of the same eight-bar tune, over the
+ * same chords, at the same pace and with the same small band, so when the theme changes it
+ * sounds like the next verse rather than a different track. The tune opens on the hook
+ * D – G – B – A (the same four notes as the Christmas opening jingle), and is shaped like a
+ * song: the hook, the hook answered, a lift in the middle, the hook coming home.
  *
- *   main     112 bpm, straight. The hook on celesta, stately, in quarter notes. G Em C D | Em C Am→D G
- *   mitsumi  126 bpm, a bouncy swing. The hook quick and hopping, on whistle. G C G D | Em C D G
- *   shima    92 bpm, laid back, half-time drums. The hook on the offbeats, on vibes. Cmaj7 Bm7 Am7 D | … G
- *   lights   104 bpm, a waltz in three. The hook stretched long on whistle over a glock. C D Bm Em | Am D G G
- *   mystery  84 bpm, ???'s theme: the hook turned minor on a music box, drums kept down. Em C Am B7 | …
+ *   main     the tune as it is, on celesta
+ *   mitsumi  on whistle, with little skipping notes in the gaps
+ *   shima    on vibes, a few notes pushed early for an easy, laid-back lilt
+ *   lights   Ueno's winter lights: just the long notes on whistle, a glock circling the chord
+ *   mystery  ???: the same tune in E minor (the same notes, a sadder home), on a music box, drums hushed
  *
- * The running order brings the main theme home between the others, and finishes the round with
- * the main theme a step higher, for a lift, before it all starts again. The busier themes thin
- * out for two bars in the middle and come back in on a drum fill, and every theme ends on a
- * little run into the next. The story can cue a theme (`cue`): it comes in at the next half-phrase.
+ *   chords   G  Em  C  D | Em7  C  G→D  G      (mystery: Em  C  Am  B7 | Cmaj7  Am  Em→B7  Em)
+ *
+ * The running order brings the main theme home between the others, and finishes the round on
+ * the main theme a step higher, for a lift, before it all starts again. Two bars in the middle
+ * of each verse thin out and come back in on a brush roll. The story can cue a theme (`cue`): it
+ * comes in at the next half-phrase.
  *
  * What grows as the quest goes on is the band, layer by layer:
- *   0  sleigh bells, a pizzicato bass, a warm pad, the theme's tune
+ *   0  sleigh bells, a pizzicato bass, a warm pad, the tune
  *   1  a glock answering, a soft kick, a shaker
- *   2  brushes and a soft clap, a bouncing bass, strums (each theme in its own pattern)
- *   3  a tambourine, a marimba note once a bar, bell runs at the end of phrases
+ *   2  brushes and a bouncing bass
+ *   3  a soft clap with the brushes
+ * Just that one small band: no extra instruments coming and going.
  *
  * It rests while something else has the music: one of the hidden games, or an OP/ED video.
  */
 import { reportBand, voices as V } from './sfx'
 import { hz } from './gameSong'
 
-/** bars in a theme */
+/** one pace for the whole song, with the offbeat eighths a touch late for a gentle lilt */
+const BPM = 104
+const SWING = 0.1
+/** sixteenths in a bar, bars in a verse */
+const BAR = 16
 const BARS = 8
 const AHEAD = 0.2
 
@@ -43,24 +50,14 @@ const G = ch(43, 67, 71, 74)
 const Em = ch(40, 64, 67, 71)
 const Cmaj = ch(36, 64, 67, 72)
 const D = ch(38, 66, 69, 74)
-const B7 = ch(35, 63, 66, 69, 71)
 const Am = ch(45, 64, 69, 72)
-const Bm = ch(35, 62, 66, 71)
+const B7 = ch(35, 63, 66, 69, 71)
+const Em7 = ch(40, 64, 67, 71, 74)
 const Cmaj7 = ch(36, 64, 67, 71)
-const Bm7 = ch(35, 62, 66, 69)
-const Am7 = ch(33, 60, 64, 67)
 
 export type MotifName = 'main' | 'mitsumi' | 'shima' | 'mystery' | 'lights'
 type Lead = 'celesta' | 'whistle' | 'vibes' | 'musicbox'
-/** how the drums and the bass move under a theme */
-type Feel = 'straight' | 'bounce' | 'laid' | 'waltz' | 'hush'
 interface Motif {
-  bpm: number
-  /** beats in a bar: 4, or 3 for the waltz */
-  beats: 4 | 3
-  /** how late the offbeat eighths come, as a share of an eighth (0 straight, ~0.33 a lilting swing) */
-  swing: number
-  feel: Feel
   /** one chord per bar, or two (the second from halfway) */
   chords: [Chord, Chord?][]
   /** one note per eighth (null rests), eight bars */
@@ -68,133 +65,112 @@ interface Motif {
   lead: Lead
   /** how long each tune note rings, in sixteenths */
   hold?: number
-  /** the glock's answer in the gaps, if this theme has one */
+  /** the glock's answers in the gaps */
   answer?: (number | null)[]
-  /** a glock running up and down the chord on the eighths */
+  /** a glock circling the chord on the eighths */
   arp?: boolean
+  /** the drums kept down */
+  hushed?: boolean
 }
 
 const _ = null
+/** the song's chords, shared by every theme in G */
+const HOME: [Chord, Chord?][] = [[G], [Em], [Cmaj], [D], [Em7], [Cmaj], [G, D], [G]]
+/** the glock's answers, the same in every theme that has them */
+const ANSWER = [
+  _, _, _, _, _, _, _, _,
+  _, _, _, _, _, 83, _, 86,
+  _, _, _, _, _, _, _, _,
+  _, _, _, _, _, 86, _, 81,
+  _, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, 79,
+  _, _, _, _, _, _, _, _,
+  _, _, 86, _, 83, _, 79, _,
+]
+
 const MOTIFS: Record<MotifName, Motif> = {
-  // the hook in quarter notes, answered, a high middle, and home
+  // the tune as it is
   main: {
-    bpm: 112,
-    beats: 4,
-    swing: 0,
-    feel: 'straight',
-    chords: [[G], [Em], [Cmaj], [D], [Em], [Cmaj], [Am, D], [G]],
+    chords: HOME,
     lead: 'celesta',
     tune: [
       74, _, 79, _, 83, _, 81, _,
       79, _, _, 76, 79, _, _, _,
-      74, _, 79, _, 83, _, 84, _,
-      83, _, 81, _, 78, _, _, _,
+      76, _, 79, _, 84, _, 83, _,
+      81, _, 78, _, 74, _, _, _,
       83, _, 86, _, 88, _, 86, 83,
-      84, _, 83, 81, 79, _, 76, _,
-      74, _, 79, _, 83, _, 81, 78,
+      84, _, 79, 81, 79, _, 76, _,
+      74, _, 79, 83, 81, _, 78, _,
       79, _, _, _, _, _, _, _,
     ],
-    answer: [
-      _, _, _, _, _, _, _, _,
-      _, _, _, _, _, 83, _, 86,
-      _, _, _, _, _, _, _, _,
-      _, _, _, _, _, 86, _, 81,
-      _, _, _, _, _, _, _, _,
-      _, _, _, _, _, _, _, 79,
-      _, _, _, _, _, _, _, _,
-      _, _, 86, _, 83, _, 79, _,
-    ],
+    answer: ANSWER,
   },
-  // Mitsumi: the hook quick and hopping, as if she's running ahead
+  // Mitsumi: the same tune, skipping along, with little notes filling the gaps
   mitsumi: {
-    bpm: 126,
-    beats: 4,
-    swing: 0.3,
-    feel: 'bounce',
-    chords: [[G], [Cmaj], [G], [D], [Em], [Cmaj], [D], [G]],
+    chords: HOME,
     lead: 'whistle',
     hold: 2,
     tune: [
-      74, 79, 83, 81, 79, _, 74, _,
-      76, 79, 84, 83, 81, _, 79, _,
-      74, 79, 83, 81, 79, _, 83, _,
-      81, _, 78, _, 74, _, _, _,
-      76, _, 79, _, 83, _, 81, 79,
-      76, _, 79, _, 84, _, 83, 81,
-      78, 81, 86, _, 84, _, 81, 78,
+      74, 76, 79, _, 83, _, 81, 79,
+      79, _, 76, 78, 79, _, 71, _,
+      76, 78, 79, _, 84, _, 83, 79,
+      81, _, 78, _, 74, _, 78, _,
+      83, _, 86, _, 88, _, 86, 83,
+      84, _, 79, 81, 79, _, 76, 74,
+      74, 76, 79, 83, 81, _, 78, 74,
       79, _, 74, _, 79, _, _, _,
     ],
-    // a little hop from the glock at the end of each bar
-    answer: [
-      _, _, _, _, _, _, _, 86,
-      _, _, _, _, _, _, _, 88,
-      _, _, _, _, _, _, _, 86,
-      _, _, _, _, _, _, 90, 86,
-      _, _, _, _, _, _, _, 83,
-      _, _, _, _, _, _, _, 84,
-      _, _, _, _, _, _, _, _,
-      _, _, _, _, _, 86, _, 91,
-    ],
+    answer: ANSWER,
   },
-  // Shima: the hook on the offbeats, unhurried, never quite on time
+  // Shima: the same tune, in no hurry, a few notes arriving early
   shima: {
-    bpm: 92,
-    beats: 4,
-    swing: 0.33,
-    feel: 'laid',
-    chords: [[Cmaj7], [Bm7], [Am7], [D], [Cmaj7], [Bm7], [Am7, D], [G]],
+    chords: HOME,
     lead: 'vibes',
     hold: 3,
     tune: [
-      _, 74, _, 79, _, 83, 81, _,
-      _, 81, _, 78, 74, _, _, _,
-      _, 72, _, 76, _, 79, 78, _,
-      76, _, 74, _, 69, _, _, _,
-      _, 74, _, 79, _, 83, 84, _,
-      83, _, 81, _, 78, _, 74, _,
-      _, 76, _, 72, _, 74, 78, _,
+      74, _, 79, _, _, 83, 81, _,
+      79, _, _, 76, _, 79, _, _,
+      76, _, 79, _, _, 84, 83, _,
+      81, _, 78, _, _, 74, _, _,
+      83, _, 86, _, _, 88, 86, _,
+      84, _, 79, _, _, 81, 79, _,
+      74, _, 79, 83, _, 81, _, 78,
       79, _, _, _, _, _, _, _,
     ],
+    answer: ANSWER,
   },
-  // ???: the hook turned minor (B E G F#), slow and far away
-  mystery: {
-    bpm: 84,
-    beats: 4,
-    swing: 0,
-    feel: 'hush',
-    chords: [[Em], [Cmaj], [Am], [B7], [Em], [Cmaj], [Am, B7], [Em]],
-    lead: 'musicbox',
-    hold: 4,
-    tune: [
-      71, _, 76, _, 79, _, 78, _,
-      76, _, _, _, 72, _, _, _,
-      69, _, 72, _, 76, _, 75, _,
-      75, _, _, _, 71, _, _, _,
-      71, _, 76, _, 79, _, 83, _,
-      84, _, 83, _, 79, _, 76, _,
-      72, _, 76, _, 78, _, 75, _,
-      76, _, _, _, _, _, _, _,
-    ],
-  },
-  // Ueno's winter lights: a waltz, the hook stretched long over a glock turning round the chord
+  // Ueno's lights: only the tune's long notes, with a glock circling the chord underneath
   lights: {
-    bpm: 104,
-    beats: 3,
-    swing: 0,
-    feel: 'waltz',
-    chords: [[Cmaj], [D], [Bm], [Em], [Am], [D], [G], [G]],
+    chords: HOME,
     lead: 'whistle',
     hold: 7,
     arp: true,
     tune: [
-      76, _, _, _, 79, _,
-      78, _, _, _, 74, _,
-      74, _, 79, _, 83, _,
-      81, _, _, _, _, _,
-      72, _, _, _, 76, _,
-      78, _, _, _, 81, _,
-      79, _, 74, _, 71, _,
-      74, _, 79, _, _, _,
+      74, _, _, _, 83, _, _, _,
+      79, _, _, _, _, _, _, _,
+      76, _, _, _, 84, _, _, _,
+      81, _, _, _, 78, _, _, _,
+      83, _, _, _, 88, _, _, _,
+      84, _, _, _, 79, _, _, _,
+      74, _, _, _, 81, _, 78, _,
+      79, _, _, _, _, _, _, _,
+    ],
+  },
+  // ???: the same tune and rhythm, every note a third lower, so it sits in E minor
+  mystery: {
+    chords: [[Em], [Cmaj], [Am], [B7], [Cmaj7], [Am], [Em, B7], [Em]],
+    lead: 'musicbox',
+    hold: 4,
+    hushed: true,
+    tune: [
+      71, _, 76, _, 79, _, 78, _,
+      76, _, _, 72, 76, _, _, _,
+      72, _, 76, _, 81, _, 79, _,
+      78, _, 75, _, 71, _, _, _,
+      79, _, 83, _, 84, _, 83, 79,
+      81, _, 76, 78, 76, _, 72, _,
+      71, _, 76, 79, 78, _, 75, _,
+      76, _, _, _, _, _, _, _,
     ],
   },
 }
@@ -223,7 +199,7 @@ const sleigh = (d: number, v = 1) => {
 }
 /** celesta: a soft bell with a warm body under it */
 const celesta = (m: number, d: number, g = 1) => {
-  V.pluck({ f: hz(m), dur: 1.1, g: 0.036 * g * human(), delay: d, wood: 0.08 })
+  V.pluck({ f: hz(m), dur: 1.7, g: 0.036 * g * human(), delay: d, wood: 0.08 })
   V.tone({ f: hz(m), dur: 0.5, type: 'triangle', g: 0.01 * g, a: 0.004, delay: d })
 }
 /** vibes: rounder and longer, with a slow shimmer */
@@ -238,7 +214,7 @@ const musicBox = (m: number, d: number) => {
 }
 const whistle = (m: number, d: number, len: number) => V.whistle({ f: hz(m), dur: len, g: 0.024, delay: d })
 const glock = (m: number, d: number, g = 1) => {
-  V.pluck({ f: hz(m), dur: 0.9, g: 0.03 * g * human(), delay: d, wood: 0.1 })
+  V.pluck({ f: hz(m), dur: 1.3, g: 0.028 * g * human(), delay: d, wood: 0.1 })
   V.tone({ f: hz(m) * 2, dur: 0.3, g: 0.006 * g, a: 0.002, delay: d })
 }
 const pizz = (m: number, d: number, g = 1) => V.pluck({ f: hz(m), dur: 0.32, g: 0.055 * g * human(), delay: d, wood: 0.5 })
@@ -249,27 +225,14 @@ const brush = (d: number, v = 1) => {
   V.noise({ dur: 0.15, f: 2300, q: 0.6, g: 0.03 * v, a: 0.008, delay: d })
   V.tone({ f: 185, f2: 150, dur: 0.07, g: 0.016 * v, delay: d })
 }
-const tambourine = (d: number, v = 1) => {
-  V.noise({ dur: 0.06, f: 7200, q: 2.5, g: 0.009 * v, a: 0.002, delay: d })
-  V.noise({ dur: 0.035, f: 9800, q: 3, g: 0.006 * v, a: 0.001, delay: d + 0.012 })
-}
 const bass = (m: number, d: number, len: number, v = 1) => V.tone({ f: hz(m - 12), dur: len, type: 'triangle', g: 0.055 * v, a: 0.006, delay: d })
 /** a handclap: a few tiny bursts smeared together */
 const clap = (d: number, v = 1) => {
   for (let i = 0; i < 3; i++) V.noise({ dur: 0.012, f: 1500, q: 1.2, g: 0.014 * v, a: 0.001, delay: d + i * 0.009 })
   V.noise({ dur: 0.09, f: 1300, q: 1, g: 0.02 * v, a: 0.002, delay: d + 0.027 })
 }
-/** marimba: a short, woody, bright note */
-const marimba = (m: number, d: number, g = 1) => {
-  V.pluck({ f: hz(m), dur: 0.22, g: 0.018 * g * human(), delay: d, wood: 0.7 })
-  V.tone({ f: hz(m) * 4, dur: 0.05, g: 0.003 * g, a: 0.001, delay: d })
-}
-/** a quick bright strum on the offbeat, like a ukulele */
-function strum(tones: number[], d: number, g = 1) {
-  tones.forEach((m, i) => V.pluck({ f: hz(m), dur: 0.3, g: 0.016 * g * human(0.2), delay: d + i * 0.012, wood: 0.4 }))
-}
 function pad(tones: number[], len: number, d: number) {
-  tones.forEach((m) => V.tone({ f: hz(m - 12) * human(0.002), dur: len, type: 'triangle', g: 0.008, a: len * 0.3, delay: d }))
+  tones.forEach((m) => V.tone({ f: hz(m - 12) * human(0.002), dur: len + 0.4, type: 'triangle', g: 0.0095, a: len * 0.45, delay: d }))
 }
 
 // ── the engine ───────────────────────────────────────────────────────────
@@ -299,58 +262,47 @@ let cued: MotifName | null = null
 /** how many times the main theme has come round: it's an octave up every other time */
 let homecomings = 0
 
-/** sixteenths in a bar of the theme playing, and how long one lasts */
-const barLen = () => MOTIFS[motif].beats * 4
-const s16 = () => 60 / MOTIFS[motif].bpm / 4
+/** how long a sixteenth lasts */
+const S16 = 60 / BPM / 4
 
-/** the chord at a step of a bar (a second chord takes over halfway) */
+/** the chord at a step of a bar (a second chord takes over halfway), in the key the verse is in */
 function chordAt(b: number, s: number) {
   const [first, second] = MOTIFS[motif].chords[Math.min(b, BARS - 1)]
-  const c = second && s >= barLen() / 2 ? second : first
+  const c = second && s >= BAR / 2 ? second : first
   return lift ? { root: c.root + lift, tones: c.tones.map((t) => t + lift) } : c
 }
 
 /** schedule one sixteenth; `t` is on the audio clock, the voices want seconds from now */
 function play(t: number) {
   const M = MOTIFS[motif]
-  const len = barLen()
-  const half = len / 2
-  const sixteenth = s16()
-  // the offbeat eighths come a little late in the swung themes
-  const late = step % 4 === 2 ? M.swing * sixteenth * 2 : 0
+  const half = BAR / 2
+  // the offbeat eighths come a touch late: a gentle lilt, the same all the way through
+  const late = step % 4 === 2 ? SWING * S16 * 2 : 0
   const d = Math.max(0, t - V.now()) + late
   const c = chordAt(bar, step)
   const e8 = step % 2 === 0 ? step / 2 : -1 // which eighth this is, or -1 on the in-betweens
   const up = (motif === 'main' && homecomings % 2 === 1 ? 12 : 0) + lift
-  const hushed = M.feel === 'hush'
+  const hushed = !!M.hushed
   const drums = hushed ? Math.min(level, 1) : level
-  const lastBar = bar === BARS - 1
-  // the busier themes thin out for two bars in the middle, then come back in on a fill
-  const thin = (M.feel === 'straight' || M.feel === 'bounce') && (bar === 4 || bar === 5) && level >= 2
+  // two bars in the middle of each verse thin out, then come back in on a brush roll
+  const thin = !hushed && (bar === 4 || bar === 5) && level >= 2
   const beat = step % 4 === 0
-  const downbeat = step === 0
   const secondChord = !!M.chords[bar]?.[1]
 
-  // ── always: bells, pizzicato, pad, the theme's tune
-  if (M.feel === 'waltz') {
-    if (downbeat) sleigh(d, 0.8)
-  } else if (level < 1 ? step % 2 === 0 : step % 4 === 2) {
-    sleigh(d, (step % 4 === 2 ? 0.9 : 0.5) * (hushed ? 0.6 : 1))
-  }
-  if (M.feel === 'waltz') {
-    if (downbeat) pizz(c.root + 24, d)
-  } else if (step === 0 || step === half) pizz(c.root + 24, d, hushed ? 0.7 : 1)
-  if (step === 0 || (secondChord && step === half)) pad(c.tones, sixteenth * (secondChord ? half : len), d)
+  // ── always: bells, pizzicato, pad, the tune
+  if (level < 1 ? step % 2 === 0 : step % 4 === 2) sleigh(d, (step % 4 === 2 ? 0.9 : 0.5) * (hushed ? 0.6 : 1))
+  if (step === 0 || step === half) pizz(c.root + 24, d, hushed ? 0.7 : 1)
+  if (step === 0 || (secondChord && step === half)) pad(c.tones, S16 * (secondChord ? half : BAR), d)
   if (e8 >= 0) {
-    const m = M.tune[bar * M.beats * 2 + e8]
+    const m = M.tune[bar * 8 + e8]
     if (m) {
-      const ring = sixteenth * (M.hold ?? 2)
+      const ring = S16 * (M.hold ?? 2)
       if (M.lead === 'celesta') celesta(m + up, d, up >= 12 ? 0.85 : 1)
       else if (M.lead === 'whistle') whistle(m + lift, d, ring)
       else if (M.lead === 'vibes') vibes(m + lift, d, ring)
       else musicBox(m + lift, d)
     }
-    // the lights: a glock turning round the chord on the eighths
+    // the lights: a glock circling the chord on the eighths
     if (M.arp) {
       const run = [...c.tones, c.tones[0] + 12, ...c.tones.slice(1).reverse()]
       glock(run[e8 % run.length] + 12, d, 0.45)
@@ -360,62 +312,22 @@ function play(t: number) {
   // ── 1: the glock answers, a soft kick, a shaker
   if (level >= 1) {
     if (e8 >= 0 && M.answer) {
-      const n = M.answer[bar * M.beats * 2 + e8]
+      const n = M.answer[bar * 8 + e8]
       if (n) glock(n - (up >= 12 ? 0 : 12) + lift, d, 0.8)
     }
-    if (drums >= 1 && !thin) {
-      if (M.feel === 'waltz') {
-        if (downbeat) kick(d, 0.8)
-      } else if (M.feel === 'laid') {
-        if (downbeat) kick(d)
-      } else if (step === 0 || step === half) kick(d)
-    }
-    if (drums >= 1 && step % 2 === 0 && M.feel !== 'waltz') shaker(d, (step % 4 === 2 ? 0.9 : 0.45) * (hushed ? 0.6 : 1) * (thin ? 0.7 : 1))
+    if (drums >= 1 && !thin && (step === 0 || step === half)) kick(d)
+    if (drums >= 1 && beat) shaker(d, (step % 8 === 4 ? 0.8 : 0.45) * (hushed ? 0.6 : 1) * (thin ? 0.7 : 1))
   }
 
-  // ── 2: the groove, in each theme's own pattern
+  // ── 2: brushes on two and four, and a bass bouncing between the root and its octave
   if (drums >= 2) {
-    if (M.feel === 'waltz') {
-      // oom-pah-pah: the bass on one, a soft brush and a strum on two and three
-      if (downbeat) bass(c.root + 12, d, sixteenth * 3.5)
-      if (step === 4 || step === 8) {
-        brush(d, 0.55)
-        strum(c.tones, d, 0.8)
-      }
-    } else if (M.feel === 'laid') {
-      // half time: the clap only on three, a walking bass on the beats, strums on the and of two and four
-      if (step === 8) {
-        brush(d)
-        clap(d, 0.5)
-      }
-      if (beat) bass(c.root + (step === 4 || step === 12 ? 19 : 12), d, sixteenth * 3.6, 0.9)
-      if (step === 6 || step === 14) strum(c.tones, d, 0.9)
-    } else {
-      if (!thin && (step === 4 || step === 12)) {
-        brush(d)
-        clap(d, 0.6)
-      }
-      if (beat) bass(c.root + (step % 8 === 4 ? 24 : 12), d, sixteenth * 3.2, thin ? 0.7 : 1)
-      if (!thin && (step === 2 || step === 6 || step === 10 || step === 14)) strum(c.tones, d, M.feel === 'bounce' ? 1.1 : 1)
-    }
-    // the drums come back in: a little brush roll across the last beat of the thin stretch
-    if (bar === 5 && step >= 12 && (M.feel === 'straight' || M.feel === 'bounce')) brush(d, 0.35 + (step - 12) * 0.15)
+    if (!thin && (step === 4 || step === 12)) brush(d)
+    if (beat) bass(c.root + (step % 8 === 4 ? 24 : 12), d, S16 * 3.2, thin ? 0.7 : 1)
+    if (bar === 5 && step >= 12) brush(d, 0.35 + (step - 12) * 0.15)
   }
 
-  // ── 3: brighter, not faster
-  if (drums >= 3) {
-    if (!thin && M.feel !== 'waltz' && (step === 4 || step === 12)) tambourine(d, 0.7)
-    if (step === len - 2) marimba(c.tones[2] + 12, d, 0.8)
-  }
-
-  // every theme hands over on a little run up the chord in its last beat
-  if (lastBar && level >= 1 && step >= len - 4 && step % 2 === 0) {
-    const run = [...c.tones, c.tones[0] + 12]
-    glock(run[(step - (len - 4)) / 2 + 1] + 12, d, 0.6)
-  }
-  if (level >= 3 && (bar === 3 || lastBar) && step >= half && step % 2 === 0 && M.feel !== 'waltz') {
-    glock([79, 81, 83, 86][((step - half) / 2) % 4] + lift, d, 0.5)
-  }
+  // ── 3: a soft clap joins the brushes
+  if (drums >= 3 && !thin && (step === 4 || step === 12)) clap(d, 0.4)
 }
 
 function begin(i: number, name: MotifName = ORDER[i].name) {
@@ -430,7 +342,7 @@ function begin(i: number, name: MotifName = ORDER[i].name) {
 /** move one sixteenth on, and to the next theme when this one's done */
 function advance() {
   step++
-  if (step < barLen()) return
+  if (step < BAR) return
   step = 0
   bar++
   // a cue from the story comes in halfway through, rather than waiting the whole eight bars
@@ -459,8 +371,7 @@ function loop() {
   if (!Number.isFinite(next) || next < now - 0.2) next = now + 0.05
   while (next < now + AHEAD) {
     play(next)
-    // the step just played belongs to the theme that was playing, at its own tempo
-    next += s16()
+    next += S16
     advance()
   }
 }
@@ -496,7 +407,7 @@ export const questMusic = {
       const d = 0.05
       // the hook, one last time, and the chord
       ;[74, 79, 83, 81].forEach((m, i) => celesta(m + 12, d + i * 0.14, 1.2))
-      strum([67, 71, 74, 79], d + 0.6, 1.4)
+      pad([67, 71, 74, 79], 1.6, d + 0.6)
       sleigh(d + 0.6, 1.4)
       bass(55, d + 0.6, 1.4)
     }
@@ -505,7 +416,7 @@ export const questMusic = {
     return !!timer && owner[ONE] === timer
   },
   get state() {
-    return { level, bpm: MOTIFS[motif].bpm, motif, bar, lift }
+    return { level, bpm: BPM, motif, bar, lift }
   },
 }
 
