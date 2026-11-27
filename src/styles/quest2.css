@@ -329,6 +329,25 @@ html.q2-flipped .paper {
   align-items: center;
   gap: 10px;
 }
+.q2-signal-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.q2-live {
+  min-width: 72px;
+  min-height: 28px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid var(--edge);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 18px;
+  line-height: 24px;
+  letter-spacing: 0.14em;
+  text-align: center;
+  color: var(--ink);
+}
 .q2-lamp {
   flex: none;
   width: 92px;
@@ -361,34 +380,55 @@ html.q2-flipped .paper {
   font-size: 13px;
   font-variation-settings: 'wght' 800, 'ROND' 100;
 }
-.q2-keys button:hover {
+.q2-keys button:hover:not(:disabled) {
   border-color: var(--c);
 }
-.q2-keys button:active {
+.q2-keys button:active:not(:disabled) {
   border-bottom-width: 2px;
   translate: 0 2px;
+}
+.q2-keys button:disabled {
+  opacity: 0.45;
 }
 
 /* Makoto's card */
 .q2-chart {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
   gap: 4px;
   padding: 10px;
   border-radius: 16px;
   background: var(--paper);
   border: 2px dashed var(--edge);
 }
-.q2-chart span {
+.q2-chart span,
+.q2-chart button {
   display: flex;
   align-items: baseline;
   gap: 6px;
-  padding: 3px 6px;
+  padding: 4px 7px;
   border-radius: 8px;
   font-size: 13px;
+  text-align: left;
+  transition: background 0.1s, border-color 0.1s;
 }
-.q2-chart span.is-mark {
+.q2-chart button {
+  border: 1.5px solid transparent;
+  background: transparent;
+  color: var(--ink);
+}
+.q2-chart button:hover,
+.q2-chart button:focus-visible {
+  background: #fff;
+  border-color: var(--c);
+}
+.q2-chart button:active {
+  translate: 0 1px;
+}
+.q2-chart span.is-mark,
+.q2-chart button.is-mark {
   background: #ffe7a3;
+  border-color: #e6a800;
 }
 .q2-chart b {
   font-variation-settings: 'wght' 900, 'ROND' 100;
@@ -512,12 +552,32 @@ html.q2-flipped .paper {
   flex: 1 1 220px;
   flex-direction: column;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   padding: 16px 14px 12px;
   border-radius: 14px;
   background: #fff6e3;
   border: 2px solid #e8d6ae;
   rotate: -1deg;
+  transition: background 0.2s, border-color 0.2s;
+}
+.q2-paper.is-clear {
+  background: #f3fbf6;
+  border-color: #46b57c;
+}
+.q2-paper-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.q2-clear-tag {
+  margin-right: auto;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #d8f3e3;
+  color: #0b7a45;
+  font-size: 12px;
+  font-variation-settings: 'wght' 850, 'ROND' 100;
 }
 .q2-note {
   display: flex;
@@ -1373,36 +1433,61 @@ html.q2-tilted .qd .qd-bg {
 }
 .q2-ml {
   position: relative;
-  display: grid;
-  place-items: center;
-  min-width: 40px;
-  height: 46px;
-  padding: 0 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 44px;
+  height: 54px;
+  padding: 8px 6px 4px;
   border-radius: 10px;
   background: #fff;
   border: 2px solid var(--hair);
   transition:
     border-color 0.1s,
     background 0.1s,
+    box-shadow 0.1s,
     translate 0.1s;
 }
 .q2-ml small {
   position: absolute;
-  top: 3px;
+  top: 2px;
   left: 5px;
   font-size: 9px;
   color: var(--muted);
   font-variation-settings: 'wght' 800, 'ROND' 100;
 }
-.q2-ml code {
-  margin-top: 6px;
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 15px;
-  letter-spacing: 0.08em;
+.q2-ml b {
+  min-height: 18px;
+  font-size: 18px;
+  line-height: 1;
   color: var(--ink);
+  font-variation-settings: 'wght' 900, 'ROND' 100;
+}
+.q2-ml code {
+  min-height: 14px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: var(--muted);
 }
 .q2-ml:hover:not(:disabled) {
   border-color: var(--ink);
+}
+/* the box currently selected for editing */
+.q2-ml.is-sel {
+  border-color: var(--c);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--c), transparent 76%);
+}
+/* a letter has been filled in */
+.q2-ml.is-filled {
+  background: #f4fbf7;
+  border-color: #7cc9a1;
+}
+.q2-ml.is-filled.is-sel {
+  border-color: var(--c);
 }
 /* the letter blinking right now */
 .q2-ml.is-lit {
@@ -1414,6 +1499,9 @@ html.q2-tilted .qd .qd-bg {
 .q2-ml.is-told {
   background: #f3eeff;
   border-color: #b8a2ea;
+}
+.q2-ml.is-told code {
+  color: #5b3da8;
 }
 .q2-ml.is-told.is-lit {
   background: #ffc83d;

@@ -116,33 +116,26 @@ function Chip({ on, onClick, children, disabled }: { on?: boolean; onClick: () =
   )
 }
 
-/** Makoto's card: the whole alphabet in Morse */
-function Chart({ mark }: { mark?: string }) {
+/** Makoto's card: the whole alphabet in Morse; click a letter to fill the selected box */
+function Chart({ mark, onPick }: { mark?: string; onPick?: (letter: string) => void }) {
   return (
     <div className="q2-chart" aria-label="Morse code chart">
-      {Object.entries(MORSE).map(([l, c]) => (
-        <span key={l} className={mark?.includes(l) ? 'is-mark' : ''}>
-          <b>{l}</b>
-          <code>{pretty(c)}</code>
-        </span>
-      ))}
+      {Object.entries(MORSE).map(([l, c]) =>
+        onPick ? (
+          <button type="button" key={l} className={mark === l ? 'is-mark' : ''} onClick={() => onPick(l)} aria-label={`${l}: ${c.replace(/\./g, 'dot ').replace(/-/g, 'dash ')}`}>
+            <b>{l}</b>
+            <code>{pretty(c)}</code>
+          </button>
+        ) : (
+          <span key={l} className={mark?.includes(l) ? 'is-mark' : ''}>
+            <b>{l}</b>
+            <code>{pretty(c)}</code>
+          </span>
+        ),
+      )}
     </div>
   )
 }
-
-/** read notes like ".... . / ..." as letters, "?" for anything that isn't a letter */
-const readNotes = (s: string) =>
-  s
-    .trim()
-    .split(/\s*\/\s*|\s{3,}/)
-    .map((w) =>
-      w
-        .split(/\s+/)
-        .filter(Boolean)
-        .map((c) => FROM_MORSE[c.replace(/[−—–_]/g, '-').replace(/[·•*]/g, '.')] ?? '?')
-        .join(''),
-    )
-    .join(' ')
 
 // ── 1 · the signal ───────────────────────────────────────────────────────
 
@@ -153,77 +146,161 @@ const lettersOf = (text: string) => {
   return out
 }
 
+/** format per-box letters back into spaced words for the answer field */
+const joinWords = (letters: { ch: string; word: number }[], picks: string[]) => {
+  const words = new Map<number, string>()
+  letters.forEach((l, i) => {
+    words.set(l.word, (words.get(l.word) ?? '') + (picks[i] || ''))
+  })
+  return Array.from(words.values()).filter(Boolean).join(' ')
+}
+
 /**
- * The light on the Countdown blinks (and beeps) the message; note it down, then type it.
+ * The light on the Countdown blinks (and beeps) the message; decode it letter by letter, or type it.
  *
- * Made for people who've never seen Morse: it starts slow, the Morse card is open, and a row of
- * boxes (one per letter, in words) lights up as each letter blinks, so it's always clear where
- * one letter ends and the next begins. Tap a box to hear just that letter again. Stuck? After the
- * first watch, Makoto writes the dots and dashes for one letter at a time into its box. She never
- * says the letter: that's still yours to look up on the card.
+ * Made for people who've never seen Morse: it starts slow, shows each dot/dash live as it blinks,
+ * and groups one box per letter into words. Tap any box to select and hear just that letter again,
+ * tap · / − to decode that box, or click a letter straight on Makoto's Morse card. Stuck? Ask
+ * Makoto anytime to write the dots and dashes for the selected box (still yours to look up).
  */
 export function Telegraph({ text, onSolved, onClose }: { text: string; onSolved: () => void; onClose: () => void }) {
+  const letters = useMemo(() => lettersOf(text), [text])
   const [fast, setFast] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [lit, setLit] = useState(-1)
-  const [plays, setPlays] = useState(0)
+  const [live, setLive] = useState('')
+  const [sel, setSel] = useState(0)
+  const [codes, setCodes] = useState<string[]>(() => letters.map(() => ''))
+  const [picks, setPicks] = useState<string[]>(() => letters.map(() => ''))
   const [told, setTold] = useState<number[]>([])
-  const [notes, setNotes] = useState('')
   const [answer, setAnswer] = useState('')
   const [err, setErr] = useState('')
   const [chart, setChart] = useState(true)
   const lamp = useRef<HTMLSpanElement>(null)
   const card = useRef<HTMLFormElement>(null)
   const timers = useRef<number[]>([])
-  const letters = useMemo(() => lettersOf(text), [text])
   const stop = () => {
     timers.current.forEach(clearTimeout)
     timers.current = []
     lamp.current?.classList.remove('is-on')
     setLit(-1)
+    setLive('')
     setPlaying(false)
   }
   useEffect(() => stop, [])
 
-  /** blink the whole message, or just the letters `only` */
+  /** blink the whole message, or just the letter `only` */
   const play = (only?: number) => {
     stop()
     setPlaying(true)
     // one unit is a dot: slow by default (about 5 words a minute), or ~13 wpm for people who know it
     const u = fast ? 0.095 : 0.22
-    let t = 0.4
+    let t = only === undefined ? 0.35 : 0.1
     const later = (at: number, fn: () => void) => timers.current.push(window.setTimeout(fn, at * 1000))
-    const on = (len: number) => {
+    const on = (len: number, sym: string) => {
       sfx.beep(len, t)
-      later(t, () => lamp.current?.classList.add('is-on'))
-      later(t + len, () => lamp.current?.classList.remove('is-on'))
+      const at = t
+      later(at, () => {
+        lamp.current?.classList.add('is-on')
+        setLive((s) => s + sym)
+      })
+      later(at + len, () => lamp.current?.classList.remove('is-on'))
     }
     letters.forEach((l, i) => {
       if (only !== undefined && i !== only) return
       // a word gap is seven units: three have already gone after the last letter
       if (only === undefined && i > 0 && letters[i - 1].word !== l.word) t += u * 4
       const from = t
-      later(from, () => setLit(i))
+      later(from, () => {
+        setLit(i)
+        setLive('')
+      })
       Array.from(MORSE[l.ch]).forEach((c, k) => {
         if (k) t += u
         const len = c === '-' ? u * 3 : u
-        on(len)
+        on(len, c)
         t += len
       })
       t += u * 3
     })
-    later(t + 0.2, () => {
+    later(t + 0.15, () => {
       setLit(-1)
+      setLive('')
       setPlaying(false)
-      if (only === undefined) setPlays((n) => n + 1)
     })
   }
 
-  /** Makoto writes down the next letter's dots and dashes (never the letter itself) */
+  /** move selection to the next unfilled box, or just the next box */
+  const nextSlot = (after: number, nextPicks: string[]) => {
+    const empty = nextPicks.findIndex((p, i) => i > after && !p)
+    if (empty >= 0) return empty
+    const any = nextPicks.findIndex((p) => !p)
+    return any >= 0 ? any : Math.min(after + 1, letters.length - 1)
+  }
+
+  /** tap a dot or dash into the selected box, auto-decoding it into a letter */
+  const addSym = (sym: '.' | '-') => {
+    sfx.tick(sym === '.' ? 1.3 : 1.05)
+    setErr('')
+    const cur = codes[sel] ?? ''
+    if (cur.length >= 5) return
+    const nextCode = cur + sym
+    const nextCodes = codes.map((c, i) => (i === sel ? nextCode : c))
+    const decoded = FROM_MORSE[nextCode] ?? ''
+    const nextPicks = picks.map((p, i) => (i === sel ? decoded : p))
+    setCodes(nextCodes)
+    setPicks(nextPicks)
+    setAnswer(joinWords(letters, nextPicks))
+  }
+
+  /** delete the last dot/dash in the selected box, or clear it and step back */
+  const backSym = () => {
+    sfx.tick(0.9)
+    setErr('')
+    const cur = codes[sel] ?? ''
+    if (cur) {
+      const nextCode = cur.slice(0, -1)
+      const nextCodes = codes.map((c, i) => (i === sel ? nextCode : c))
+      const decoded = nextCode ? (FROM_MORSE[nextCode] ?? '') : ''
+      const nextPicks = picks.map((p, i) => (i === sel ? decoded : p))
+      setCodes(nextCodes)
+      setPicks(nextPicks)
+      setAnswer(joinWords(letters, nextPicks))
+    } else if (picks[sel]) {
+      const nextPicks = picks.map((p, i) => (i === sel ? '' : p))
+      setPicks(nextPicks)
+      setAnswer(joinWords(letters, nextPicks))
+    } else if (sel > 0) {
+      setSel(sel - 1)
+    }
+  }
+
+  /** pick a letter directly from Makoto's Morse card */
+  const pickFromCard = (letter: string) => {
+    sfx.tick(1.25)
+    setErr('')
+    const nextCodes = codes.map((c, i) => (i === sel ? MORSE[letter] : c))
+    const nextPicks = picks.map((p, i) => (i === sel ? letter : p))
+    setCodes(nextCodes)
+    setPicks(nextPicks)
+    setAnswer(joinWords(letters, nextPicks))
+    setSel(nextSlot(sel, nextPicks))
+  }
+
+  /** keep letter boxes in sync when typing directly in the answer input */
+  const onAnswerChange = (v: string) => {
+    setAnswer(v)
+    setErr('')
+    const clean = norm(v)
+    setPicks(letters.map((_, i) => clean[i] ?? ''))
+  }
+
+  /** Makoto writes down the selected (or next) letter's dots and dashes (never the letter itself) */
   const ask = () => {
-    const i = letters.findIndex((_, k) => !told.includes(k))
+    const i = !told.includes(sel) ? sel : letters.findIndex((_, k) => !told.includes(k))
     if (i < 0) return
     setTold([...told, i])
+    setSel(i)
     sfx.blip(1.12)
   }
 
@@ -234,88 +311,101 @@ export function Telegraph({ text, onSolved, onClose }: { text: string; onSolved:
       sfx.chime(1.2, 0.8)
       return onSolved()
     }
-    // say how many letters are right, so it's clear how close it is
     const want = norm(text)
     const got = norm(answer)
     const right = Array.from(want).filter((c, i) => got[i] === c).length
-    setErr(got ? `${right} of ${want.length} letters right. Tap the boxes to hear the others again.` : 'Type what the light says.')
+    setErr(got ? `${right} of ${want.length} letters right. Tap any box to hear it again.` : 'Type what the light says, or tap the boxes to decode it.')
     nope(card.current)
   }
 
-  // tap-to-write keys for the notes, so a phone never needs its keyboard for dots and dashes
-  const add = (s: string) => (setNotes((n) => n + s), sfx.tick(1.2))
-  const back = () => setNotes((n) => n.replace(/(\s*\/\s*|.)$/, ''))
-  const read = readNotes(notes)
   const words = Array.from(new Set(letters.map((l) => l.word)))
   const left = letters.length - told.length
+  const selCode = codes[sel] || (told.includes(sel) ? MORSE[letters[sel].ch] : '')
+  const selMatch = codes[sel] ? FROM_MORSE[codes[sel]] : undefined
 
   return (
-    <Pop label="The cue light" color={C.pink} hint="Short blink is a dot, long blink is a dash. Each box is one letter: tap one to hear it again." onClose={onClose} wide>
+    <Pop label="The cue light" color={C.pink} hint="Short blink is a dot (·), long blink is a dash (−). Tap any box to hear it, then tap · / − or pick from the card." onClose={onClose} wide>
       <form className="q2-body" ref={card} onSubmit={submit}>
         <div className="q2-stage q2-signal">
           <span className={`q2-lamp${playing ? ' is-live' : ''}`} ref={lamp} aria-hidden="true" />
           <div className="q2-signal-ctl">
-            <button type="button" className="q2-go is-big" onClick={() => play()} disabled={playing}>
-              <Icon name="play" color="#fff" size={16} /> {playing ? 'Blinking…' : plays ? 'Play again' : 'Play'}
+            <button type="button" className="q2-go is-big" onClick={() => (playing ? stop() : play())}>
+              <Icon name={playing ? 'close' : 'play'} color="#fff" size={16} /> {playing ? 'Stop' : 'Play all'}
             </button>
-            <Chip on={fast} onClick={() => setFast(!fast)} disabled={playing}>
-              Faster
-            </Chip>
+            <div className="q2-signal-meta">
+              <Chip on={fast} onClick={() => setFast(!fast)} disabled={playing}>
+                Faster
+              </Chip>
+              <code className="q2-live" aria-hidden="true">
+                {pretty(live) || ' '}
+              </code>
+            </div>
           </div>
         </div>
 
-        {/* one box per letter, in words: it lights up while its letter blinks */}
+        {/* one box per letter, in words: tap to select and replay just that letter */}
         <div className="q2-ml-row" aria-label={`${letters.length} letters in ${words.length} word${words.length > 1 ? 's' : ''}`}>
           {words.map((w) => (
             <span key={w} className="q2-ml-word">
-              {letters.map((l, i) =>
-                l.word === w ? (
+              {letters.map((l, i) => {
+                if (l.word !== w) return null
+                const shownCode = told.includes(i) ? MORSE[l.ch] : codes[i]
+                return (
                   <button
                     type="button"
                     key={i}
-                    className={`q2-ml${lit === i ? ' is-lit' : ''}${told.includes(i) ? ' is-told' : ''}`}
-                    onClick={() => play(i)}
-                    disabled={playing}
-                    aria-label={`Letter ${i + 1}${told.includes(i) ? `: ${MORSE[l.ch].replace(/\./g, 'dot ').replace(/-/g, 'dash ')}` : ''}. Play it again`}
+                    className={`q2-ml${lit === i ? ' is-lit' : ''}${sel === i ? ' is-sel' : ''}${told.includes(i) ? ' is-told' : ''}${picks[i] ? ' is-filled' : ''}`}
+                    onClick={() => {
+                      setSel(i)
+                      play(i)
+                    }}
+                    aria-pressed={sel === i}
+                    aria-label={`Letter ${i + 1}${picks[i] ? `, ${picks[i]}` : ''}${shownCode ? `, ${shownCode.replace(/\./g, 'dot ').replace(/-/g, 'dash ')}` : ''}. Tap to hear again`}
                   >
                     <small>{i + 1}</small>
-                    <code>{told.includes(i) ? pretty(MORSE[l.ch]) : ''}</code>
+                    <b>{picks[i] || ''}</b>
+                    <code>{shownCode ? pretty(shownCode) : ''}</code>
                   </button>
-                ) : null,
-              )}
+                )
+              })}
             </span>
           ))}
         </div>
 
         <div className="q2-notes">
-          <label className="q2-label" htmlFor="q2-notes">
-            Your notes
-          </label>
-          <input id="q2-notes" className="is-mono" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="·· −· / ···" spellCheck={false} autoComplete="off" />
-          <div className="q2-keys" aria-label="Write in your notes">
-            <button type="button" onClick={() => add('.')} aria-label="Dot">
+          <div className="q2-keys" aria-label={`Write dots and dashes for box ${sel + 1}`}>
+            <button type="button" onClick={() => addSym('.')} aria-label="Dot">
               ·
             </button>
-            <button type="button" onClick={() => add('-')} aria-label="Dash">
+            <button type="button" onClick={() => addSym('-')} aria-label="Dash">
               −
             </button>
-            <button type="button" className="is-wide" onClick={() => add(' ')}>
-              next letter
+            <button type="button" className="is-wide" onClick={() => setSel((s) => Math.max(0, s - 1))} disabled={sel === 0} aria-label="Previous box">
+              ← prev
             </button>
-            <button type="button" className="is-wide" onClick={() => add(' / ')}>
-              next word
+            <button type="button" className="is-wide" onClick={() => setSel((s) => Math.min(letters.length - 1, s + 1))} disabled={sel === letters.length - 1} aria-label="Next box">
+              next →
             </button>
-            <button type="button" onClick={back} aria-label="Delete">
+            <button type="button" onClick={backSym} aria-label="Delete">
               ⌫
             </button>
           </div>
           <p className="q2-read" aria-live="polite">
-            {notes.trim() ? (
+            Box <b>{sel + 1}</b>
+            {selCode ? (
               <>
-                Reads as <b>{read}</b>
+                : <code>{pretty(selCode)}</code>
+                {codes[sel] ? (
+                  <>
+                    {' '}
+                    → <b>{selMatch ?? '?'}</b>
+                  </>
+                ) : (
+                  ' — look it up on the card below'
+                )}
               </>
             ) : (
-              ' '
+              ': tap · / − or click a letter on the card'
             )}
           </p>
         </div>
@@ -324,15 +414,15 @@ export function Telegraph({ text, onSolved, onClose }: { text: string; onSolved:
           <Chip on={chart} onClick={() => setChart(!chart)}>
             Morse card
           </Chip>
-          {plays > 0 && left > 0 && (
+          {left > 0 && (
             <Chip onClick={ask}>
               Ask Makoto <small>({left} left)</small>
             </Chip>
           )}
         </div>
-        {chart && <Chart />}
+        {chart && <Chart mark={selMatch} onPick={pickFromCard} />}
 
-        <Answer label="What does it say?" value={answer} onChange={(v) => (setAnswer(v), setErr(''))} err={err} button="Check" />
+        <Answer label="What does it say?" value={answer} onChange={onAnswerChange} err={err} button="Check" />
       </form>
     </Pop>
   )
@@ -495,7 +585,7 @@ export function TapKey({ onSolved, onClose }: { onSolved: () => void; onClose: (
 
 const ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
-/** the cipher wheel: outside the real letter, inside the shifted one; line it up and read */
+/** the cipher wheel: turn the ring to shift the note back live; when it lines up, read and answer */
 export function Wheel({ shift, onSolved, onClose }: { shift: number; onSolved: () => void; onClose: () => void }) {
   const [turn, setTurn] = useState(0)
   const [pick, setPick] = useState<string | null>(null)
@@ -503,14 +593,35 @@ export function Wheel({ shift, onSolved, onClose }: { shift: number; onSolved: (
   const [err, setErr] = useState('')
   const card = useRef<HTMLFormElement>(null)
   const note = useMemo(() => caesar(CALL_SHEET, shift), [shift])
+  const decoded = useMemo(() => caesar(note, -turn), [note, turn])
+  const aligned = turn === shift
   const R1 = 118
   const R2 = 86
   const step = 360 / 26
 
-  const spin = (by: number) => {
-    setTurn((t) => (t + by + 26) % 26)
-    sfx.tick(1.1 + Math.random() * 0.1)
+  const setTurnWithSfx = (next: number) => {
+    setTurn((prev) => {
+      if (next === prev) return prev
+      if (next === shift) sfx.chime(1.25, 0.35)
+      else sfx.tick(1.1 + Math.random() * 0.1)
+      return next
+    })
   }
+  const spin = (by: number) => setTurnWithSfx((turn + by + 26) % 26)
+  const spinRef = useRef(spin)
+  spinRef.current = spin
+
+  // arrow keys turn the wheel when not typing in the answer box
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'INPUT') return
+      if (e.key === 'ArrowLeft') (e.preventDefault(), spinRef.current(-1))
+      else if (e.key === 'ArrowRight') (e.preventDefault(), spinRef.current(1))
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   // drag the inner ring round
   const drag = useRef<{ a: number; t: number } | null>(null)
   const angle = (e: RPointerEvent) => {
@@ -520,11 +631,13 @@ export function Wheel({ shift, onSolved, onClose }: { shift: number; onSolved: (
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
-    if (norm(answer) === norm(CALL_ANSWER)) {
+    const got = norm(answer)
+    const want = norm(CALL_ANSWER)
+    if (got === want || got.includes(want)) {
       sfx.chime(1.2, 0.8)
       return onSolved()
     }
-    setErr(norm(answer) ? 'Not quite. Go letter by letter.' : 'Type what it tells you to do.')
+    setErr(!got ? 'Type what it tells you to do.' : !aligned ? 'Turn the wheel until the note reads clearly first.' : 'Not quite. Read the last three words of the note.')
     nope(card.current)
   }
 
@@ -533,22 +646,26 @@ export function Wheel({ shift, onSolved, onClose }: { shift: number; onSolved: (
   const pickAt = pick ? (ABC.indexOf(pick) - turn + 26) % 26 : -1
 
   return (
-    <Pop label="Her call sheet" color={C.blue} hint="Turn the ring by his age. Tap a letter on the note to find it." onClose={onClose} wide>
+    <Pop label="Her call sheet" color={C.blue} hint="Turn the wheel by his age until the note makes sense, then type what it tells you to do." onClose={onClose} wide>
       <form className="q2-body" ref={card} onSubmit={submit}>
         <div className="q2-stage q2-cipher">
-          <div className="q2-paper">
-            <p className="q2-note" aria-label={`The note: ${note}`}>
-              {Array.from(note).map((c, i) =>
-                /[A-Z]/.test(c) ? (
-                  <button type="button" key={i} className={pick === c ? 'is-pick' : ''} onClick={() => (setPick(pick === c ? null : c), sfx.tick(1.3))}>
+          <div className={`q2-paper${aligned ? ' is-clear' : ''}`}>
+            <p className="q2-note" aria-label={`The note: ${decoded}`}>
+              {Array.from(decoded).map((c, i) => {
+                const orig = note[i]
+                return /[A-Z]/.test(c) ? (
+                  <button type="button" key={i} className={pick === orig ? 'is-pick' : ''} onClick={() => (setPick(pick === orig ? null : orig), sfx.tick(1.3))}>
                     {c}
                   </button>
                 ) : (
                   <span key={i}>{c}</span>
-                ),
-              )}
+                )
+              })}
             </p>
-            <span className="q2-sign">— ???</span>
+            <div className="q2-paper-foot">
+              {aligned && <span className="q2-clear-tag">Readable!</span>}
+              <span className="q2-sign">— ???</span>
+            </div>
           </div>
           <div className="q2-wheel-box">
             <svg
@@ -556,6 +673,10 @@ export function Wheel({ shift, onSolved, onClose }: { shift: number; onSolved: (
               viewBox="-140 -140 280 280"
               role="img"
               aria-label={`Cipher wheel, inner ring turned ${turn}: A sits over ${inner(0)}`}
+              onWheel={(e) => {
+                e.preventDefault()
+                spin(e.deltaY < 0 ? 1 : -1)
+              }}
               onPointerDown={(e) => {
                 ;(e.currentTarget as Element).setPointerCapture(e.pointerId)
                 drag.current = { a: angle(e), t: turn }
@@ -566,10 +687,7 @@ export function Wheel({ shift, onSolved, onClose }: { shift: number; onSolved: (
                 if (d > 180) d -= 360
                 if (d < -180) d += 360
                 const t = (((drag.current.t - Math.round(d / step)) % 26) + 26) % 26
-                if (t !== turn) {
-                  setTurn(t)
-                  sfx.tick(1.15)
-                }
+                if (t !== turn) setTurnWithSfx(t)
               }}
               onPointerUp={() => (drag.current = null)}
               onPointerCancel={() => (drag.current = null)}
