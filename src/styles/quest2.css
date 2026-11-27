@@ -1321,10 +1321,37 @@ html.q2-tilted .qd .qd-bg {
 .q2-sk-list li.is-got .q2-sk-state {
   color: #0b7a45;
 }
+/* on a phone it squeezes down beside the buttons in the other corner: no tag, no empty slots,
+   just the keys found so far (smaller, overlapping) and the countdown */
 @media (max-width: 760px) {
   .q2-sk {
     left: 12px;
     bottom: 14px;
+    max-width: calc(100vw - 140px);
+    gap: 8px;
+    padding: 4px 12px 4px 4px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .q2-sk-tag {
+    display: none;
+  }
+  .q2-sk-keys {
+    gap: 0;
+  }
+  .q2-sk-keys i {
+    width: 24px;
+    height: 24px;
+  }
+  .q2-sk-keys i + i {
+    margin-left: -7px;
+  }
+  .q2-sk-keys i:not(.is-got) {
+    display: none;
+  }
+  .q2-sk-when {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 @media (prefers-reduced-motion: reduce) {
