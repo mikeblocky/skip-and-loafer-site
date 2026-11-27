@@ -1,4 +1,5 @@
 import { C } from './data'
+import { PART_AT } from './quest'
 import type { IconName } from './icons'
 
 /**
@@ -32,6 +33,11 @@ export interface Part {
   /** how to get to it */
   how?: string
   items: string[]
+  /**
+   * A live countdown to `to` (a timestamp), ticking every second: `before` sits over it while
+   * it counts, and once it's run out, `after` replaces both
+   */
+  countdown?: { to: number; before: string; after: string }
 }
 
 export const UPDATES: Update[] = [
@@ -45,7 +51,7 @@ export const UPDATES: Update[] = [
       'Winter’s here, and the site’s dressed up for it. This season comes as a series: a Secret Santa story told in parts, and a big box for everyone’s letters that opens on the 24th. Merry Skipmas and Happy Loaf Year!',
     items: [
       'Secret Santa part 1 is out now.',
-      'Part 2 comes out in 48 hours.',
+      'Part 2 comes out on 27 November, part 3 on 3 December, part 4 on 10 December, and the final part on 23 December. Each one at 10 PM (GMT+7), the same moment everywhere.',
       'The Secret Santa giftbox is open for letters until the 23rd.',
     ],
     parts: [
@@ -59,13 +65,32 @@ export const UPDATES: Update[] = [
         ],
       },
       {
-        title: 'Secret Santa (Part 2), coming in 48 hours',
+        title: 'Secret Santa (Part 2)',
         icon: 'clock',
         color: C.violet,
-        items: [
-          'The story carries on in about two days. Finish part 1 first, because part 2 starts where it leaves off.',
-          'Keep what you found in part 1. You’ll need it again.',
-        ],
+        items: [],
+        countdown: { to: PART_AT[2], before: 'The next challenge begins in', after: 'The next challenge has begun.' },
+      },
+      {
+        title: 'Secret Santa (Part 3)',
+        icon: 'clock',
+        color: C.red,
+        items: [],
+        countdown: { to: PART_AT[3], before: 'The next challenge begins in', after: 'The next challenge has begun.' },
+      },
+      {
+        title: 'Secret Santa (Part 4)',
+        icon: 'clock',
+        color: C.green,
+        items: [],
+        countdown: { to: PART_AT[4], before: 'The next challenge begins in', after: 'The next challenge has begun.' },
+      },
+      {
+        title: 'Secret Santa (Final part)',
+        icon: 'star',
+        color: C.sky,
+        items: [],
+        countdown: { to: PART_AT[5], before: 'The last challenge begins in', after: 'The last challenge has begun.' },
       },
       {
         title: 'Secret Santa giftbox',

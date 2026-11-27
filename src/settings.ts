@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { isLangPref, localeOf, resolveLang, type LangPref } from './i18n/locale'
+import { quest, shimaCursorUnlocked } from './quest'
 
 /**
  * Everyone's own settings for the site, kept on this device. One small store: read it anywhere
@@ -81,6 +82,8 @@ export interface Settings {
   font: Font
   /** the site's drawn cursors, or the system's own */
   cursors: boolean
+  /** which drawn set: the site's icons, or the Shima prototype */
+  cursorStyle: 'drawn' | 'shima'
   furigana: boolean
   lyrics: boolean
   /** the line under the Japanese lyrics: 'auto' (the site's language), 'off', or a language code */
@@ -108,6 +111,13 @@ export interface Settings {
   santaTheme: boolean
   /** the other Secret Santa reward: snow falling over the site, every visit after part 1 */
   santaSnow: boolean
+  /** part 2's reward: snow lying along the bottom of every page */
+  santaScene: boolean
+  /**
+   * Which Skipmas 2026 song is the site's music (once part 2 is done): "Straight Again", the
+   * jolly version from the end of part 2, or part 1's "Snow on the Site"
+   */
+  santaSong: 'straight' | 'snow'
   /** characters (by id) and doodle kinds (by icon name) left off the page */
   hiddenChars: string[]
   hiddenIcons: string[]
@@ -142,6 +152,7 @@ export const DEFAULTS: Settings = {
   contrast: false,
   font: 'site',
   cursors: true,
+  cursorStyle: 'drawn',
   furigana: true,
   lyrics: true,
   clock: 'auto',
@@ -157,6 +168,8 @@ export const DEFAULTS: Settings = {
   quietNews: false,
   santaTheme: true,
   santaSnow: true,
+  santaScene: true,
+  santaSong: 'straight',
   hiddenChars: [],
   hiddenIcons: [],
   rings: true,
@@ -185,6 +198,7 @@ function load(): Settings {
     // the old single "Greyscale" choice is now Achromatopsia; anything unknown goes back to off
     if ((out.colorFilter as string) === 'grey') out.colorFilter = 'achroma'
     if (!FILTER_IDS.has(out.colorFilter)) out.colorFilter = 'none'
+    if (out.cursorStyle !== 'shima') out.cursorStyle = 'drawn'
     return out
   } catch {
     return base
@@ -263,15 +277,24 @@ export function pageFilter(st: Pick<Settings, 'colorFilter' | 'saturation'> = st
   return parts.join(' ')
 }
 
-/** The drawn cursors, half as big again: same pictures, bigger box, hotspot moved to match. */
+/**
+ * The drawn cursors, half as big again: same pictures, bigger box, hotspot moved to match.
+ * Shima's cursors are pictures, not SVGs, so their bigger size lives in styles/settings.css.
+ */
 const CURSORS = ['--cur', '--cur-pointer', '--cur-grab', '--cur-grabbing']
 let cursorSrc: Record<string, string> | null = null
-function bigCursors(on: boolean) {
+function bigCursors(on: boolean, shima: boolean) {
   const r = document.documentElement
-  if (!on) return CURSORS.forEach((v) => r.style.removeProperty(v))
+  CURSORS.forEach((v) => r.style.removeProperty(v))
+  // Shima's set grows in styles/settings.css instead
+  if (!on || shima) return
   if (!cursorSrc) {
+    // read the plain drawn set, whichever set is showing right now
+    const was = r.dataset.cursor
+    r.dataset.cursor = 'site'
     const cs = getComputedStyle(r)
     cursorSrc = Object.fromEntries(CURSORS.map((v) => [v, cs.getPropertyValue(v).trim()]))
+    r.dataset.cursor = was
   }
   for (const v of CURSORS) {
     const big = cursorSrc[v]
@@ -281,6 +304,9 @@ function bigCursors(on: boolean) {
   }
 }
 
+/** Shima's cursors only once they've been earned (a saved choice of them waits until then) */
+const shimaCursor = () => state.cursorStyle === 'shima' && shimaCursorUnlocked()
+
 function apply() {
   if (state.font !== 'site') FONTS[state.font]().catch(() => {})
   const r = document.documentElement
@@ -288,7 +314,8 @@ function apply() {
   r.dataset.text = state.textSize
   r.dataset.contrast = state.contrast ? 'more' : 'normal'
   r.dataset.font = state.font
-  r.dataset.cursor = state.cursors ? 'site' : 'system'
+  r.dataset.cursor = !state.cursors ? 'system' : shimaCursor() ? 'shima' : 'site'
+  r.dataset.bigCursor = state.cursors && state.bigCursor ? 'on' : 'off'
   r.dataset.spacing = state.letterSpacing
   r.dataset.leading = state.lineSpacing
   r.dataset.links = state.underline ? 'underline' : 'normal'
@@ -298,8 +325,10 @@ function apply() {
   r.lang = resolveLang(state.lang)
   if (state.colorFilter in DALTON) ensureFilters()
   r.style.filter = pageFilter()
-  bigCursors(state.cursors && state.bigCursor)
+  bigCursors(state.cursors && state.bigCursor, shimaCursor())
 }
+// the moment Shima's cursors are earned, a saved choice of them takes effect
+quest.subscribe(() => apply())
 
 export const settings = {
   get: () => state,

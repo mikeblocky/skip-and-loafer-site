@@ -115,6 +115,11 @@ export const en = {
   'see.underline': 'Underline links',
   'see.cursors': 'Site cursors',
   'see.bigCursor': 'Bigger cursor',
+  'sec.cursor': 'Cursor',
+  'cur.style': 'Style',
+  'cur.drawn': 'Drawn',
+  'cur.shima': 'Shima (prototype)',
+  'cur.system': 'System',
 
   'rd.size': 'Text size',
   'rd.normal': 'Normal',

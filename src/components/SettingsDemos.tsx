@@ -1,7 +1,8 @@
-import type { CSSProperties } from 'react'
+import { useSyncExternalStore, type CSSProperties } from 'react'
 import { C } from '../data'
 import { Icon } from '../icons'
 import { useSettings } from '../settings'
+import { quest, shimaCursorUnlocked } from '../quest'
 import { useT } from '../i18n'
 
 /**
@@ -26,9 +27,9 @@ export function MotionDemo() {
   )
 }
 
-/** pairs that colour blindness tends to merge, a grey caption, a link and the cursor */
+/** pairs that colour blindness tends to merge, a grey caption and a link */
 export function SeeingDemo() {
-  const { underline, bigCursor, cursors } = useSettings()
+  const { underline } = useSettings()
   const { t } = useT()
   const pairs: [string, string][] = [
     [C.red, C.green],
@@ -50,20 +51,6 @@ export function SeeingDemo() {
         <span className="ds-muted">{t('demo.released')}</span>
         <span className={`ds-link${underline ? ' is-under' : ''}`}>{t('demo.read')}</span>
       </div>
-      {cursors && (
-        <span className={`ds-cursor${bigCursor ? ' is-big' : ''}`}>
-          <svg viewBox="1 1 24 24">
-            <path
-              d="M4.037 4.688a.495.495 0 0 1 .651-.651l16 6.5a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063z"
-              fill="#F53D84"
-              stroke="#B3175A"
-              strokeWidth="1.9"
-              strokeLinejoin="round"
-              paintOrder="stroke"
-            />
-          </svg>
-        </span>
-      )}
     </div>
   )
 }
@@ -115,6 +102,45 @@ export function FocusDemo() {
           <Icon name="bunting" color="#fff" size={14} /> {t('news.title')}
         </div>
       )}
+    </div>
+  )
+}
+
+/** Shima's set, in the order you'd meet them: calm, clickable, draggable, dragging, loading, can't use */
+const SHIMA_SET = ['shima', 'shima-point', 'shima-grab', 'shima-grabbing', 'shima-busy', 'shima-no']
+
+/** the chosen cursor gliding across a strip of the page (and Shima's whole set beside it) */
+export function CursorDemo() {
+  const { bigCursor, cursors, cursorStyle: chosen } = useSettings()
+  // Shima's set shows only once it's been earned
+  const unlocked = useSyncExternalStore(quest.subscribe, () => shimaCursorUnlocked())
+  const cursorStyle = chosen === 'shima' && unlocked ? 'shima' : 'drawn'
+  if (!cursors) return null
+  return (
+    <div className="demo demo-cursor" aria-hidden="true">
+      {cursorStyle === 'shima' && (
+        <div className="dc-set">
+          {SHIMA_SET.map((n) => (
+            <img key={n} src={`/cursors/${n}.png`} alt="" />
+          ))}
+        </div>
+      )}
+      <span className={`ds-cursor${bigCursor ? ' is-big' : ''}${cursorStyle === 'shima' ? ' is-shima' : ''}`}>
+        {cursorStyle === 'shima' ? (
+          <img src="/cursors/shima.png" alt="" />
+        ) : (
+          <svg viewBox="1 1 24 24">
+            <path
+              d="M4.037 4.688a.495.495 0 0 1 .651-.651l16 6.5a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063z"
+              fill="#F53D84"
+              stroke="#B3175A"
+              strokeWidth="1.9"
+              strokeLinejoin="round"
+              paintOrder="stroke"
+            />
+          </svg>
+        )}
+      </span>
     </div>
   )
 }

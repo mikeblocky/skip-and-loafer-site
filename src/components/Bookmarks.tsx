@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react'
 import { gsap } from '../gsap'
 import { C } from '../data'
 import { Icon, type IconName } from '../icons'
 import { useT, type Key } from '../i18n'
 import { useSeason } from './santa/season'
+import { caesar, quest } from '../quest'
 
 export type NavId = 'countdown' | 'volumes' | 'birthdays' | 'anime' | 'message' | 'santa' | 'replay'
 
@@ -33,6 +34,11 @@ function Mark({
 }) {
   const ref = useRef<HTMLButtonElement>(null)
   const { t } = useT()
+  // Secret Santa part 2: while the cipher is unsolved, every tab's name is shifted along the alphabet
+  const shift = useSyncExternalStore(quest.subscribe, () => {
+    const q = quest.get()
+    return q.part2 === 'cipher' && q.p2?.shifted !== false ? (q.p2?.shift ?? 0) : 0
+  })
   const [hover, setHover] = useState(false)
   const first = useRef(true)
 
@@ -72,7 +78,9 @@ function Mark({
     >
       <span className="mark-ribbon">
         <Icon name={item.icon} color={item.ink ? C.ink : '#fff'} size={22} />
-        <span className="mark-label">{t(`nav.${item.id}` as Key)}</span>
+        <span className="mark-label" aria-label={shift ? t(`nav.${item.id}` as Key) : undefined}>
+          {shift ? caesar(t(`nav.${item.id}` as Key), shift) : t(`nav.${item.id}` as Key)}
+        </span>
       </span>
     </button>
   )

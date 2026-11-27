@@ -6,6 +6,7 @@ import { Icon } from '../../icons'
 import { sfx } from '../../sfx'
 import { cleanSigner, cleanText, LETTER_MAX, LETTER_MIN, NAME_MAX, problem, safeColor, STATIONERY } from '../../letterRules'
 import { clientId, post, remember, store } from './mail'
+import { questLetter } from '../../quest'
 import { dateOf, PAPER, paper, reduced, vars, type Geo } from './geometry'
 import { Envelope, Folding, parts, Sheet, turn } from './Paper'
 import { centre, confetti } from './confetti'
@@ -156,6 +157,7 @@ export function Writer({ g, onSent, onOpen, stats }: { g: Geo; onSent: () => voi
       (d) => {
         remember('sl-msg-sent', d.id, 60)
         ok = true
+        questLetter('message')
         settle()
       },
       (e: Error) => {

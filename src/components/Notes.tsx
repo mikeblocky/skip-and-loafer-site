@@ -257,11 +257,14 @@ function News({
                   <span lang="en">{p.how}</span>
                 </p>
               )}
-              <ul className="nt-items" lang="en">
-                {p.items.map((item, i) => (
-                  <li key={i}>{item}</li>
-                ))}
-              </ul>
+              {p.countdown && <Countdown {...p.countdown} />}
+              {p.items.length > 0 && (
+                <ul className="nt-items" lang="en">
+                  {p.items.map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              )}
             </section>
           ))}
           {/* Secret Santa, part 1: a ticket tucked into the very first update */}
@@ -351,5 +354,44 @@ export function Notes({ ready }: { ready: boolean }) {
         />
       )}
     </>
+  )
+}
+
+/** a part that hasn't come out yet: a live countdown to it, ticking every second */
+function Countdown({ to, before, after }: { to: number; before: string; after: string }) {
+  const [now, setNow] = useState(Date.now)
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [])
+  const left = Math.max(0, to - now)
+  if (!left)
+    return (
+      <p className="nt-count is-out" lang="en">
+        <b>{after}</b>
+      </p>
+    )
+  const s = Math.floor(left / 1000)
+  const two = (n: number) => String(n).padStart(2, '0')
+  const units: [number, string][] = [
+    [Math.floor(s / 86400), 'd'],
+    [Math.floor((s % 86400) / 3600), 'h'],
+    [Math.floor((s % 3600) / 60), 'm'],
+    [s % 60, 's'],
+  ]
+  // no "0d" once it's under a day
+  const shown = units[0][0] ? units : units.slice(1)
+  return (
+    <p className="nt-count" lang="en" aria-label={`${before} ${shown.map(([n, u]) => `${n}${u}`).join(' ')}`}>
+      <span>{before}</span>
+      <b aria-hidden="true">
+        {shown.map(([n, u]) => (
+          <span key={u}>
+            {two(n)}
+            <small>{u}</small>
+          </span>
+        ))}
+      </b>
+    </p>
   )
 }

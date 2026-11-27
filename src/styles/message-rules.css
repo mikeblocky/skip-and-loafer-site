@@ -305,7 +305,7 @@
   background: #e6e1ec;
   color: #A49C8E;
   box-shadow: none;
-  cursor: not-allowed;
+  cursor: var(--cur-no);
 }
 .msg-btn:disabled svg {
   stroke: #A49C8E;

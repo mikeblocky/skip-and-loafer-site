@@ -7,7 +7,7 @@ import { reducedMotion } from '../../settings'
 import { SantaHat } from './SantaHat'
 import { SceneBg, type Backdrop } from './SceneBg'
 
-export type Speaker = 'shima' | 'mitsumi'
+export type Speaker = 'shima' | 'mitsumi' | 'yuzuki' | 'makoto'
 /** ??? never appears: they write letters, and speak out of nowhere. The narrator tells the rest. */
 export type Voice = Speaker | 'unknown' | 'narrator'
 
@@ -29,8 +29,18 @@ export interface Line {
   via?: 'phone' | 'letter' | 'voice' | 'memory'
   /** a label of its own beside the name, e.g. "eight years old" */
   tag?: string
-  /** poof: a Santa hat lands on Mitsumi's head too */
-  fx?: 'shake' | 'flash' | 'dark' | 'snow' | 'glow' | 'poof'
+  /**
+   * poof: a Santa hat lands on someone's head (Mitsumi's, unless `hats` says whose) ·
+   * tilt: the whole site leans over to `tilt` degrees (0 sets it straight), rocking by `sway`
+   */
+  fx?: 'shake' | 'flash' | 'dark' | 'snow' | 'glow' | 'poof' | 'tilt'
+  /** who gets a hat on a poof */
+  hats?: Speaker[]
+  /** the angle for a tilt */
+  tilt?: number
+  sway?: number
+  /** the tabs' names shift along the alphabet as this line starts */
+  shift?: boolean
   /**
    * How the speaker moves as the line starts. Without one, it's read off the line: shaky text
    * shakes, a shout or an exclamation hops, sing-song text sways.
@@ -47,7 +57,7 @@ export interface Line {
  * or walks on and then nearly jumps out of their skin (a flip: front, back or sideways).
  */
 export type Entry = 'here' | 'pop' | 'walk' | 'shock'
-export type Move = 'spin' | 'shake' | 'hop' | 'sway' | 'nod'
+export type Move = 'spin' | 'shake' | 'hop' | 'sway' | 'nod' | 'peer'
 
 /** the move a line gets when it doesn't name one */
 function moveFor(line: Line): Move | undefined {
@@ -69,16 +79,16 @@ export interface Chapter {
 }
 
 /** each voice blips at its own pitch, like an old RPG; ??? is low and slow; narration is quiet */
-const PITCH: Record<Voice, number> = { shima: 0.78, mitsumi: 1.25, unknown: 0.5, narrator: 0.95 }
+const PITCH: Record<Voice, number> = { shima: 0.78, mitsumi: 1.25, yuzuki: 1.02, makoto: 1.12, unknown: 0.5, narrator: 0.95 }
 const CPS = 40
-const SIDE: Record<Speaker, 'left' | 'right'> = { mitsumi: 'left', shima: 'right' }
+const SIDE: Record<Speaker, 'left' | 'right'> = { mitsumi: 'left', makoto: 'left', shima: 'right', yuzuki: 'right' }
 const VIA: Record<NonNullable<Line['via']>, { icon: IconName; label: string }> = {
   phone: { icon: 'phone', label: 'on the phone' },
   letter: { icon: 'envelope', label: 'the letter' },
   voice: { icon: 'snow', label: 'from somewhere' },
   memory: { icon: 'film', label: 'remembering' },
 }
-const FULL: Record<string, string> = { mitsumi: 'Iwakura Mitsumi', shima: 'Shima Sousuke' }
+const FULL: Record<string, string> = { mitsumi: 'Iwakura Mitsumi', shima: 'Shima Sousuke', yuzuki: 'Murashige Yuzuki', makoto: 'Kurume Makoto' }
 
 const info = (id: Voice) =>
   id === 'unknown' ? { name: '???', color: C.ink, src: '' } : id === 'narrator' ? { name: '', color: '#8a7559', src: '' } : CHARACTERS.find((c) => c.id === id)!
@@ -181,6 +191,10 @@ export function Dialogue({
   snow = false,
   exit = false,
   when,
+  hats,
+  onFx,
+  spot,
+  onSpot,
   onDone,
 }: {
   lines: Line[]
@@ -202,6 +216,17 @@ export function Dialogue({
   exit?: boolean
   /** when, for a scene that isn't a flashback, e.g. "The next morning" */
   when?: string
+  /** who has a Santa hat on from the start (overrides `hat` and `mitsumiHat`) */
+  hats?: Speaker[]
+  /** a line's moment that's bigger than the scene (the site tilting): the quest handles it */
+  onFx?: (line: Line) => void
+  /**
+   * An altered memory: the line at `at` isn't how it went. While a line is on screen, "That's
+   * not how it went" (or X) challenges it: the right one glitches back into `fixed`.
+   */
+  spot?: { at: number; fixed: Line }
+  /** the altered line was caught */
+  onSpot?: () => void
   onDone: () => void
 }) {
   const shocked = cast.some(([, how]) => how === 'shock')
@@ -210,12 +235,18 @@ export function Dialogue({
   const [shown, setShown] = useState(0)
   const [live, setLive] = useState(false)
   const [startled, setStartled] = useState(false)
-  const [hatOn, setHatOn] = useState(hat && !shocked)
-  const [mitsuHat, setMitsuHat] = useState(mitsumiHat)
+  // who's wearing a Santa hat right now
+  const [hatSet, setHatSet] = useState<Speaker[]>(() =>
+    hats ?? [...(hat && !shocked ? (['shima'] as Speaker[]) : []), ...(mitsumiHat ? (['mitsumi'] as Speaker[]) : [])],
+  )
+  const hatOn = hatSet.includes('shima')
+  const setHatOn = (v: boolean) => setHatSet((h) => (v ? [...h.filter((x) => x !== 'shima'), 'shima'] : h.filter((x) => x !== 'shima')))
+  const fxRef = useRef(onFx)
+  fxRef.current = onFx
+  const puffs = useRef<Record<string, HTMLSpanElement | null>>({})
   const leaving = useRef(false)
   // a line with fx 'snow' starts it snowing for the rest of the scene
   const [snowing, setSnowing] = useState(snow)
-  const puffM = useRef<HTMLSpanElement>(null)
   const root = useRef<HTMLDivElement>(null)
   const sprites = useRef<Record<string, HTMLDivElement | null>>({})
   const box = useRef<HTMLDivElement>(null)
@@ -223,7 +254,11 @@ export function Dialogue({
   const flash = useRef<HTMLDivElement>(null)
   const doneRef = useRef(onDone)
   doneRef.current = onDone
-  const line = lines[at]
+  // an altered memory, once its wrong line is caught, plays the real one in its place
+  const [caught, setCaught] = useState(false)
+  const [glitch, setGlitch] = useState(false)
+  const [nope, setNope] = useState('')
+  const line = caught && spot && at === spot.at ? spot.fixed : lines[at]
   const segs = parse(line.text)
   const text = plain(segs)
   const full = shown >= text.length
@@ -298,7 +333,10 @@ export function Dialogue({
     const quick = reducedMotion()
     if (line.fx === 'shake') {
       sfx.thud()
-      if (!quick) gsap.fromTo(root.current, { x: -14 }, { x: 0, duration: 0.7, ease: 'elastic.out(1.4, 0.2)', clearProps: 'x' })
+      // shaken through a variable (see .qd in quest.css), not GSAP's x: GSAP would fold the scene's
+      // CSS rotation (secret santa part 2 turns scenes with the site) into its own transform and
+      // leave it there, turning the scene twice
+      if (!quick) gsap.fromTo(root.current, { '--qd-shake': '-14px' }, { '--qd-shake': '0px', duration: 0.7, ease: 'elastic.out(1.4, 0.2)' })
     } else if (line.fx === 'flash' || line.fx === 'dark') {
       sfx.whoosh(0.4, line.fx === 'flash', 0.12)
       gsap.fromTo(
@@ -312,19 +350,28 @@ export function Dialogue({
       if (!quick) burst(root.current!)
     } else if (line.fx === 'glow') sfx.chime(0.8, 0.5)
     else if (line.fx === 'poof') {
-      // poof: hers turns up out of nowhere too, and she jumps
-      setMitsuHat(true)
-      sfx.pop(1.6)
-      sfx.chime(1.6, 0.5)
-      const el = sprites.current.mitsumi
-      gsap.fromTo(puffM.current, { scale: 0.2, autoAlpha: 1 }, { scale: 1.6, autoAlpha: 0, duration: 0.6, ease: 'power2.out' })
-      if (el && !quick) {
-        gsap
-          .timeline()
-          .to(el, { y: -70, duration: 0.25, ease: 'power2.out' })
-          .call(() => sfx.boing())
-          .to(el, { y: 0, duration: 0.3, ease: 'bounce.out' })
-      }
+      // poof: a hat turns up out of nowhere on each of them, one after the other, and they jump
+      const who = line.hats ?? ['mitsumi']
+      who.forEach((id, i) => {
+        window.setTimeout(() => {
+          setHatSet((h) => (h.includes(id) ? h : [...h, id]))
+          sfx.pop(1.6 - i * 0.15)
+          sfx.chime(1.6 - i * 0.15, 0.5)
+          const el = sprites.current[id]
+          gsap.fromTo(puffs.current[id] ?? null, { scale: 0.2, autoAlpha: 1 }, { scale: 1.6, autoAlpha: 0, duration: 0.6, ease: 'power2.out' })
+          if (el && !quick) {
+            gsap
+              .timeline()
+              .to(el, { y: -70, duration: 0.25, ease: 'power2.out' })
+              .call(() => sfx.boing())
+              .to(el, { y: 0, duration: 0.3, ease: 'bounce.out' })
+          }
+        }, i * 380)
+      })
+    } else if (line.fx === 'tilt') {
+      sfx.thud()
+      sfx.whoosh(0.6, (line.tilt ?? 0) === 0, 0.16)
+      fxRef.current?.(line)
     }
   }, [at, live]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -373,6 +420,10 @@ export function Dialogue({
       tl.to(el, { rotation: 0, duration: 0.35, ease: 'sine.inOut' })
     } else if (move === 'nod') {
       tl.to(el, { scaleY: 0.96, scaleX: 1.02, transformOrigin: '50% 100%', duration: 0.12, repeat: 1, yoyo: true, ease: 'power1.inOut' })
+    } else if (move === 'peer') {
+      // leans right up to the screen, at whoever's reading, holds it a moment, and settles back
+      tl.to(el, { scale: 1.12, y: -18, transformOrigin: '50% 100%', duration: 0.35, ease: 'power2.out' })
+      tl.to(el, { scale: 1, y: 0, duration: 0.5, ease: 'back.out(1.6)' }, '+=0.9')
     }
     return () => void tl.progress(1).kill()
   }, [at, live]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -398,10 +449,11 @@ export function Dialogue({
     if (!full) return setShown(text.length)
     sfx.click(1.1)
     if (at + 1 >= lines.length) {
-      if (!exit || reducedMotion()) return doneRef.current()
-      // off they go, side by side, hopping along to the right
+      // (only once: a second press before the scene's gone must not end the next one too)
       if (leaving.current) return
       leaving.current = true
+      if (!exit || reducedMotion()) return doneRef.current()
+      // off they go, side by side, hopping along to the right
       const tl = gsap.timeline({ onComplete: () => doneRef.current() })
       tl.to(box.current, { y: 40, autoAlpha: 0, duration: 0.3, ease: 'power2.in' }, 0)
       cast.forEach(([id], i) => {
@@ -420,11 +472,40 @@ export function Dialogue({
     setAt(at + 1)
     setShown(0)
   }
+  /** "That's not how it went": right on the altered line, it rewrites itself; anywhere else, doubt */
+  const challenge = () => {
+    if (!spot || caught || !live) return
+    if (at === spot.at) {
+      setCaught(true)
+      setGlitch(true)
+      setNope('')
+      setShown(0)
+      sfx.whoosh(0.35, false, 0.14)
+      sfx.clank(1.6)
+      window.setTimeout(() => (setGlitch(false), sfx.chime(1.3, 0.6)), 750)
+      onSpot?.()
+      return
+    }
+    sfx.boing()
+    setNope(
+      at < spot.at
+        ? pickOne(['Mitsumi: “No, that bit’s right. I think.”', 'Shima: “That’s how it went. Keep going.”', 'Mitsumi: “Hmm. That one sounds fine to me?”'])
+        : pickOne(['Shima: “We missed it. It was earlier.”', 'Mitsumi: “Too late, it was before this!”']),
+    )
+    window.setTimeout(() => setNope(''), 1800)
+  }
+  const challengeRef = useRef<(() => void) | null>(null)
+  challengeRef.current = spot && !caught ? challenge : null
   const nextRef = useRef(next)
   nextRef.current = next
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if ((e.key === 'x' || e.key === 'X') && challengeRef.current) {
+        e.preventDefault()
+        e.stopPropagation()
+        return challengeRef.current()
+      }
       if (e.key !== 'Enter' && e.key !== ' ') return
       e.preventDefault()
       e.stopPropagation()
@@ -458,6 +539,7 @@ export function Dialogue({
         line.who === 'unknown' && 'is-unknown',
         narr && 'is-narration',
         line.fx === 'glow' && live && 'is-glow',
+        glitch && 'is-glitch',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -479,19 +561,18 @@ export function Dialogue({
       )}
       {(past || when) && !card && <span className="qd-when">{past ?? when}</span>}
       <div className="qd-cast" aria-hidden="true">
-        {cast.map(([id]) => (
+        {cast.map(([id], k) => (
           <div
             key={id}
-            className={`qd-char is-${SIDE[id]}${id === line.who && !line.via && live ? ' is-talking' : ''}`}
+            className={`qd-char is-${SIDE[id]}${second(cast, k) ? ' is-second' : ''}${id === line.who && !line.via && live ? ' is-talking' : ''}`}
             ref={(el) => void (sprites.current[id] = el)}
             style={{ visibility: 'hidden' }}
             title={FULL[id]}
           >
             <div className="qd-fig">
               <img src={info(id).src} alt="" draggable={false} />
-              {id === 'shima' && hatOn && <SantaHat />}
-              {id === 'mitsumi' && mitsuHat && <SantaHat className="is-mitsumi" />}
-              {id === 'mitsumi' && <span className="qd-puff is-mitsumi" ref={puffM} />}
+              {hatSet.includes(id) && <SantaHat className={id === 'shima' ? undefined : `is-${id}`} />}
+              {id !== 'shima' && <span className={`qd-puff is-${id}`} ref={(el) => void (puffs.current[id] = el)} />}
               {id === 'shima' && shocked && <span className="qd-puff" ref={puff} />}
               {id === 'shima' && startled && <span className="qd-bang">!</span>}
             </div>
@@ -511,11 +592,35 @@ export function Dialogue({
           <Icon name={last ? 'check' : 'chev'} color={narr ? '#8a7559' : who.color} size={20} style={last ? undefined : { rotate: '90deg' }} />
         </span>
         <span className="qd-sr">Press Enter to continue</span>
+        {spot && !caught && live && (
+          <button
+            type="button"
+            className="qd-spot"
+            onClick={(e) => (e.stopPropagation(), challenge())}
+            title="That’s not how it went (X)"
+          >
+            <Icon name="replay" color="#fff" size={15} />
+            That’s not how it went
+          </button>
+        )}
+        {nope && (
+          <span className="qd-nope" role="status">
+            {nope}
+          </span>
+        )}
       </div>
       <div className="qd-flash" ref={flash} aria-hidden="true" />
       {card && chapter && <ChapterCard ch={chapter} onGo={next} />}
     </div>
   )
+}
+
+const pickOne = (xs: string[]) => xs[Math.floor(Math.random() * xs.length)]
+
+/** the second one standing on their side: they stand further in, a step behind */
+function second(cast: [Speaker, Entry][], k: number) {
+  const side = SIDE[cast[k][0]]
+  return cast.slice(0, k).some(([id]) => SIDE[id] === side)
 }
 
 /** a puff of snowflakes across the scene */

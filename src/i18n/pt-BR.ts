@@ -111,6 +111,11 @@ export const ptBR: Dict = {
   'see.underline': 'Sublinhar links',
   'see.cursors': 'Cursores do site',
   'see.bigCursor': 'Cursor maior',
+  'sec.cursor': 'Cursor',
+  'cur.style': 'Estilo',
+  'cur.drawn': 'Desenhado',
+  'cur.shima': 'Shima (protótipo)',
+  'cur.system': 'Sistema',
 
   'rd.size': 'Tamanho do texto',
   'rd.normal': 'Normal',

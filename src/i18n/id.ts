@@ -111,6 +111,11 @@ export const id: Dict = {
   'see.underline': 'Garis bawahi tautan',
   'see.cursors': 'Kursor khas situs',
   'see.bigCursor': 'Kursor lebih besar',
+  'sec.cursor': 'Kursor',
+  'cur.style': 'Gaya',
+  'cur.drawn': 'Gambar',
+  'cur.shima': 'Shima (prototipe)',
+  'cur.system': 'Sistem',
 
   'rd.size': 'Ukuran teks',
   'rd.normal': 'Normal',

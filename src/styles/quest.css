@@ -1485,3 +1485,47 @@
     z-index: 1;
   }
 }
+
+/* a scene shaking (a line's fx: 'shake'): moved by a variable so nothing else on it is touched */
+.qd {
+  translate: var(--qd-shake, 0px) 0;
+}
+
+/* the backdrops' snow: each flake drifts down a little way and fades, over and over, staggered */
+.sb-flakes circle {
+  transform-box: fill-box;
+  animation: sb-fall 8s linear infinite;
+}
+@keyframes sb-fall {
+  0% {
+    translate: 0 -70px;
+    opacity: 0;
+  }
+  15%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    translate: 24px 90px;
+    opacity: 0;
+  }
+}
+/* the snow inside the snow globe on the set: swirling slowly */
+.sb-drift {
+  transform-box: fill-box;
+  animation: sb-swirl 6s ease-in-out infinite alternate;
+}
+@keyframes sb-swirl {
+  from {
+    translate: -10px -14px;
+  }
+  to {
+    translate: 12px 18px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sb-flakes circle,
+  .sb-drift {
+    animation: none;
+  }
+}

@@ -29,7 +29,7 @@
   scale: 1.04;
 }
 .rx-box:disabled {
-  cursor: progress;
+  cursor: var(--cur-busy);
 }
 .mbox {
   position: relative;

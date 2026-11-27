@@ -1,7 +1,4 @@
 @media (max-width: 760px) {
-  .paper::after {
-    left: 28px;
-  }
   .wordmark {
     display: none;
   }

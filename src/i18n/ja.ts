@@ -111,6 +111,11 @@ export const ja: Dict = {
   'see.underline': 'リンクに下線',
   'see.cursors': 'サイト独自のカーソル',
   'see.bigCursor': 'カーソルを大きく',
+  'sec.cursor': 'カーソル',
+  'cur.style': 'スタイル',
+  'cur.drawn': 'イラスト',
+  'cur.shima': '志摩（試作）',
+  'cur.system': 'システム',
 
   'rd.size': '文字サイズ',
   'rd.normal': '標準',

@@ -5,9 +5,14 @@ import { Icon, type IconName } from '../../icons'
 import { sfx } from '../../sfx'
 import { reducedMotion, useSettings } from '../../settings'
 import { questMusic, type MotifName } from '../../questMusic'
+import { questMusic2, type Motif2 } from '../../questMusic2'
+import { refall, tilt } from '../../tilt'
+import { phaseNow } from '../santa/season'
 import type { Mode } from '../Stage'
-import { DIGS, LETTERS, PAGES, RIDDLES, TORII_VOLUME, WISHES, past, onQuestHint, buryGifts, liveTicket, normCode, onOpenGate, quest, type Gift, type Page } from '../../quest'
-import { Dialogue } from './Dialogue'
+import { PART_AT, partOut, DIGS, LETTERS, MEMORIES, PAGES, RIDDLES, STAGE_PAGE, siteAltered, TORII_VOLUME, WISHES, caesar, past, part2On, newPart2, onQuestHint, onQuestLetter, buryGifts, liveTicket, normCode, onOpenGate, quest, type Gift, type Page, type Stage2 } from '../../quest'
+import { Dialogue, type Line } from './Dialogue'
+import { Globe, Locker, Route2, DimensionalGift, SkipmasBadge, SnowScape, Spot, TapKey, Telegraph, Wheel, untilText } from './Part2'
+import * as P2 from './story2'
 import { ARRIVE, BLESS, BOX, BOX_AFTER, CALL, CLOCK, CONFESS, HAT_TOO, LETTER, MENDED, PIECES, RIDDLE_CHAPTER, SEAL, SET, SET_AFTER, THAW, UENO, WALK, WHEEL, type Scene } from './story'
 
 /** the tabs, as the bookmarks draw them */
@@ -21,13 +26,13 @@ const TAB: Record<Page, { label: string; color: string; icon: IconName }> = {
 /** what's inside each present, in a word */
 const SHORT: Record<Page, string> = { countdown: 'coffee', volumes: 'bookmark', birthdays: 'shortcake', anime: 'popcorn', message: 'stamps' }
 
-type Phase = 'idle' | 'gate' | 'scene' | 'sinking' | 'rising' | 'mend' | 'list' | 'key'
+type Phase = 'idle' | 'gate' | 'scene' | 'sinking' | 'rising' | 'mend' | 'list' | 'key' | 'game' | 'key2'
 
 const useQuest = () => useSyncExternalStore(quest.subscribe, quest.get)
 
 // ── the ticket gate ──────────────────────────────────────────────────────
 
-function Gate({ onClose, onPass }: { onClose: () => void; onPass: () => void }) {
+function Gate({ onClose, onPass, onKey }: { onClose: () => void; onPass: () => void; onKey: () => void }) {
   // already been through once: say so, and offer to play it again (the key is kept)
   const [used, setUsed] = useState(() => quest.get().part1)
   const [code, setCode] = useState('')
@@ -68,6 +73,40 @@ function Gate({ onClose, onPass }: { onClose: () => void; onPass: () => void }) 
     window.setTimeout(() => input.current?.focus({ preventScroll: true }), 50)
   }
 
+  const part2 = quest.get().part2
+  const locked2 = part2 === 'none' && !partOut(2)
+  if (used === 'blessed')
+    return (
+      <div className="qs qg" role="dialog" aria-modal="true" aria-label="Ticket gate" lang="en">
+        <div className="qg-backdrop" onClick={onClose} />
+        <div className="qg-card">
+          <span className="qg-jp" lang="ja">
+            改札
+          </span>
+          <h3>Ticket gate</h3>
+          <p>
+            {locked2
+              ? 'There’s a keyhole under the ticket slot that wasn’t there before. It won’t turn yet.'
+              : part2 === 'none'
+                ? 'There’s a keyhole under the ticket slot that wasn’t there before. The Key of Ueno is warm in your hand.'
+                : part2 === 'done'
+                  ? 'Part 2 is finished. The Dimensional Gift is yours. It opens in part 3.'
+                  : 'Part 2 is still going: the route in the corner says what’s next.'}
+          </p>
+          <div className="qg-row">
+            <button type="button" className="sx-btn" style={{ '--c': C.ink } as CSSProperties} onClick={part2 === 'none' || part2 === 'done' ? replay : onClose}>
+              {part2 === 'none' || part2 === 'done' ? 'Play part 1 again' : 'Carry on'}
+            </button>
+            {(part2 === 'none' || part2 === 'done') && (
+              <button type="button" className="sx-btn is-strong" style={{ '--c': C.amber } as CSSProperties} onClick={onKey} disabled={locked2}>
+                {locked2 ? `Part 2 in ${untilText(PART_AT[2] - Date.now())}` : part2 === 'none' ? 'Use the Key of Ueno' : 'Play part 2 again'}
+              </button>
+            )}
+          </div>
+          <p className="qg-fine">{locked2 ? 'Part 2 starts here once it’s out. It’s harder.' : part2 === 'none' ? 'Part 2 starts here. It’s harder.' : 'Your keys stay yours.'}</p>
+        </div>
+      </div>
+    )
   if (used !== 'none')
     return (
       <div className="qs qg" role="dialog" aria-modal="true" aria-label="Ticket gate" lang="en">
@@ -78,13 +117,11 @@ function Gate({ onClose, onPass }: { onClose: () => void; onPass: () => void }) 
           </span>
           <h3>Ticket gate</h3>
           <p>
-            {used === 'blessed'
-              ? 'This gate has already let you through. Part 1 is finished, and the Key of Ueno is yours.'
-              : 'This gate has already let you through. Part 1 is still going: the checklist in the corner says what’s next.'}
+            This gate has already let you through. Part 1 is still going: the route in the corner says what’s next.
           </p>
           <div className="qg-row">
             <button type="button" className="sx-btn" style={{ '--c': C.ink } as CSSProperties} onClick={onClose}>
-              {used === 'blessed' ? 'Close' : 'Carry on'}
+              Carry on
             </button>
             <button type="button" className="sx-btn is-strong" style={{ '--c': C.sky } as CSSProperties} onClick={replay}>
               Play part 1 again
@@ -616,12 +653,14 @@ function Route({ onList, onSent, onMiss }: { onList: () => void; onSent: (i: num
 /** a quick line from one of them while you play: who's talking, and what they said */
 interface Bark {
   id: number
-  who: 'mitsumi' | 'shima'
+  who: 'mitsumi' | 'shima' | 'yuzuki' | 'makoto'
   text: string
 }
 const FACE: Record<Bark['who'], { src: string; color: string; name: string }> = {
   mitsumi: { src: '/characters/mitsumi.webp', color: C.pink, name: 'Mitsumi' },
   shima: { src: '/characters/shima.webp', color: C.sky, name: 'Shima' },
+  yuzuki: { src: '/characters/yuzuki.webp', color: C.orange, name: 'Yuzuki' },
+  makoto: { src: '/characters/makoto.webp', color: C.violet, name: 'Makoto' },
 }
 function Barks({ list }: { list: Bark[] }) {
   return (
@@ -687,6 +726,9 @@ export function Quest({
   const [phase, setPhase] = useState<Phase>('idle')
   const [scene, setScene] = useState<{ s: Scene; n: number } | null>(null)
   const queue = useRef<{ scenes: Scene[]; then: () => void }>({ scenes: [], then: () => {} })
+  // every scene gets a key of its own, even one that starts the moment the last one ends (so it
+  // never inherits the last one's place in its lines)
+  const sceneCount = useRef(0)
   // little lines from the two of them while you play, so the tasks feel like one job together
   const [barks, setBarks] = useState<Bark[]>([])
   // once it's all over, it snows on the site: straight away (even with the reward switched off,
@@ -696,7 +738,7 @@ export function Quest({
   const say = (who: Bark['who'], text: string) => {
     const id = ++barkId.current
     setBarks((b) => [...b.slice(-1), { id, who, text }])
-    sfx.blip(who === 'shima' ? 0.8 : 1.25)
+    sfx.blip(who === 'shima' ? 0.8 : who === 'mitsumi' ? 1.25 : 1.05)
     window.setTimeout(() => setBarks((b) => b.filter((x) => x.id !== id)), 4200)
   }
   const voidEl = useRef<HTMLDivElement>(null)
@@ -710,14 +752,14 @@ export function Quest({
   /** play these scenes in order, then carry on */
   const play = (scenes: Scene[], then: () => void = () => go('idle')) => {
     queue.current = { scenes: scenes.slice(1), then }
-    setScene((x) => ({ s: scenes[0], n: (x?.n ?? 0) + 1 }))
+    setScene({ s: scenes[0], n: ++sceneCount.current })
     go('scene')
   }
   const nextScene = () => {
     const { scenes, then } = queue.current
     if (scenes.length) {
       queue.current.scenes = scenes.slice(1)
-      setScene((x) => ({ s: scenes[0], n: (x?.n ?? 0) + 1 }))
+      setScene({ s: scenes[0], n: ++sceneCount.current })
     } else {
       setScene(null)
       then()
@@ -739,12 +781,20 @@ export function Quest({
   const questOn = ['scraps', 'mend', 'riddles', 'dig'].includes(q.part1)
   // the reward for finishing part 1: the theme becomes the site's music, on every page, every
   // visit (unless it's switched off in Settings › Sound)
-  const { santaTheme, santaSnow } = useSettings()
-  const reward = q.keys.includes('ueno') && santaTheme && !questOn && phase === 'idle'
+  const { santaTheme, santaSnow, santaScene, santaSong } = useSettings()
+  // part 2 has its own music ("The Tilt"), from its first scene to the walk home
+  const s2 = scene?.s
+  const homeScene = s2?.lines === P2.HOME.lines
+  const m2 = (part2On(q) || !!s2?.part2) && !homeScene && phase !== 'key2'
+  // after part 2 the reward is the jolly version, "Straight Again" (it first plays on the walk
+  // home), unless Settings › Sound picks part 1's "Snow on the Site"
+  const jollyReward = q.keys.includes('silver') && santaTheme && santaSong === 'straight' && !questOn && !m2 && (phase === 'idle' || phase === 'key2')
+  const want2: 'tilt' | 'jolly' | null = m2 ? 'tilt' : homeScene || jollyReward ? 'jolly' : null
+  const reward = q.keys.includes('ueno') && santaTheme && !questOn && !m2 && !jollyReward && phase === 'idle'
   // dev server only: ?questmusic=0..3 plays the music at that level (and &motif=… picks a theme),
   // to hear how it sits with everything else without playing through the quest
   const devMusic = devQuestMusic()
-  const on = devMusic !== null || questOn || reward || (phase !== 'idle' && phase !== 'gate' && phase !== 'key')
+  const on = !want2 && (devMusic !== null || questOn || reward || (phase !== 'idle' && phase !== 'gate' && phase !== 'key' && phase !== 'key2' && phase !== 'game'))
   // how far along: the theme builds the whole way, a step for each task, and a lift in the scenes
   const found = q.gifts.filter((g) => g.found).length
   const base =
@@ -769,6 +819,8 @@ export function Quest({
           ? Math.min(base, 1)
           : s === BLESS
             ? 3
+            : s?.lines === P2.HOME.lines
+              ? 2
             : s === CALL
               ? 1.25
               : Math.min(3, base + 0.75)
@@ -802,11 +854,199 @@ export function Quest({
             ? 'mystery'
             : s === UENO
               ? 'lights'
-              : s === THAW || s === BLESS || s === WALK || s === CLOCK
+              : s === THAW || s === BLESS || s === WALK || s === CLOCK || s.lines === P2.HOME.lines
                 ? 'main'
                 : undefined
     if (m) questMusic.cue(m)
   }, [s])
+
+  // ── part 2's music: it builds a step with every challenge, and a lift in the scenes
+  const level2 = ({ none: 0, memories: 0.25, letter: 0.5, signal: 1, reply: 1.5, cipher: 2, globe: 2.5, locker: 3, done: 3 } as Record<Stage2, number>)[q.part2]
+  const target2 = Math.min(3, level2 + (phase === 'scene' ? 0.5 : 0))
+  useEffect(() => {
+    if (!want2 || !ready) return void questMusic2.stop()
+    // the tense version during part 2, the jolly one after it: switching starts it from the top
+    if (questMusic2.mode !== want2) {
+      questMusic2.stop()
+      questMusic2.setMode(want2)
+    }
+    const lvl = want2 === 'jolly' ? (homeScene ? 2 : 2.5) : target2
+    questMusic2.start(lvl)
+    questMusic2.setLevel(lvl)
+  }, [want2, ready, target2, homeScene])
+  useEffect(() => () => questMusic2.stop(), [])
+  useEffect(() => {
+    if (!s2?.part2) return
+    const is = (x: P2.Scene2) => s2.lines === x.lines
+    const has = (t: string) => s2.lines.some((l) => l.text.includes(t))
+    // each scene brings in the variation that fits it: the memories of the set get the old tune
+    // from part 1 on a music box; turned over, the tune turns upside down too
+    const m: Motif2 = s2.past
+      ? 'memory'
+      : is(P2.ALTERED) || is(P2.RESTORED) || is(P2.OPEN) || is(P2.LOCKER_OPEN) || is(P2.HATS_TOO) || has('The night the box bursts')
+        ? 'reveal'
+        : is(P2.FLIP) || is(P2.GLOBE)
+          ? 'flip'
+          : is(P2.SIGNAL) || is(P2.CUE_AFTER) || has('Where are you?')
+            ? 'signal'
+            : s2.chapter?.n === 3 || is(P2.CALLSHEET_AFTER) || s2.lines.some((l) => l.fx === 'tilt' && (l.tilt ?? 0) > 0 && (l.tilt ?? 0) < 90)
+              ? 'shift'
+              : 'tilt'
+    questMusic2.cue(m)
+  }, [s2])
+
+  // ── part 2: the site is altered while it's on. Now and then the logo slips: two letters of
+  // "Loafer" swap places for a moment, then swap back as if nothing happened
+  const altered = siteAltered(q)
+  useEffect(() => {
+    if (!altered || !ready) return
+    let id = 0
+    const slip = () => {
+      const word = document.querySelectorAll('.wordmark .fw')[2]
+      const ls = word ? Array.from(word.querySelectorAll<HTMLElement>('.fl')) : []
+      if (ls.length >= 3 && !reducedMotion() && phaseRef.current === 'idle') {
+        const [a, b] = [ls[1], ls[2]]
+        const ta = a.textContent
+        const tb = b.textContent
+        a.textContent = tb
+        b.textContent = ta
+        window.setTimeout(() => ((a.textContent = ta), (b.textContent = tb)), 650)
+      }
+      id = window.setTimeout(slip, 7000 + Math.random() * 9000)
+    }
+    id = window.setTimeout(slip, 4000)
+    return () => clearTimeout(id)
+  }, [altered, ready])
+
+  // ── part 2: the site leans the whole way through, a different way for each challenge
+  useEffect(() => {
+    if (phase === 'scene') return
+    const lean: Record<Stage2, [number, number]> = {
+      none: [0, 0],
+      memories: [0, 0],
+      letter: [0, 0],
+      signal: [-5, 0.8],
+      reply: [-5, 0.8],
+      cipher: [6, 1.2],
+      globe: [180, 1.5],
+      locker: [3, 0.6],
+      done: [0, 0],
+    }
+    const [deg, sway] = lean[q.part2]
+    tilt(deg, sway, true)
+  }, [q.part2, phase])
+  useEffect(() => () => tilt(0, 0, true), [])
+  // a new page lays the stage out again: drop everything loose where it now is
+  useEffect(() => {
+    if (!ready) return
+    const id = window.setTimeout(refall, 900)
+    return () => clearTimeout(id)
+  }, [view, ready])
+  const onFx = (l: Line) => {
+    if (l.fx !== 'tilt') return
+    // the tabs' names shift right as the site swings, not before
+    if (l.shift) quest.update((x) => ({ ...x, p2: x.p2 ? { ...x.p2, shifted: true } : x.p2 }))
+    tilt(l.tilt ?? 0, l.sway ?? 0)
+    // the music lurches with it
+    questMusic2.hit(Math.abs(l.tilt ?? 0) > 90 ? 'flip' : (l.tilt ?? 0) === 0 ? 'settle' : 'tilt')
+  }
+
+  /** play part 2's scenes (marked, so they get part 2's music) */
+  const play2 = (scenes: P2.Scene2[], then?: () => void) => play(scenes.map((x) => ({ ...x, part2: true })), then)
+  const [game, setGame] = useState<Stage2 | null>(null)
+  const openGame = (st: Stage2) => {
+    sfx.pop(1.2)
+    setGame(st)
+    go('game')
+  }
+  const closeGame = () => {
+    setGame(null)
+    go('idle')
+  }
+  const p2 = q.p2
+
+  const startPart2 = () => {
+    sfx.stamp()
+    quest.update((x) => ({ ...x, part2: 'memories', p2: newPart2() }))
+    play2([P2.ALTERED], () => nextMemory())
+  }
+
+  // ── chapter 1: the four altered memories, one after another until each wrong line is caught
+  const restored = () => quest.get().p2?.restored ?? []
+  const nextMemory = () => {
+    const i = Array.from({ length: MEMORIES }, (_, k) => k).find((k) => !restored().includes(k))
+    if (i === undefined) {
+      // all put back: the first suspicion, and then ??? wants a letter
+      quest.update((x) => ({ ...x, part2: 'letter' }))
+      return play2([P2.RESTORED, P2.OPEN], () => {
+        go('idle')
+        window.setTimeout(() => say('mitsumi', phaseNow() === 'collect' ? 'Secret Santa tab, up top! Write whatever you like. She said any words will do.' : 'The big box is shut right now… the Message tab works too. I asked.'), 600)
+      })
+    }
+    play2([P2.MEMORY[i]], () => {
+      // nobody stopped the wrong line: it slips by, and they go through it again
+      if (!restored().includes(i)) play2([P2.MISSED], () => nextMemory())
+      else nextMemory()
+    })
+  }
+  const spotted = (s: Scene) => {
+    const i = P2.MEMORY.findIndex((m) => m.lines === s.lines)
+    if (i < 0) return
+    quest.update((x) => ({ ...x, p2: x.p2 ? { ...x.p2, restored: [...(x.p2.restored ?? []).filter((k) => k !== i), i] } : x.p2 }))
+  }
+
+  // the letter went in: the site tips over
+  useEffect(
+    () =>
+      onQuestLetter(() => {
+        if (quest.get().part2 !== 'letter') return
+        quest.update((x) => ({ ...x, part2: 'signal' }))
+        window.setTimeout(() => {
+          play2([P2.TILT, P2.SIGNAL, P2.CUE, P2.CUE_AFTER], () => {
+            go('idle')
+            window.setTimeout(() => say('makoto', 'The light’s on the Countdown page. Um, you’re writing it down, right? I’ll read over your shoulder.'), 600)
+          })
+        }, 900)
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+
+  const solved2 = (st: Stage2) => {
+    const d = quest.get().p2 ?? newPart2()
+    setGame(null)
+    if (st === 'signal') {
+      quest.update((y) => ({ ...y, part2: 'reply' }))
+      play2([P2.HEARD(d.signal)], () => openGame('reply'))
+    } else if (st === 'reply') {
+      quest.update((y) => ({ ...y, part2: 'cipher', p2: y.p2 ? { ...y.p2, shifted: false } : y.p2 }))
+      play2([P2.SWING(caesar('Countdown', d.shift)), P2.YUZUKI, P2.CALLSHEET, P2.CALLSHEET_AFTER], () => {
+        go('idle')
+        window.setTimeout(() => say('yuzuki', 'Volumes page. Pick a tab you know, count how far it moved. And don’t look at me like that, you can do it.'), 600)
+      })
+    } else if (st === 'cipher') {
+      quest.update((y) => ({ ...y, part2: 'globe' }))
+      play2([P2.FLIP, P2.GLOBE], () => {
+        go('idle')
+        window.setTimeout(() => say('makoto', 'The little globe’s on the Birthdays page. You might have to tilt your head. Sorry.'), 600)
+      })
+    } else if (st === 'locker') {
+      quest.update((y) => ({ ...y, part2: 'done', keys: y.keys.includes('silver') ? y.keys : [...y.keys, 'silver'] }))
+      play2([P2.LOCKER_OPEN, P2.HATS_TOO, P2.HOME], () => {
+        questMusic.stop(true)
+        sfx.jingle(0.8)
+        go('key2')
+      })
+    }
+  }
+  const globeDone = (digits: number[]) => {
+    quest.update((y) => ({ ...y, part2: 'locker', p2: y.p2 ? { ...y.p2, digits } : y.p2 }))
+    setGame(null)
+    play2([P2.DIGITS(digits)], () => {
+      go('idle')
+      window.setTimeout(() => say('shima', 'Message page. Locker 1224. You remember the order the lights came on in? Good. I don’t.'), 600)
+    })
+  }
 
   const pass = () => {
     sfx.stamp()
@@ -933,6 +1173,20 @@ export function Quest({
 
   const playing = ['scraps', 'mend', 'riddles', 'dig'].includes(q.part1) && ready && (phase === 'idle' || phase === 'list' || phase === 'mend')
   const scrapHere = !!view && q.part1 === 'scraps' && phase === 'idle' && ready && !q.scraps.includes(view)
+  // part 2: something already on the page glows and opens the challenge
+  const SPOTS: Partial<Record<Stage2, { sel: string; label: string; color: string }>> = {
+    memories: { sel: '[data-char="shima"]', label: 'Your memories', color: C.violet },
+    signal: { sel: '.view-countdown .clock', label: 'The cue light', color: C.pink },
+    reply: { sel: '.view-countdown .clock', label: 'Answer her', color: C.pink },
+    cipher: { sel: '.view-volumes .vol-title', label: 'Her call sheet', color: C.blue },
+    globe: { sel: '.bd-title', label: 'The little snow globe', color: C.green },
+    locker: { sel: '.view-message .msg-title', label: 'Locker 1224', color: C.red },
+  }
+  // between parts: the Skipmas 2026 badge with the keys and the countdown
+  const between = ready && phase === 'idle' && !questOn && q.part1 === 'blessed' && (q.part2 === 'none' || q.part2 === 'done')
+  // part 2 done: the gift box on the Secret Santa tab hums, but won't open yet
+  const waiting = q.keys.includes('silver') && q.part2 === 'done' && ready && phase === 'idle' && !questOn
+  const spot = ready && phase === 'idle' && view && (STAGE_PAGE[q.part2] === view || q.part2 === 'memories') ? SPOTS[q.part2] : undefined
   const drifts = q.part1 === 'dig' && phase === 'idle' && ready ? q.gifts.map((g, i) => ({ g, i })).filter(({ g }) => g.page === view && !g.found) : []
 
   return (
@@ -945,9 +1199,9 @@ export function Quest({
         ))}
       </div>
 
-      {phase === 'gate' && <Gate onClose={() => go('idle')} onPass={pass} />}
+      {phase === 'gate' && <Gate onClose={() => go('idle')} onPass={pass} onKey={startPart2} />}
       {phase === 'scene' && scene && (
-        <Dialogue key={scene.n} lines={scene.s.lines} cast={scene.s.cast} dark={scene.s.dark} past={scene.s.past} bg={scene.s.bg} chapter={scene.s.chapter} hat={!scene.s.past} mitsumiHat={scene.s.mitsumiHat} snow={scene.s.snow} exit={scene.s.exit} when={scene.s.when} onDone={nextScene} />
+        <Dialogue key={scene.n} lines={scene.s.lines} cast={scene.s.cast} dark={scene.s.dark} past={scene.s.past} bg={scene.s.bg} chapter={scene.s.chapter} hat={!scene.s.past} mitsumiHat={scene.s.mitsumiHat} snow={scene.s.snow} exit={scene.s.exit} when={scene.s.when} hats={scene.s.hats} onFx={onFx} spot={scene.s.spot} onSpot={() => spotted(scene.s)} onDone={nextScene} />
       )}
       {phase === 'mend' && <List solved={false} onSolved={mended} onClose={() => go('idle')} />}
       {phase === 'list' && <List solved lit={past(q.part1, 'mend') ? (past(q.part1, 'riddles') ? [0, 1, 2] : q.solved) : undefined} onClose={() => go('idle')} />}
@@ -961,6 +1215,40 @@ export function Quest({
         </div>
       )}
       {phase === 'key' && <Blessing onClose={() => go('idle')} />}
+      {phase === 'key2' && <DimensionalGift onClose={() => go('idle')} />}
+      {/* after part 2, getting ready for part 3: a
+          gift box on the Secret Santa page that won't open yet */}
+      {between && !playing && <SkipmasBadge keys={q.keys} next={q.part2 === 'none' ? 2 : 3} />}
+      {waiting && at === 'santa' && (
+        <Spot
+          sel=".view-santa .ss-title"
+          label="A humming gift box"
+          color={C.violet}
+          onOpen={() => {
+            sfx.clank(1.4)
+            const lines: [Bark['who'], string][] = [
+              ['mitsumi', 'It won’t open. Not yet.'],
+              ['shima', 'Same snowflake as the letter. Soon, then.'],
+              ['yuzuki', 'It’s humming. Like the gift. Of course it is.'],
+              ['makoto', 'It feels bigger than it looks.'],
+            ]
+            const [who, text] = lines[Math.floor(Math.random() * lines.length)]
+            say(who, text)
+          }}
+        />
+      )}
+      {q.keys.includes('silver') && santaScene && <SnowScape />}
+
+      {/* part 2's challenges */}
+      {phase === 'game' && game === 'signal' && p2 && <Telegraph text={p2.signal} onSolved={() => solved2('signal')} onClose={closeGame} />}
+      {phase === 'game' && game === 'reply' && <TapKey onSolved={() => solved2('reply')} onClose={closeGame} />}
+      {phase === 'game' && game === 'cipher' && p2 && <Wheel shift={p2.shift} onSolved={() => solved2('cipher')} onClose={closeGame} />}
+      {phase === 'game' && game === 'globe' && <Globe onSolved={globeDone} onClose={closeGame} />}
+      {phase === 'game' && game === 'locker' && <Locker digits={p2?.digits ?? []} onSolved={() => solved2('locker')} onClose={closeGame} />}
+      {spot && <Spot key={q.part2} {...spot} onOpen={() => (q.part2 === 'memories' ? nextMemory() : openGame(q.part2))} />}
+      {part2On(q) && ready && phase === 'idle' && (
+        <Route2 stage={q.part2} santaOpen={phaseNow() === 'collect'} />
+      )}
 
       {scrapHere && view && <Scrap key={view} onCatch={() => caught(view)} />}
       {drifts.map(({ g, i }) => (
@@ -992,9 +1280,9 @@ function Blessing({ onClose }: { onClose: () => void }) {
         <div className="qb-key" ref={key}>
           <Icon name="key" color={C.amber} size={70} />
         </div>
-        <span className="qb-kicker">Secret Santa · part 1 complete</span>
+        <span className="qb-kicker">Found in the snow</span>
         <h3>The Key of Ueno</h3>
-        <p>It turned up in the snow after the last present went out, with “Ueno” on it like the ticket. Hang on to it: part 2 starts here.</p>
+        <p>It turned up in the snow after the last present went out, with “Ueno” on it like the ticket. Hang on to it: part 2 starts at the same ticket gate, behind volume 1’s cover.</p>
         <p className="qb-reward">
           <Icon name="note" color={C.sky} size={16} />
           <span>

@@ -429,6 +429,38 @@ export const sfx = {
     noise({ dur: 0.018, f: 2800 * pitch * vary(0.08), q: 4, g: 0.022 * g * vary(0.25), a: 0.002 })
     tone({ f: 1320 * pitch * vary(0.04), dur: 0.035, g: 0.012 * g, a: 0.002 })
   },
+  /**
+   * A radio key's beep, `dur` seconds long (Morse in Secret Santa part 2). `delay` schedules it
+   * on the audio clock, so a whole message keeps perfect time. Never gated: dots come fast.
+   */
+  beep(dur: number, delay = 0, pitch = 1) {
+    if (!live()) return
+    const f = 698.46 * pitch
+    tone({ f, dur: dur + 0.012, type: 'sine', g: 0.07, a: 0.006, delay })
+    tone({ f: f * 2, dur: dur + 0.012, type: 'sine', g: 0.008, a: 0.006, delay })
+  },
+  /** the beep held down as long as a finger's on the key: returns a function that lets go */
+  hold(pitch = 1) {
+    if (!live() || !ctx) return () => {}
+    const dest = out(0)
+    if (!dest) return () => {}
+    const t = ctx.currentTime
+    const o = ctx.createOscillator()
+    o.frequency.value = 698.46 * pitch * TUNE
+    const v = ctx.createGain()
+    v.gain.setValueAtTime(0.0001, t)
+    v.gain.exponentialRampToValueAtTime(0.07, t + 0.008)
+    o.connect(v).connect(dest)
+    o.start(t)
+    return () => {
+      if (!ctx) return
+      const e = ctx.currentTime
+      v.gain.cancelScheduledValues(e)
+      v.gain.setValueAtTime(Math.max(0.0001, v.gain.value), e)
+      v.gain.exponentialRampToValueAtTime(0.0001, e + 0.02)
+      o.stop(e + 0.04)
+    }
+  },
   /** A flip block landing: a woodblock knock, like a toy one. */
   clack(pitch = 1) {
     if (!live()) return

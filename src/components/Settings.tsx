@@ -3,12 +3,12 @@ import { C } from '../data'
 import { Icon, type IconName } from '../icons'
 import { sfx } from '../sfx'
 import { COLOR_FILTERS, settings, useSettings, type Settings } from '../settings'
-import { FocusDemo, MotionDemo, ReadingDemo, SeeingDemo } from './SettingsDemos'
+import { CursorDemo, FocusDemo, MotionDemo, ReadingDemo, SeeingDemo } from './SettingsDemos'
 import { LANGS, deviceLang, langName, useT, type Key } from '../i18n'
 import { lyricLangs } from '../i18n/lyrics'
 import { PagePicker } from './SettingsPicker'
 import { GameShortcuts } from './SettingsGames'
-import { quest } from '../quest'
+import { quest, shimaCursorUnlocked } from '../quest'
 
 /**
  * One place for sound and accessibility options. A dialog over the page: focus stays inside
@@ -18,7 +18,7 @@ import { quest } from '../quest'
 
 const set = (patch: Partial<Settings>) => settings.set(patch)
 
-type SectionId = 'language' | 'sound' | 'motion' | 'seeing' | 'reading' | 'focus' | 'page' | 'games' | 'countdown' | 'karaoke'
+type SectionId = 'language' | 'sound' | 'motion' | 'seeing' | 'cursor' | 'reading' | 'focus' | 'page' | 'games' | 'countdown' | 'karaoke'
 
 /** each section's title is `sec.<id>` in the language files */
 const SECTIONS: { id: SectionId; icon: IconName; color: string }[] = [
@@ -26,6 +26,7 @@ const SECTIONS: { id: SectionId; icon: IconName; color: string }[] = [
   { id: 'sound', icon: 'sound', color: C.pink },
   { id: 'motion', icon: 'sparkle', color: C.violet },
   { id: 'seeing', icon: 'sun', color: C.orange },
+  { id: 'cursor', icon: 'arrow', color: C.pink },
   { id: 'reading', icon: 'book', color: C.blue },
   { id: 'focus', icon: 'star', color: C.green },
   { id: 'page', icon: 'smile', color: C.magenta },
@@ -401,6 +402,9 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
   const s = useSettings()
   // the Secret Santa theme switch appears once part 1 is done
   const santaUnlocked = useSyncExternalStore(quest.subscribe, () => quest.get().keys.includes('ueno'))
+  const silverUnlocked = useSyncExternalStore(quest.subscribe, () => quest.get().keys.includes('silver'))
+  // Shima's cursors are a reward for a later part: hidden until then
+  const shimaUnlocked = useSyncExternalStore(quest.subscribe, () => shimaCursorUnlocked())
   const { t, lang: resolvedLang } = useT()
   const [soundOn, setSoundOn] = useState(sfx.on)
   useEffect(() => sfx.subscribe(setSoundOn), [])
@@ -519,7 +523,25 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
               {/* the Secret Santa reward: only here once it's been earned (English only, like the quest) */}
               {santaUnlocked && (
                 <span lang="en">
-                  <Toggle label="“Snow on the Site” as the site’s music (a Secret Santa reward)" checked={s.santaTheme} onChange={(santaTheme) => set({ santaTheme })} />
+                  <Toggle
+                    label={silverUnlocked ? 'The Skipmas 2026 soundtrack as the site’s music (a Secret Santa reward)' : '“Snow on the Site” as the site’s music (a Secret Santa reward)'}
+                    checked={s.santaTheme}
+                    onChange={(santaTheme) => set({ santaTheme })}
+                  />
+                </span>
+              )}
+              {/* after part 2 there are two versions to choose between */}
+              {silverUnlocked && (
+                <span lang="en">
+                  <Choice
+                    label="Skipmas 2026 soundtrack"
+                    value={s.santaSong}
+                    options={[
+                      { v: 'straight', label: '“Straight Again” (after part 2)' },
+                      { v: 'snow', label: '“Snow on the Site” (the first one)' },
+                    ]}
+                    onChange={(santaSong) => set({ santaSong })}
+                  />
                 </span>
               )}
             </Section>
@@ -562,7 +584,19 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
               />
               <Toggle label={t('see.contrast')} checked={s.contrast} onChange={(contrast) => set({ contrast })} />
               <Toggle label={t('see.underline')} checked={s.underline} onChange={(underline) => set({ underline })} />
-              <Toggle label={t('see.cursors')} checked={s.cursors} onChange={(cursors) => set({ cursors })} />
+            </Section>
+
+            <Section id="cursor" demo={<CursorDemo />}>
+              <Choice
+                label={t('cur.style')}
+                value={!s.cursors ? 'system' : s.cursorStyle === 'shima' && !shimaUnlocked ? 'drawn' : s.cursorStyle}
+                options={[
+                  { v: 'drawn', label: t('cur.drawn') },
+                  ...(shimaUnlocked ? [{ v: 'shima' as const, label: t('cur.shima') }] : []),
+                  { v: 'system', label: t('cur.system') },
+                ]}
+                onChange={(v) => set(v === 'system' ? { cursors: false } : { cursors: true, cursorStyle: v })}
+              />
               {s.cursors && <Toggle label={t('see.bigCursor')} checked={s.bigCursor} onChange={(bigCursor) => set({ bigCursor })} />}
             </Section>
 
@@ -622,6 +656,11 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
               {santaUnlocked && (
                 <span lang="en">
                   <Toggle label="Snow falling over the site (a Secret Santa reward)" checked={s.santaSnow} onChange={(santaSnow) => set({ santaSnow })} />
+                </span>
+              )}
+              {silverUnlocked && (
+                <span lang="en">
+                  <Toggle label="Snow lying along the bottom of the page (a Secret Santa part 2 reward)" checked={s.santaScene} onChange={(santaScene) => set({ santaScene })} />
                 </span>
               )}
             </Section>

@@ -111,6 +111,11 @@ export const zhHans: Dict = {
   'see.underline': '链接加下划线',
   'see.cursors': '网站专属光标',
   'see.bigCursor': '放大光标',
+  'sec.cursor': '光标',
+  'cur.style': '样式',
+  'cur.drawn': '手绘',
+  'cur.shima': '志摩（试作）',
+  'cur.system': '系统',
 
   'rd.size': '字号',
   'rd.normal': '标准',

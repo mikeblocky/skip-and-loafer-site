@@ -111,6 +111,11 @@ export const zhHant: Dict = {
   'see.underline': '連結加底線',
   'see.cursors': '網站專屬游標',
   'see.bigCursor': '放大游標',
+  'sec.cursor': '游標',
+  'cur.style': '樣式',
+  'cur.drawn': '手繪',
+  'cur.shima': '志摩（試作）',
+  'cur.system': '系統',
 
   'rd.size': '文字大小',
   'rd.normal': '標準',

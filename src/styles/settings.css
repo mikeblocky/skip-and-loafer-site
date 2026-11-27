@@ -132,6 +132,32 @@
   --cur-grab: grab;
   --cur-grabbing: grabbing;
 }
+/*
+ * Prototype: Shima's set (public/cursors). His calm face everywhere, "!" with a hand up on anything
+ * you can click, asleep (Zzz) while something's loading, "?" on things you can't use right
+ * now. The pictures are 80px, shown at 40px (56px for the bigger cursor), a little bigger than
+ * the drawn set and still sharp on high-density screens. On anything you can drag he's ready to
+ * hold it, and while you're dragging he's straining to carry it.
+ * Click points: his hand on the everyday one and the two drag ones, the top of the "!" on the
+ * clickable one, and the tip of his leftmost hair spike on the rest (10,116 / 12-13,119 / 8,51 /
+ * 6,39 / 18,35 in the 128px drawings, scaled to the size shown).
+ */
+:root[data-cursor='shima'] {
+  --cur: image-set(url('/cursors/shima.png') 2x) 3 36, auto;
+  --cur-pointer: image-set(url('/cursors/shima-point.png') 2x) 2 16, pointer;
+  --cur-grab: image-set(url('/cursors/shima-grab.png') 2x) 4 37, grab;
+  --cur-grabbing: image-set(url('/cursors/shima-grabbing.png') 2x) 4 37, grabbing;
+  --cur-busy: image-set(url('/cursors/shima-busy.png') 2x) 6 11, progress;
+  --cur-no: image-set(url('/cursors/shima-no.png') 2x) 2 12, not-allowed;
+}
+:root[data-cursor='shima'][data-big-cursor='on'] {
+  --cur: image-set(url('/cursors/shima.png') 1.43x) 4 51, auto;
+  --cur-pointer: image-set(url('/cursors/shima-point.png') 1.43x) 4 22, pointer;
+  --cur-grab: image-set(url('/cursors/shima-grab.png') 1.43x) 5 52, grab;
+  --cur-grabbing: image-set(url('/cursors/shima-grabbing.png') 1.43x) 6 52, grabbing;
+  --cur-busy: image-set(url('/cursors/shima-busy.png') 1.43x) 8 15, progress;
+  --cur-no: image-set(url('/cursors/shima-no.png') 1.43x) 3 17, not-allowed;
+}
 
 /* ---------- the gear (in the corner where the sound button used to be) ---------- */
 
@@ -376,7 +402,7 @@
   box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--ink);
 }
 .st-slider input:disabled {
-  cursor: not-allowed;
+  cursor: var(--cur-no);
 }
 .st-slider output {
   flex: 0 0 3.2em;
@@ -981,6 +1007,31 @@
 .ds-cursor.is-big {
   width: 48px;
   height: 48px;
+}
+/* Shima's set is a little bigger than the drawn one (see the cursor sizes above) */
+.ds-cursor.is-shima {
+  width: 40px;
+  height: 40px;
+}
+.ds-cursor.is-shima.is-big {
+  width: 56px;
+  height: 56px;
+}
+.dc-set {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  padding: 0 12px;
+}
+.dc-set img {
+  width: 34px;
+  height: 34px;
+}
+.ds-cursor img {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .ds-cursor svg {
   display: block;

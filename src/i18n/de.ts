@@ -111,6 +111,11 @@ export const de: Dict = {
   'see.underline': 'Links unterstreichen',
   'see.cursors': 'Eigene Mauszeiger',
   'see.bigCursor': 'Größerer Mauszeiger',
+  'sec.cursor': 'Mauszeiger',
+  'cur.style': 'Stil',
+  'cur.drawn': 'Gezeichnet',
+  'cur.shima': 'Shima (Prototyp)',
+  'cur.system': 'System',
 
   'rd.size': 'Textgröße',
   'rd.normal': 'Normal',

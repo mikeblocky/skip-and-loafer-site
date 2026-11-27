@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { liveTicket, newCode, quest } from '../../quest'
+import { liveTicket, newCode, quest, siteAltered } from '../../quest'
 import { sfx } from '../../sfx'
 
 /**
@@ -132,7 +132,7 @@ export function Ticket() {
             />
           )}
         </div>
-        <span className="qt-fine">{used ? 'Used. Thank you for visiting!' : revealed ? 'Valid for one hour. Redeem at the gate where it all began.' : 'Secret Santa · not for resale'}</span>
+        <span className={`qt-fine${used && siteAltered() ? ' is-altered' : ''}`}>{used && siteAltered() ? 'Do you remember it right?' : used && quest.get().keys.includes('silver') ? 'See you in part 3.' : used ? 'Used. Thank you for visiting!' : revealed ? 'Valid for one hour. Redeem at the gate where it all began.' : 'Secret Santa · not for resale'}</span>
       </div>
       {used && <i className="qt-stamp">used</i>}
     </div>

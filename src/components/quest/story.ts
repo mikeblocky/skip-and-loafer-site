@@ -20,6 +20,15 @@ export interface Scene {
   mitsumiHat?: boolean
   /** they walk off together at the end */
   exit?: boolean
+  /** one of part 2's scenes (it gets part 2's music) */
+  part2?: boolean
+  /** who has a Santa hat on from the start (part 2 says so outright) */
+  hats?: Speaker[]
+  /**
+   * Part 2's altered memories: the line at `at` isn't how it really went. Catch it while it's
+   * on screen ("That's not how it went") and it rewrites itself back into `fixed`.
+   */
+  spot?: { at: number; fixed: Line }
 }
 const both = (a: Entry = 'pop', b: Entry = 'pop'): [Speaker, Entry][] => [
   ['mitsumi', a],

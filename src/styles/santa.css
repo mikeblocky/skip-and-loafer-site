@@ -494,7 +494,7 @@
   outline-offset: 2px;
 }
 .sv-add-pic.is-busy {
-  cursor: progress;
+  cursor: var(--cur-busy);
   opacity: 0.7;
 }
 .sv-add-pic input {

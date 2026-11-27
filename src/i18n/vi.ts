@@ -111,6 +111,11 @@ export const vi: Dict = {
   'see.underline': 'Gạch chân liên kết',
   'see.cursors': 'Con trỏ riêng của trang',
   'see.bigCursor': 'Con trỏ to hơn',
+  'sec.cursor': 'Con trỏ',
+  'cur.style': 'Kiểu',
+  'cur.drawn': 'Vẽ tay',
+  'cur.shima': 'Shima (bản thử)',
+  'cur.system': 'Hệ thống',
 
   'rd.size': 'Cỡ chữ',
   'rd.normal': 'Bình thường',

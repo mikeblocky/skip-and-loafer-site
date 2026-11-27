@@ -8,7 +8,7 @@ import { reducedMotion, settings, useSettings } from '../settings'
 import { clamp, metrics, rand, type Pose } from './stage/geometry'
 import { scatter } from './stage/scatter'
 import { ringAroundHeaders, type Item } from './stage/ring'
-import { quest, questStarted } from '../quest'
+import { quest, questStarted, siteAltered } from '../quest'
 import { SantaHat } from './quest/SantaHat'
 
 export type Mode = 'countdown' | 'volumes' | 'birthdays' | 'anime' | 'message' | 'santa'
@@ -51,7 +51,11 @@ export const Stage = forwardRef<StageHandle, { aspects: Record<string, number> }
   // Secret Santa: once Shima has turned up, he keeps the Santa hat on
   const santa = useSyncExternalStore(quest.subscribe, questStarted)
   // ...and Mitsumi gets hers at the very end of part 1
-  const santaToo = useSyncExternalStore(quest.subscribe, () => quest.get().part1 === 'blessed')
+  const santaToo = useSyncExternalStore(quest.subscribe, () => quest.get().part1 === 'blessed' || quest.get().keys.includes('ueno'))
+  // ...and Yuzuki and Makoto get theirs at the end of part 2
+  const santaFour = useSyncExternalStore(quest.subscribe, () => quest.get().keys.includes('silver'))
+  // ...and while part 2 has the site altered, Yuzuki is simply not there
+  const altered = useSyncExternalStore(quest.subscribe, () => siteAltered())
 
   const icons = useMemo(() => {
     const small = window.innerWidth < 760
@@ -529,7 +533,7 @@ export const Stage = forwardRef<StageHandle, { aspects: Record<string, number> }
       {CHARACTERS.map((c, i) => (
         <div
           key={c.id}
-          className={`char${hiddenChars.includes(c.id) ? ' is-off' : ''}`}
+          className={`char${hiddenChars.includes(c.id) ? ' is-off' : ''}${altered && c.id === 'yuzuki' ? ' is-gone' : ''}`}
           data-char={c.id}
           ref={(el) => {
             if (el) charEls.current[i] = el
@@ -544,6 +548,7 @@ export const Stage = forwardRef<StageHandle, { aspects: Record<string, number> }
             <img src={c.src} alt="" draggable={false} />
             {c.id === 'shima' && santa && <SantaHat />}
             {c.id === 'mitsumi' && santaToo && <SantaHat className="is-mitsumi" />}
+            {(c.id === 'yuzuki' || c.id === 'makoto') && santaFour && <SantaHat className={`is-${c.id}`} />}
           </div>
           <span className="char-tag" style={{ background: c.color }}>
             {c.name}

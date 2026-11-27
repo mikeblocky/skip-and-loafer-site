@@ -32,6 +32,11 @@ textarea,
 [contenteditable=''] {
   cursor: text;
 }
+/* the drawn set keeps the usual loading and not-allowed cursors; Shima's set has his own */
+:root {
+  --cur-busy: progress;
+  --cur-no: not-allowed;
+}
 
 /* the click pop (see ClickBurst): a ring and a few dots that fly out and fade */
 .bursts {

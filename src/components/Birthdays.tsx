@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react'
 import { gsap, Draggable, GRAB } from '../gsap'
 import { BIRTHDAYS, C, RAINBOW } from '../data'
 import { Icon, SCATTER_ICONS } from '../icons'
 import { FlexText } from './FlexText'
 import { sfx } from '../sfx'
 import { openSecret } from '../secrets'
-import { questHint } from '../quest'
+import { alteredName, quest, questHint, siteAltered } from '../quest'
 import { dayMonth, monthName, useT } from '../i18n'
 
 const START = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
@@ -100,6 +100,10 @@ const BURST = Array.from({ length: 14 }, (_, i) => ({
 }))
 
 export function Birthdays() {
+  // Secret Santa part 2: while the site is altered, one name on the wheel is just "Y."
+  const altered = useSyncExternalStore(quest.subscribe, () => siteAltered())
+  // ...and once it's over, one small mark stays: a snowflake by Yuzuki's name, ready for part 3
+  const marked = useSyncExternalStore(quest.subscribe, () => quest.get().keys.includes('silver') && !siteAltered())
   const { t, locale } = useT()
   const { w: vw, h: vh } = useViewport()
   const mobile = vw < 760
@@ -275,7 +279,10 @@ export function Birthdays() {
               >
                 <div className="bd-upright">
                   <span className="bd-dot">{p.d}</span>
-                  <span className="bd-name">{p.name}</span>
+                  <span className="bd-name">
+                    {alteredName(p.name, altered)}
+                    {marked && p.name === 'Yuzuki' && <Icon name="snow" color={C.sky} size={11} style={{ marginLeft: 3, verticalAlign: '-1px' }} />}
+                  </span>
                 </div>
               </div>
             ))}
@@ -283,10 +290,10 @@ export function Birthdays() {
 
           <div className="bd-info" key={b.name} style={{ '--c': b.color } as CSSProperties}>
             <div className="bd-face">
-              {b.img ? (
+              {b.img && alteredName(b.name, altered) === b.name ? (
                 <span className="bd-portrait" style={{ backgroundImage: `url(/characters/${b.img}.webp)` }} />
               ) : (
-                <span className="bd-initial">{b.name[0]}</span>
+                <span className="bd-initial">{alteredName(b.name, altered)[0]}</span>
               )}
               <div className="bd-burst" ref={burst} aria-hidden="true">
                 {BURST.map((x, i) => (
@@ -294,7 +301,7 @@ export function Birthdays() {
                 ))}
               </div>
             </div>
-            <FlexText as="div" className="bd-who" words={[{ t: b.name, w: 850, c: b.color }]} />
+            <FlexText as="div" className="bd-who" words={[{ t: alteredName(b.name, altered), w: 850, c: b.color }]} />
             <div className="bd-date">{date}</div>
             <div className="bd-count">
               {b.days === 0 ? (

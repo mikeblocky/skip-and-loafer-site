@@ -13,6 +13,7 @@ import { centre, confetti } from '../message/confetti'
 import { local, santaApi, santaPost, type Wrapped } from './season'
 import { Present } from './Present'
 import { Ideas } from './Ideas'
+import { questLetter } from '../../quest'
 import { Flip, inkOn, LetterBack } from './Letter'
 import { preparePicture, uploadPicture, type Picture } from './picture'
 
@@ -208,6 +209,7 @@ export function Workshop({ burstDate, start, end }: { burstDate: string; start: 
     setText('')
     setPic(null)
     setStep('sent')
+    questLetter('santa')
   }
 
   const again = () => {

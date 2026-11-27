@@ -111,6 +111,11 @@ export const es: Dict = {
   'see.underline': 'Subrayar enlaces',
   'see.cursors': 'Cursores del sitio',
   'see.bigCursor': 'Cursor más grande',
+  'sec.cursor': 'Cursor',
+  'cur.style': 'Estilo',
+  'cur.drawn': 'Dibujado',
+  'cur.shima': 'Shima (prototipo)',
+  'cur.system': 'Sistema',
 
   'rd.size': 'Tamaño del texto',
   'rd.normal': 'Normal',

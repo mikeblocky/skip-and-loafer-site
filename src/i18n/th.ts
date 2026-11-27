@@ -111,6 +111,11 @@ export const th: Dict = {
   'see.underline': 'ขีดเส้นใต้ลิงก์',
   'see.cursors': 'เคอร์เซอร์ของเว็บ',
   'see.bigCursor': 'เคอร์เซอร์ใหญ่ขึ้น',
+  'sec.cursor': 'เคอร์เซอร์',
+  'cur.style': 'สไตล์',
+  'cur.drawn': 'แบบวาด',
+  'cur.shima': 'ชิมะ (ต้นแบบ)',
+  'cur.system': 'ระบบ',
 
   'rd.size': 'ขนาดตัวอักษร',
   'rd.normal': 'ปกติ',

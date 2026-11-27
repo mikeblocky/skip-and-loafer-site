@@ -112,6 +112,11 @@ export const fr: Dict = {
   'see.underline': 'Souligner les liens',
   'see.cursors': 'Curseurs du site',
   'see.bigCursor': 'Curseur plus grand',
+  'sec.cursor': 'Curseur',
+  'cur.style': 'Style',
+  'cur.drawn': 'Dessiné',
+  'cur.shima': 'Shima (prototype)',
+  'cur.system': 'Système',
 
   'rd.size': 'Taille du texte',
   'rd.normal': 'Normale',

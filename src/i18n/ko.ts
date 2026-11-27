@@ -111,6 +111,11 @@ export const ko: Dict = {
   'see.underline': '링크에 밑줄',
   'see.cursors': '사이트 전용 커서',
   'see.bigCursor': '커서 크게',
+  'sec.cursor': '커서',
+  'cur.style': '스타일',
+  'cur.drawn': '일러스트',
+  'cur.shima': '시마 (시제품)',
+  'cur.system': '시스템',
 
   'rd.size': '글자 크기',
   'rd.normal': '보통',
